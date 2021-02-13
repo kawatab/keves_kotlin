@@ -24,8 +24,6 @@ package io.github.kawatab.keveskotlin.objects
 import io.github.kawatab.keveskotlin.KevesVM
 
 abstract class ScmProcedure(val id: String, val syntax: ScmSyntax?) : ScmObject() {
-    override val type get() = ObjectType.PROCEDURE
-
     override fun toStringForWrite(): String = "#<procedure $id>"
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

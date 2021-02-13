@@ -22,8 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmBox(var value: ScmObject?) : ScmObject() {
-    override val type get() = ObjectType.BOX
-
     override fun toStringForWrite(): String = "#<box ${getStringForWrite(value)}>"
     override fun toStringForDisplay(): String = "#<box ${getStringForDisplay(value)}>"
     override fun toString(): String = toStringForWrite()

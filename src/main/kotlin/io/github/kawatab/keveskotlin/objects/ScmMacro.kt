@@ -24,8 +24,6 @@ package io.github.kawatab.keveskotlin.objects
 import io.github.kawatab.keveskotlin.KevesCompiler
 
 abstract class ScmMacro(private val id: String) : ScmObject() {
-    override val type get() = ObjectType.MACRO
-
     override fun toStringForWrite(): String = "#<macro $id>"
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

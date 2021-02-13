@@ -45,8 +45,6 @@ class ScmInstruction private constructor(private val instructionType: Instructio
         RETURN,
     }
 
-    override val type = ObjectType.INSTRUCTION
-
     override fun toStringForWrite(): String = when (instructionType) {
         InstructionType.HALT -> "<HALT>"
         InstructionType.REFER_LOCAL -> "<REFER_LOCAL>"

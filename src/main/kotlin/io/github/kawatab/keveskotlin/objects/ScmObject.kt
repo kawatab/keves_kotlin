@@ -22,9 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 abstract class ScmObject {
-    enum class ObjectType { UNDEF, PAIR, INT, FLOAT, DOUBLE, CHAR, STRING, SYMBOL, ERROR, TRUE, FALSE, INSTRUCTION, BOX, VECTOR, SYNTAX, PROCEDURE, MACRO, BYTEVECTOR }
-
-    abstract val type: ObjectType
     abstract fun toStringForWrite(): String
     abstract fun toStringForDisplay(): String
     open fun eqvQ(other: ScmObject?): Boolean = this === other

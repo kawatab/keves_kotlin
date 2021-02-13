@@ -24,8 +24,6 @@ package io.github.kawatab.keveskotlin.objects
 import java.util.*
 
 class ScmSymbol private constructor(private val symbol: String) : ScmObject() {
-    override val type get() = ObjectType.SYMBOL
-
     override fun toStringForWrite(): String =
         if (symbol.run {
                 indexOf(' ') >= 0 ||
@@ -43,6 +41,8 @@ class ScmSymbol private constructor(private val symbol: String) : ScmObject() {
         }
 
     override fun toStringForDisplay(): String = toStringForWrite()
+
+    val rawString get() = symbol
 
     companion object {
         private var symbolList = mutableMapOf("" to ScmSymbol(""))

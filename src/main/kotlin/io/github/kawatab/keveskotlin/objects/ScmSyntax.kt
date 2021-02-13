@@ -24,8 +24,6 @@ package io.github.kawatab.keveskotlin.objects
 import io.github.kawatab.keveskotlin.KevesCompiler
 
 abstract class ScmSyntax(private val id: String) : ScmObject() {
-    override val type get() = ObjectType.SYNTAX
-
     override fun toStringForWrite(): String = "#<syntax $id>"
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

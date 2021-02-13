@@ -22,7 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmDouble(val value: Double) : ScmObject() {
-    override val type get() = ObjectType.DOUBLE
     override fun toStringForWrite(): String = value.toString()
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

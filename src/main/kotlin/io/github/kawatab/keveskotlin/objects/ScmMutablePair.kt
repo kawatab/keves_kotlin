@@ -37,5 +37,41 @@ class ScmMutablePair(car: ScmObject?, cdr: ScmObject?) : ScmPair(car, cdr) {
         private tailrec fun makeList(k: Int, fill: ScmObject?, result: ScmMutablePair?): ScmMutablePair? =
             if (k > 0) makeList(k - 1, fill, ScmMutablePair(fill, result))
             else result
+
+        fun append(list1: ScmPair?, list2: ScmObject?): ScmObject? = appendHelper(list1?.let { reverse(it) }, list2)
+
+        private tailrec fun appendHelper(reversedList: ScmPair?, result: ScmObject?): ScmObject? =
+            if (reversedList == null) result
+            else appendHelper(reversedList.cdr as? ScmPair, ScmMutablePair(reversedList.car, result))
+
+        fun listCopy(list: ScmPair): ScmPair = ScmMutablePair(list.car, null).also { copy ->
+            listCopy(list.cdr, copy, ArrayDeque())
+        }
+
+        private tailrec fun listCopy(rest: ScmObject?, last: ScmMutablePair, tracedPair: ArrayDeque<ScmPair>) {
+            if (rest is ScmPair) {
+                if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot copy circulated list")
+                tracedPair.addLast(rest)
+                val next = ScmMutablePair(rest.car, null)
+                last.assignCdr(next)
+                listCopy(rest.cdr, next, tracedPair)
+            } else {
+                last.assignCdr(rest)
+            }
+        }
+
+        fun reverse(list: ScmPair): ScmPair? =
+            reverse(list.cdr, ScmMutablePair(list.car, null), ArrayDeque<ScmPair>().apply { addLast(list) })
+
+        private tailrec fun reverse(rest: ScmObject?, result: ScmPair?, tracedPair: ArrayDeque<ScmPair>): ScmPair? =
+            when (rest) {
+                null -> result
+                is ScmPair -> {
+                    if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
+                    tracedPair.addLast(rest)
+                    reverse(rest.cdr, ScmMutablePair(rest.car, result), tracedPair)
+                }
+                else -> throw IllegalArgumentException("cannot reverse improper list")
+            }
     }
 }

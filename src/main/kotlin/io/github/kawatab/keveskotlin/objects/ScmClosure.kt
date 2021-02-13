@@ -30,8 +30,6 @@ class ScmClosure(
     private val numArg: Int,
     private val closure: ScmVector
 ) : ScmProcedure(id, null) {
-    override val type get() = ObjectType.PROCEDURE
-
     override fun toStringForWrite(): String = "#<procedure $id>"
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

@@ -22,7 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmInt(val value: Int) : ScmObject() {
-    override val type get() = ObjectType.INT
     override fun toStringForWrite(): String = value.toString()
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

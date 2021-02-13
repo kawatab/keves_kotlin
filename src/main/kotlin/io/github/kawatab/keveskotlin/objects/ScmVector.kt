@@ -25,8 +25,6 @@ class ScmVector(private val array: Array<ScmObject?>) : ScmObject() {
     constructor(size: Int) : this(Array<ScmObject?>(size) { ScmConstant.UNDEF })
     constructor(size: Int, fill: ScmObject?) : this(Array<ScmObject?>(size) { fill })
 
-    override val type get() = ObjectType.VECTOR
-
     val size get() = array.size
 
     override fun toStringForWrite(): String = "#(${array.joinToString(" ") { getStringForWrite(it) }})"

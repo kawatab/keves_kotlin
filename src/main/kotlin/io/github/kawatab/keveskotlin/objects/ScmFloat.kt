@@ -22,7 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmFloat(val value: Float) : ScmObject() {
-    override val type get() = ObjectType.FLOAT
     override fun toStringForWrite(): String = value.toString()
     override fun toStringForDisplay(): String = toStringForWrite()
     override fun toString(): String = toStringForWrite()

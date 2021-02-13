@@ -279,6 +279,19 @@ class ParserTest {
     }
 
     @Test
+    fun test031() {
+        val scheme = Keves()
+        val result = scheme.parse("'(list #\\a #\\b #\\語 #\\𑄸 #\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)")
+        assertEquals("(begin (quote (list #\\a #\\b #\\語 #\\𑄸 #\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)))", getStringForWrite(result.first).replace("\n", "\\n"))
+        assertEquals(true, result.second.isEmpty())
+    }
+
+    /*
+
+
+     */
+
+    @Test
     fun testR7RS0201() {
         val scheme = Keves()
         val result1 = scheme.parse("|H\\x65;llo|")

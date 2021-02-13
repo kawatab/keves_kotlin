@@ -22,8 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
-    override val type get() = ObjectType.PAIR
-
     var car: ScmObject? = car
         protected set
 
@@ -197,25 +195,6 @@ open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
                 else -> throw IllegalArgumentException("cannot get the length of improper list")
             }
 
-        fun append(list1: ScmPair?, list2: ScmObject?): ScmObject? = appendHelper(reverse(list1), list2)
-
-        private tailrec fun appendHelper(reversedList: ScmPair?, result: ScmObject?): ScmObject? =
-            if (reversedList == null) result
-            else appendHelper(reversedList.cdr as? ScmPair, ScmMutablePair(reversedList.car, result))
-
-        fun reverse(list: ScmPair?): ScmPair? = reverse(list, null, ArrayDeque())
-
-        private tailrec fun reverse(rest: ScmObject?, result: ScmPair?, tracedPair: ArrayDeque<ScmPair>): ScmPair? =
-            when (rest) {
-                null -> result
-                is ScmPair -> {
-                    if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
-                    tracedPair.addLast(rest)
-                    reverse(rest.cdr, ScmMutablePair(rest.car, result), tracedPair)
-                }
-                else -> throw IllegalArgumentException("cannot reverse improper list")
-            }
-
         fun isPair(obj: ScmObject?): Boolean = obj is ScmPair
 
         fun isProperList(obj: ScmObject?): Boolean =
@@ -239,15 +218,123 @@ open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
                 else -> false
             }
 
-        fun toProperList(list: ScmObject?): Pair<ScmPair?, Int> {
-            tailrec fun loop(rest: ScmObject?, result: ScmPair?, n: Int): Pair<ScmPair?, Int> =
-                when (rest) {
-                    null -> reverse(result) to n
-                    is ScmPair -> loop(rest.cdr, ScmPair(rest.car, result), n + 1)
-                    else -> reverse(ScmPair(rest, result)) to -(n + 1)
+        fun toProperList(list: ScmObject?): Pair<ScmPair?, Int> = toProperList(list, null, 0)
+
+        private tailrec fun toProperList(rest: ScmObject?, result: ScmPair?, n: Int): Pair<ScmPair?, Int> =
+            when (rest) {
+                null -> result?.let { reverse(it) } to n
+                is ScmPair -> toProperList(rest = rest.cdr, result = ScmPair(rest.car, result), n = n + 1)
+                else -> reverse(ScmPair(rest, result)) to -(n + 1)
+            }
+
+        fun reverse(list: ScmPair): ScmPair? =
+            reverse(list.cdr, ScmPair(list.car, null), ArrayDeque<ScmPair>().apply { addLast(list) })
+
+        private tailrec fun reverse(rest: ScmObject?, result: ScmPair?, tracedPair: ArrayDeque<ScmPair>): ScmPair? =
+            when (rest) {
+                null -> result
+                is ScmPair -> {
+                    if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
+                    tracedPair.addLast(rest)
+                    reverse(rest.cdr, ScmMutablePair(rest.car, result), tracedPair)
                 }
-            return loop(rest = list, result = null, n = 0)
-        }
+                else -> throw IllegalArgumentException("cannot reverse improper list")
+            }
+
+        tailrec fun listTail(list: ScmPair?, k: Int): ScmPair? =
+            if (k > 0) {
+                if (list == null) throw IllegalArgumentException("length not enough")
+                else listTail(
+                    list.cdr?.let { it as? ScmPair ?: throw IllegalArgumentException("not proper list") },
+                    k - 1
+                )
+            } else {
+                list
+            }
+
+        fun memq(obj: ScmObject?, list: ScmPair?): ScmObject = memq(obj, list, ArrayDeque())
+
+        private tailrec fun memq(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    if (list.car === obj) list else memq(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
+
+        fun memv(obj: ScmObject?, list: ScmPair?): ScmObject = memv(obj, list, ArrayDeque())
+
+        private tailrec fun memv(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    if (eqvQ(list.car, obj)) list else memv(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
+
+        fun member(obj: ScmObject?, list: ScmPair?): ScmObject = member(obj, list, ArrayDeque())
+
+        private tailrec fun member(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    if (equalQ(list.car, obj)) list else member(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
+
+        fun assq(obj: ScmObject?, list: ScmPair?): ScmObject = assq(obj, list, ArrayDeque())
+
+        private tailrec fun assq(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    val car = list.car
+                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
+                    if (car.car === obj) car else assq(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
+
+        fun assv(obj: ScmObject?, list: ScmPair?): ScmObject = assv(obj, list, ArrayDeque())
+
+        private tailrec fun assv(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    val car = list.car
+                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
+                    if (eqvQ(car.car, obj)) car else assv(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
+
+        fun assoc(obj: ScmObject?, list: ScmPair?): ScmObject = assoc(obj, list, ArrayDeque())
+
+        private tailrec fun assoc(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
+            when (list) {
+                null -> ScmConstant.FALSE
+                is ScmPair -> {
+                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                    tracedPair.addLast(list)
+                    val car = list.car
+                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
+                    if (equalQ(car.car, obj)) car else assoc(obj, list.cdr, tracedPair)
+                }
+                else -> throw IllegalArgumentException("not proper list")
+            }
 
         @Suppress("unused")
         fun car(pair: ScmObject?): ScmObject? =

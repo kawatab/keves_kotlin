@@ -70,7 +70,10 @@ class KevesCompiler {
             if (obj is ScmPair) {
                 val car = obj.car
                 if (car === ScmSymbol.get("define"))
-                    return findDefinition(sequence = sequence.cdr, definition = ScmPair(findLambda(obj.cdr), definition))
+                    return findDefinition(
+                        sequence = sequence.cdr,
+                        definition = ScmPair(findLambda(obj.cdr), definition)
+                    )
             }
         }
         return definition to (findNextDefinition(sequence, null) ?: sequence)
@@ -164,7 +167,7 @@ class KevesCompiler {
                                 loop(
                                     args.cdr?.let {
                                         it as? ScmPair
-                                            ?: throw IllegalArgumentException(badSyntax.format(x.toStringForWrite()))
+                                            ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
                                     },
                                     compile(args.car, e, s, ScmPair.list(ScmInstruction.ARGUMENT, c)),
                                     n + 1
@@ -173,7 +176,8 @@ class KevesCompiler {
 
                         loop(
                             x.cdr?.let {
-                                it as? ScmPair ?: throw IllegalArgumentException(badSyntax.format(x.toStringForWrite()))
+                                it as? ScmPair
+                                    ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
                             },
                             compile(
                                 x.car,
@@ -449,19 +453,21 @@ class KevesCompiler {
      */
     fun tailQ(next: ScmPair?): Boolean = next != null && next.car === ScmInstruction.RETURN
 
+    /*
     companion object {
         val symbolBegin = ScmSymbol.get("begin")
 
-        const val badSyntax = "bad syntax in '%s'"
-        const val expectedSymbol = "'%s' expected a symbol, but got other"
-        const val expected1DatumButGotNothing = "'%s' expected 1 datum, but got nothing"
-        const val expected1DatumButGotMore = "'%s' expected 1 datum, but got more"
-        const val expected2DatumButGotLess = "'%s' expected 2 datum, but got less"
-        const val expected2DatumButGotMore = "'%s' expected 2 datum, but got more"
-        const val expected2OrMoreDatumButGotLess = "'%s' expected 2 or more datum, but got less"
-        const val expected3DatumButGotLess = "'%s' expected 3 datum, but got less"
-        const val expected3DatumButGotMore = "'%s' expected 3 datum, but got more"
+        // const val badSyntax = "bad syntax in '%s'"
+        // const val expectedSymbol = "'%s' expected a symbol, but got other"
+        // const val expected1DatumButGotNothing = "'%s' expected 1 datum, but got nothing"
+        // const val expected1DatumButGotMore = "'%s' expected 1 datum, but got more"
+        // const val expected2DatumButGotLess = "'%s' expected 2 datum, but got less"
+        // const val expected2DatumButGotMore = "'%s' expected 2 datum, but got more"
+        // const val expected2OrMoreDatumButGotLess = "'%s' expected 2 or more datum, but got less"
+        // const val expected3DatumButGotLess = "'%s' expected 3 datum, but got less"
+        // const val expected3DatumButGotMore = "'%s' expected 3 datum, but got more"
     }
+     */
 
     fun splitBinds(binds: ScmPair?): Pair<ScmPair?, ScmPair?> {
         tailrec fun loop(binds: ScmPair?, variables: ScmPair?, values: ScmPair?): Pair<ScmPair?, ScmPair?> =
@@ -476,7 +482,7 @@ class KevesCompiler {
                 loop(cdr, ScmPair(variable, variables), ScmPair(value, values))
             }
         return loop(binds, null, null).let { (variables, values) ->
-            ScmPair.reverse(variables) to ScmPair.reverse(values)
+            variables?.let { ScmPair.reverse(it) } to values?.let { ScmPair.reverse(it) }
         }
     }
 }

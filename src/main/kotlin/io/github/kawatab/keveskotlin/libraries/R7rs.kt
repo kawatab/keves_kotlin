@@ -22,6 +22,7 @@
 package io.github.kawatab.keveskotlin.libraries
 
 import io.github.kawatab.keveskotlin.KevesCompiler
+import io.github.kawatab.keveskotlin.KevesExceptions
 import io.github.kawatab.keveskotlin.KevesVM
 import io.github.kawatab.keveskotlin.objects.*
 
@@ -43,61 +44,101 @@ class R7rs {
             ScmSymbol.get("call/cc") to procCallWithCC,
             ScmSymbol.get("call-with-current-continuation") to procCallWithCC,
             ScmSymbol.get("display") to procDisplay,
-            ScmSymbol.get("+") to procAdd,
-            ScmSymbol.get("-") to procSubtract,
-            ScmSymbol.get("*") to procMultiple,
-            ScmSymbol.get("/") to procDivide,
-            ScmSymbol.get("=") to procEqual,
-            ScmSymbol.get("<") to procLessThan,
-            ScmSymbol.get(">") to procGraterThan,
-            ScmSymbol.get("append") to procAppend,
-            ScmSymbol.get("cons") to procCons,
-            ScmSymbol.get("caaaar") to procCaaaar,
-            ScmSymbol.get("caaadr") to procCaaadr,
-            ScmSymbol.get("caaar") to procCaaar,
-            ScmSymbol.get("caadar") to procCaadar,
-            ScmSymbol.get("caaddr") to procCaaddr,
-            ScmSymbol.get("caadr") to procCaadr,
-            ScmSymbol.get("caar") to procCaar,
-            ScmSymbol.get("cadaar") to procCadaar,
-            ScmSymbol.get("cadadr") to procCadadr,
-            ScmSymbol.get("cadar") to procCadar,
-            ScmSymbol.get("caddar") to procCaddar,
-            ScmSymbol.get("cadddr") to procCadddr,
-            ScmSymbol.get("caddr") to procCaddr,
-            ScmSymbol.get("cadr") to procCadr,
-            ScmSymbol.get("car") to procCar,
-            ScmSymbol.get("cdaaar") to procCdaaar,
-            ScmSymbol.get("cdaadr") to procCdaadr,
-            ScmSymbol.get("cdaar") to procCdaar,
-            ScmSymbol.get("cdadar") to procCdadar,
-            ScmSymbol.get("cdaddr") to procCdaddr,
-            ScmSymbol.get("cdadr") to procCdadr,
-            ScmSymbol.get("cdar") to procCdar,
-            ScmSymbol.get("cddaar") to procCddaar,
-            ScmSymbol.get("cddadr") to procCddadr,
-            ScmSymbol.get("cddar") to procCddar,
-            ScmSymbol.get("cdddar") to procCdddar,
-            ScmSymbol.get("cddddr") to procCddddr,
-            ScmSymbol.get("cdddr") to procCdddr,
-            ScmSymbol.get("cddr") to procCddr,
-            ScmSymbol.get("cdr") to procCdr,
+            ScmSymbol.get("*") to R7rsNumber.procMultiple,
+            ScmSymbol.get("+") to R7rsNumber.procAdd,
+            ScmSymbol.get("-") to R7rsNumber.procSubtract,
+            ScmSymbol.get("/") to R7rsNumber.procDivide,
+            ScmSymbol.get("<") to R7rsNumber.procLessThan,
+            ScmSymbol.get("=") to R7rsNumber.procEqual,
+            ScmSymbol.get(">") to R7rsNumber.procGraterThan,
+            ScmSymbol.get("append") to R7rsList.procAppend,
+            ScmSymbol.get("assoc") to R7rsList.procAssoc,
+            ScmSymbol.get("assq") to R7rsList.procAssq,
+            ScmSymbol.get("assv") to R7rsList.procAssv,
+            ScmSymbol.get("cons") to R7rsList.procCons,
+            ScmSymbol.get("caaaar") to R7rsList.procCaaaar,
+            ScmSymbol.get("caaadr") to R7rsList.procCaaadr,
+            ScmSymbol.get("caaar") to R7rsList.procCaaar,
+            ScmSymbol.get("caadar") to R7rsList.procCaadar,
+            ScmSymbol.get("caaddr") to R7rsList.procCaaddr,
+            ScmSymbol.get("caadr") to R7rsList.procCaadr,
+            ScmSymbol.get("caar") to R7rsList.procCaar,
+            ScmSymbol.get("cadaar") to R7rsList.procCadaar,
+            ScmSymbol.get("cadadr") to R7rsList.procCadadr,
+            ScmSymbol.get("cadar") to R7rsList.procCadar,
+            ScmSymbol.get("caddar") to R7rsList.procCaddar,
+            ScmSymbol.get("cadddr") to R7rsList.procCadddr,
+            ScmSymbol.get("caddr") to R7rsList.procCaddr,
+            ScmSymbol.get("cadr") to R7rsList.procCadr,
+            ScmSymbol.get("car") to R7rsList.procCar,
+            ScmSymbol.get("cdaaar") to R7rsList.procCdaaar,
+            ScmSymbol.get("cdaadr") to R7rsList.procCdaadr,
+            ScmSymbol.get("cdaar") to R7rsList.procCdaar,
+            ScmSymbol.get("cdadar") to R7rsList.procCdadar,
+            ScmSymbol.get("cdaddr") to R7rsList.procCdaddr,
+            ScmSymbol.get("cdadr") to R7rsList.procCdadr,
+            ScmSymbol.get("cdar") to R7rsList.procCdar,
+            ScmSymbol.get("cddaar") to R7rsList.procCddaar,
+            ScmSymbol.get("cddadr") to R7rsList.procCddadr,
+            ScmSymbol.get("cddar") to R7rsList.procCddar,
+            ScmSymbol.get("cdddar") to R7rsList.procCdddar,
+            ScmSymbol.get("cddddr") to R7rsList.procCddddr,
+            ScmSymbol.get("cdddr") to R7rsList.procCdddr,
+            ScmSymbol.get("cddr") to R7rsList.procCddr,
+            ScmSymbol.get("cdr") to R7rsList.procCdr,
+            ScmSymbol.get("char?") to R7rsChar.procCharQ,
+            ScmSymbol.get("char->integer") to R7rsChar.procCharToInteger,
+            ScmSymbol.get("char-ci<=?") to R7rsChar.procCharCILessThanEqualQ,
+            ScmSymbol.get("char-ci<?") to R7rsChar.procCharCILessThanQ,
+            ScmSymbol.get("char-ci=?") to R7rsChar.procCharCIEqualQ,
+            ScmSymbol.get("char-ci>=?") to R7rsChar.procCharCIGraterThanEqualQ,
+            ScmSymbol.get("char-ci>?") to R7rsChar.procCharCIGraterThanQ,
+            ScmSymbol.get("char-alphabetic?") to R7rsChar.procCharAlphabeticQ,
+            ScmSymbol.get("char-downcase") to R7rsChar.procCharDowncase,
+            ScmSymbol.get("char-foldcase") to R7rsChar.procCharFoldcase,
+            ScmSymbol.get("char-lower-case?") to R7rsChar.procCharLowerCaseQ,
+            ScmSymbol.get("char-numeric?") to R7rsChar.procCharNumericQ,
+            ScmSymbol.get("char-upper-case?") to R7rsChar.procCharUpperCaseQ,
+            ScmSymbol.get("char-upcase") to R7rsChar.procCharUpcase,
+            ScmSymbol.get("char-whitespace?") to R7rsChar.procCharWhitespaceQ,
+            ScmSymbol.get("char<=?") to R7rsChar.procCharLessThanEqualQ,
+            ScmSymbol.get("char<?") to R7rsChar.procCharLessThanQ,
+            ScmSymbol.get("char=?") to R7rsChar.procCharEqualQ,
+            ScmSymbol.get("char>=?") to R7rsChar.procCharGraterThanEqualQ,
+            ScmSymbol.get("char>?") to R7rsChar.procCharGraterThanQ,
+            ScmSymbol.get("digit-value") to R7rsChar.procDigitValue,
             ScmSymbol.get("eq?") to procEqQ,
             ScmSymbol.get("equal?") to procEqualQ,
             ScmSymbol.get("eqv?") to procEqvQ,
-            ScmSymbol.get("length") to procLength,
-            ScmSymbol.get("list") to procList,
-            ScmSymbol.get("list?") to procListQ,
-            ScmSymbol.get("make-list") to procMakeList,
+            ScmSymbol.get("integer->char") to R7rsChar.procIntegerToChar,
+            ScmSymbol.get("length") to R7rsList.procLength,
+            ScmSymbol.get("list") to R7rsList.procList,
+            ScmSymbol.get("list-copy") to R7rsList.procListCopy,
+            ScmSymbol.get("list-ref") to R7rsList.procListRef,
+            ScmSymbol.get("list-set!") to R7rsList.procListSetE,
+            ScmSymbol.get("list-tail") to R7rsList.procListTail,
+            ScmSymbol.get("list?") to R7rsList.procListQ,
+            ScmSymbol.get("make-list") to R7rsList.procMakeList,
             ScmSymbol.get("make-vector") to procMakeVector,
-            ScmSymbol.get("null?") to procNullQ,
-            ScmSymbol.get("pair?") to procPairQ,
-            ScmSymbol.get("reverse") to procReverse,
-            ScmSymbol.get("set-car!") to procSetCarE,
-            ScmSymbol.get("set-cdr!") to procSetCdrE,
-            ScmSymbol.get("zero?") to procZeroQ,
+            ScmSymbol.get("member") to R7rsList.procMember,
+            ScmSymbol.get("memq") to R7rsList.procMemq,
+            ScmSymbol.get("memv") to R7rsList.procMemv,
+            ScmSymbol.get("null?") to R7rsList.procNullQ,
+            ScmSymbol.get("pair?") to R7rsList.procPairQ,
+            ScmSymbol.get("reverse") to R7rsList.procReverse,
+            ScmSymbol.get("set-car!") to R7rsList.procSetCarE,
+            ScmSymbol.get("set-cdr!") to R7rsList.procSetCdrE,
+            ScmSymbol.get("string->symbol") to R7rsSymbol.procStringToSymbol,
+            ScmSymbol.get("string=?") to R7rsString.procStringEqualQ,
+            ScmSymbol.get("string?") to R7rsString.procStringQ,
+            ScmSymbol.get("symbol->string") to R7rsSymbol.procSymbolToString,
+            ScmSymbol.get("symbol=?") to R7rsSymbol.procSymbolEqualQ,
+            ScmSymbol.get("symbol?") to R7rsSymbol.procSymbolQ,
+            ScmSymbol.get("zero?") to R7rsNumber.procZeroQ,
         )
     }
+
+    val symbolBegin = ScmSymbol.get("begin")
 
     /** syntax: begin */
     private val syntaxBegin = object : ScmSyntax("begin") {
@@ -108,13 +149,13 @@ class R7rs {
                 } else {
                     val expsCdr: ScmPair? = exps.cdr?.let {
                         it as? ScmPair
-                            ?: throw IllegalArgumentException(KevesCompiler.badSyntax.format(x.toStringForWrite()))
+                            ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
                     }
                     loop(expsCdr, compiler.compile(ScmPair.car(exps), e, s, c))
                 }
 
             return patternMatchBegin(x)?.let { expressions ->
-                loop(ScmPair.reverse(expressions), next)
+                loop(ScmMutablePair.reverse(expressions), next)
             } ?: ScmPair.list(ScmInstruction.CONSTANT, ScmConstant.UNDEF)
         }
 
@@ -131,7 +172,7 @@ class R7rs {
 
     private fun patternMatchBegin(x: ScmPair): ScmPair? =
         ScmPair.cdr(x)?.let {
-            it as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.badSyntax.format(x.toStringForWrite()))
+            it as? ScmPair ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
         }
 
     /** syntax: quote */
@@ -156,10 +197,10 @@ class R7rs {
         try {
             ScmPair.cadr(x) // obj
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected1DatumButGotNothing.format("quote"))
+            throw IllegalArgumentException(KevesExceptions.expected1DatumGot0("quote"))
         }.also {
             ScmPair.cddr(x)
-                ?.let { throw IllegalArgumentException(KevesCompiler.expected1DatumButGotMore.format("quote")) }
+                ?.let { throw IllegalArgumentException(KevesExceptions.expected1DatumGotMore("quote")) }
         }
 
     /** syntax: lambda */
@@ -180,7 +221,7 @@ class R7rs {
                         sets,
                         vars,
                         compiler.compile(
-                            ScmPair(KevesCompiler.symbolBegin, body),
+                            ScmPair(symbolBegin, body),
                             ScmPair(varsAsProperList, free),
                             compiler.setUnion(sets, compiler.setIntersect(s, free)),
                             ScmPair.list(ScmInstruction.RETURN, ScmInt(ScmPair.length(varsAsProperList)))
@@ -206,16 +247,16 @@ class R7rs {
         val vars: ScmObject? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2OrMoreDatumButGotLess.format("lambda"))
+            throw IllegalArgumentException(KevesExceptions.expected2OrMoreDatumGotLess("lambda"))
         }?.let {
             it as? ScmPair ?: it as? ScmSymbol
-            ?: throw IllegalArgumentException(KevesCompiler.badSyntax.format(x.toStringForWrite()))
+            ?: throw KevesExceptions.badSyntax(x.toStringForWrite())
         }
         val body: ScmPair = try {
             ScmPair.cddr(x) // original is caddr instead of cddr
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2OrMoreDatumButGotLess.format("lambda"))
-        } as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.badSyntax.format(x.toStringForWrite()))
+            throw KevesExceptions.expected2OrMoreDatumGotLess("lambda")
+        } as? ScmPair ?: throw KevesExceptions.badSyntax(x.toStringForWrite())
         return vars to body
     }
 
@@ -249,19 +290,19 @@ class R7rs {
         val test: ScmObject? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected3DatumButGotLess.format("if"))
+            throw KevesExceptions.expected3DatumGotLess("if")
         }
         val thn: ScmObject? = try {
             ScmPair.caddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected3DatumButGotLess.format("if"))
+            throw KevesExceptions.expected3DatumGotLess("if")
         }
         val els: ScmObject? = try {
             ScmPair.cadddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected3DatumButGotLess.format("if"))
+            throw KevesExceptions.expected3DatumGotLess("if")
         }
-        ScmPair.cddddr(x)?.let { throw IllegalArgumentException(KevesCompiler.expected3DatumButGotMore.format("if")) }
+        ScmPair.cddddr(x)?.let { throw KevesExceptions.expected3DatumGotMore("if") }
         return Triple(test, thn, els)
     }
 
@@ -302,14 +343,14 @@ class R7rs {
         val variable: ScmSymbol = try {
             ScmPair.cadr(x) as? ScmSymbol
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("set!"))
-        } ?: throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("set!"))
+            throw KevesExceptions.expected2DatumGotLess("set!")
+        } ?: throw KevesExceptions.expectedSymbol("set!")
         val exp: ScmObject? = try {
             ScmPair.caddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("set!"))
+            throw KevesExceptions.expected2DatumGotLess("set!")
         }
-        ScmPair.cdddr(x)?.let { throw IllegalArgumentException(KevesCompiler.expected2DatumButGotMore.format("set!")) }
+        ScmPair.cdddr(x)?.let { throw KevesExceptions.expected2DatumGotMore("set!") }
         return variable to exp
     }
 
@@ -332,19 +373,19 @@ class R7rs {
         val bindings: ScmPair? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("let"))
+            throw KevesExceptions.expected2DatumGotLess("let")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("let"))
+            else throw KevesExceptions.expectedSymbol("let")
         }
 
         val body: ScmPair? = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("let"))
+            throw KevesExceptions.expected2DatumGotLess("let")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("let"))
+            else throw KevesExceptions.expectedSymbol("let")
         }
 
         return bindings to body
@@ -376,19 +417,19 @@ class R7rs {
         val bindings: ScmPair? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("let*"))
+            throw KevesExceptions.expected2DatumGotLess("let*")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("let*"))
+            else throw KevesExceptions.expectedSymbol("let*")
         }
 
         val body: ScmPair? = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("let*"))
+            throw KevesExceptions.expected2DatumGotLess("let*")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("let*"))
+            else throw KevesExceptions.expectedSymbol("let*")
         }
 
         return bindings to body
@@ -435,19 +476,19 @@ class R7rs {
         val bindings: ScmPair? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("letrec"))
+            throw KevesExceptions.expected2DatumGotLess("letrec")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("letrec"))
+            else throw KevesExceptions.expectedSymbol("letrec")
         }
 
         val body: ScmPair? = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("letrec"))
+            throw KevesExceptions.expected2DatumGotLess("letrec")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("letrec"))
+            else throw KevesExceptions.expectedSymbol("letrec")
         }
 
         return bindings to body
@@ -487,19 +528,19 @@ class R7rs {
         val bindings: ScmPair? = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("letrec*"))
+            throw KevesExceptions.expected2DatumGotLess("letrec*")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("letrec*"))
+            else throw KevesExceptions.expectedSymbol("letrec*")
         }
 
         val body: ScmPair? = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("letrec*"))
+            throw KevesExceptions.expected2DatumGotLess("letrec*")
         }?.let {
             if (it is ScmPair) it
-            else throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("letrec*"))
+            else throw KevesExceptions.expectedSymbol("letrec*")
         }
 
         return bindings to body
@@ -579,14 +620,14 @@ class R7rs {
         val test: ScmPair = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("when"))
-        } as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("when"))
+            throw KevesExceptions.expected2DatumGotLess("when")
+        } as? ScmPair ?: throw KevesExceptions.expectedSymbol("when")
 
         val expressions: ScmPair = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("when"))
-        } as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("when"))
+            throw KevesExceptions.expected2DatumGotLess("when")
+        } as? ScmPair ?: throw KevesExceptions.expectedSymbol("when")
 
         return test to expressions
     }
@@ -614,14 +655,14 @@ class R7rs {
         val test: ScmPair = try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("until"))
-        } as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("until"))
+            throw KevesExceptions.expected2DatumGotLess("until")
+        } as? ScmPair ?: throw KevesExceptions.expectedSymbol("until")
 
         val expressions: ScmPair = try {
             ScmPair.cddr(x)
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected2DatumButGotLess.format("until"))
-        } as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.expectedSymbol.format("until"))
+            throw KevesExceptions.expected2DatumGotLess("until")
+        } as? ScmPair ?: throw KevesExceptions.expectedSymbol("until")
 
         return test to expressions
     }
@@ -677,12 +718,12 @@ class R7rs {
         try {
             ScmPair.cadr(x) // exp
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected1DatumButGotNothing.format("call/cc"))
+            throw KevesExceptions.expected1DatumGot0("call/cc")
         }?.let {
-            it as? ScmPair ?: throw IllegalArgumentException(KevesCompiler.badSyntax.format(x.toStringForWrite()))
+            it as? ScmPair ?: throw KevesExceptions.badSyntax(x.toStringForWrite())
         }.also {
             ScmPair.cddr(x)
-                ?.let { throw IllegalArgumentException(KevesCompiler.expected1DatumButGotMore.format("call/cc")) }
+                ?.let { throw KevesExceptions.expected1DatumGotMore("call/cc") }
         }
 
     /** procedure: display */
@@ -744,1290 +785,8 @@ class R7rs {
         try {
             ScmPair.cadr(x) // exp
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException(KevesCompiler.expected1DatumButGotNothing.format("display"))
+            throw KevesExceptions.expected1DatumGot0("display")
         }
-
-    /** procedure: plus */
-    private val procAdd: ScmProcedure by lazy {
-        object : ScmProcedure("+", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val sp = vm.sp
-                tailrec fun doubleLoop(index: Int, sum: Double): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(sp, index)) {
-                            is ScmInt -> doubleLoop(index + 1, sum + obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
-                            else -> throw IllegalArgumentException("${procAdd.id} expected number object, but got other")
-                        }
-                    } else {
-                        ScmDouble(sum)
-                    }
-
-                tailrec fun loop(index: Int, sum: Int): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(sp, index)) {
-                            is ScmInt -> loop(index + 1, sum + obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
-                            else -> throw IllegalArgumentException("${procAdd.id} expected number object, but got other")
-                        }
-                    } else {
-                        ScmInt(sum)
-                    }
-
-                val sum = loop(0, 0)
-                vm.scmProcReturn(sum, n, this)
-            }
-        }
-    }
-
-    /** procedure: minus */
-    private val procSubtract: ScmProcedure by lazy {
-        object : ScmProcedure("-", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val difference = when (n) {
-                    0 -> throw IllegalArgumentException("${procSubtract.id} expected one or more object, but got nothing")
-
-                    1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0)) {
-                            is ScmInt -> ScmInt(-obj.value) // opposite
-                            is ScmDouble -> ScmDouble(-obj.value) // opposite
-                            else -> throw IllegalArgumentException("${procSubtract.id} expected number object, but got other")
-                        }
-                    }
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, difference: Double): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> doubleLoop(index + 1, difference - obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
-                                    else -> throw IllegalArgumentException("${procSubtract.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmDouble(difference)
-                            }
-
-                        tailrec fun intLoop(index: Int, difference: Int): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> intLoop(index + 1, difference - obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
-                                    else -> throw IllegalArgumentException("${procSubtract.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmInt(difference)
-                            }
-
-                        when (val first = vm.stack.index(sp, 0)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw IllegalArgumentException("${procSubtract.id} expected number object, but got other")
-                        }
-                    }
-                }
-
-                vm.scmProcReturn(difference, n, this)
-            }
-        }
-    }
-
-    /** procedure: multiple */
-    private val procMultiple: ScmProcedure by lazy {
-        object : ScmProcedure("*", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val i = vm.sp
-                tailrec fun doubleLoop(index: Int, product: Double): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(i, index)) {
-                            is ScmInt -> doubleLoop(index = index + 1, product = product * obj.value)
-                            is ScmDouble -> doubleLoop(index = index + 1, product = product * obj.value)
-                            else -> throw IllegalArgumentException("${procMultiple.id} expected number object, but got other")
-                        }
-                    } else {
-                        ScmDouble(product)
-                    }
-
-                tailrec fun intLoop(index: Int, product: Int): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(i, index)) {
-                            is ScmInt -> intLoop(index = index + 1, product = product * obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, product * obj.value)
-                            else -> throw IllegalArgumentException("${procMultiple.id} expected number object, but got other")
-                        }
-                    } else {
-                        ScmInt(product)
-                    }
-
-                val product = intLoop(0, 1)
-                vm.scmProcReturn(product, n, this)
-            }
-        }
-    }
-
-    /** procedure: divide */
-    private val procDivide: ScmProcedure by lazy {
-        object : ScmProcedure("/", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val quotient = when (n) {
-                    0 -> throw IllegalArgumentException("${procDivide.id} expected one or more object, but got nothing")
-
-                    1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0)) {
-                            is ScmInt -> when (obj.value) { // reciprocal
-                                0 -> throw IllegalArgumentException("${procDivide.id} expected non zero number, but got 0")
-                                -1, 1 -> obj
-                                else -> ScmDouble(1.0 / obj.value.toDouble())
-                            }
-
-                            is ScmDouble -> ScmDouble(1.0 / obj.value) // reciprocal
-
-                            else -> throw IllegalArgumentException("${procDivide.id} expected number object, but got other")
-                        }
-                    }
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, quotient: Double): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> doubleLoop(
-                                        index = index + 1,
-                                        quotient = quotient / obj.value.toDouble()
-                                    )
-                                    is ScmDouble -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
-                                    else -> throw IllegalArgumentException("${procDivide.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmDouble(quotient)
-                            }
-
-                        tailrec fun intLoop(index: Int, quotient: Int): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> {
-                                        if (obj.value == 0) {
-                                            throw IllegalArgumentException("${procDivide.id} expected non zero number, but got 0")
-                                        }
-                                        val remainder = quotient % obj.value
-                                        if (remainder == 0) {
-                                            intLoop(index = index + 1, quotient = quotient / obj.value)
-                                        } else {
-                                            doubleLoop(index + 1, quotient.toDouble() / obj.value.toDouble())
-                                        }
-                                    }
-                                    is ScmDouble -> doubleLoop(index + 1, quotient.toDouble() / obj.value)
-                                    else -> throw IllegalArgumentException("${procDivide.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmInt(quotient)
-                            }
-
-                        when (val first = vm.stack.index(sp, 0)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw IllegalArgumentException("${procDivide.id} expected number object, but got other")
-                        }
-                    }
-                }
-                vm.scmProcReturn(quotient, n, this)
-            }
-        }
-    }
-
-    /** procedure: = */
-    private val procEqual: ScmProcedure by lazy {
-        object : ScmProcedure("=", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procEqual.id} expected two or more object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procEqual.id} expected two or more object, but got one")
-
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last == obj.value.toDouble())
-                                            doubleLoop(index = index + 1, last = obj.value.toDouble())
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last == obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procEqual.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last == obj.value) intLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last.toDouble() == obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procEqual.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        val result = when (val first = vm.stack.index(sp, 0)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw IllegalArgumentException("${procEqual.id} expected number object, but got other")
-                        }
-
-                        vm.scmProcReturn(result, n, this)
-                    }
-                }
-            }
-        }
-    }
-
-    /** procedure: '<' */
-    private val procLessThan: ScmProcedure by lazy {
-        object : ScmProcedure("<", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procLessThan.id} expected two or more object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procLessThan.id} expected two or more object, but got one")
-
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last < obj.value.toDouble()) doubleLoop(
-                                            index = index + 1,
-                                            last = obj.value.toDouble()
-                                        )
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last < obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procLessThan.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last < obj.value) intLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last.toDouble() < obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procLessThan.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        val result = when (val first = vm.stack.index(sp, 0)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw IllegalArgumentException("${procLessThan.id} expected number object, but got other")
-                        }
-
-                        vm.scmProcReturn(result, n, this)
-                    }
-                }
-            }
-        }
-    }
-
-    /** procedure: '>' */
-    private val procGraterThan: ScmProcedure by lazy {
-        object : ScmProcedure(">", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procGraterThan.id} expected two or more object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procGraterThan.id} expected two or more object, but got one")
-
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last > obj.value.toDouble())
-                                            doubleLoop(index = index + 1, last = obj.value.toDouble())
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last > obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procGraterThan.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt ->
-                                        if (last > obj.value) intLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    is ScmDouble ->
-                                        if (last.toDouble() > obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw IllegalArgumentException("${procGraterThan.id} expected number object, but got other")
-                                }
-                            } else {
-                                ScmConstant.TRUE
-                            }
-
-                        val result = when (val first = vm.stack.index(sp, 0)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw IllegalArgumentException("${procGraterThan.id} expected number object, but got other")
-                        }
-
-                        vm.scmProcReturn(result, n, this)
-                    }
-                }
-            }
-        }
-    }
-
-    /** procedure: pair? */
-    private val procPairQ: ScmProcedure by lazy {
-        object : ScmProcedure("pair?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procPairQ.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (ScmPair.isPair(obj)) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procPairQ.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cons */
-    private val procCons: ScmProcedure by lazy {
-        object : ScmProcedure("cons", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCons.id} expected 2 object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procCons.id} expected 2 object, but got 1")
-                    2 -> {
-                        val sp = vm.sp
-                        val obj1 = vm.stack.index(sp, 0)
-                        val obj2 = vm.stack.index(sp, 1)
-                        val result = ScmMutablePair(obj1, obj2)
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCons.id} expected 2 object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: car */
-    private val procCar: ScmProcedure by lazy {
-        object : ScmProcedure("car", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCar.id} expected one object, but got nothing")
-                    1 -> {
-                        val pair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCar.id} expected pair but got other")
-                        vm.scmProcReturn(pair.car, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdr */
-    private val procCdr: ScmProcedure by lazy {
-        object : ScmProcedure("cdr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdr.id} expected one object, but got nothing")
-                    1 -> {
-                        val pair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdr.id} expected pair but got other")
-                        vm.scmProcReturn(pair.cdr, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: set-car! */
-    private val procSetCarE: ScmProcedure by lazy {
-        object : ScmProcedure("set-car!", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procSetCarE.id} expected 2 object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procSetCarE.id} expected 2 object, but got 1")
-                    2 -> {
-                        val sp = vm.sp
-                        val value = vm.stack.index(sp, 1)
-                        val pair = vm.stack.index(sp, 0) as? ScmMutablePair
-                            ?: throw IllegalArgumentException("${procSetCarE.id} expected mutable pair but got other")
-                        pair.assignCar(value)
-                        vm.scmProcReturn(ScmConstant.UNDEF, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procSetCarE.id} expected 2 object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: set-cdr! */
-    private val procSetCdrE: ScmProcedure by lazy {
-        object : ScmProcedure("set-cdr!", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procSetCdrE.id} expected 2 object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procSetCdrE.id} expected 2 object, but got 1")
-                    2 -> {
-                        val sp = vm.sp
-                        val value = vm.stack.index(sp, 1)
-                        val pair = vm.stack.index(sp, 0) as? ScmMutablePair
-                            ?: throw IllegalArgumentException("${procSetCdrE.id} expected mutable pair but got other")
-                        pair.assignCdr(value)
-                        vm.scmProcReturn(ScmConstant.UNDEF, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procSetCdrE.id} expected 2 object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caar */
-    private val procCaar: ScmProcedure by lazy {
-        object : ScmProcedure("caar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cadr */
-    private val procCadr: ScmProcedure by lazy {
-        object : ScmProcedure("cadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdar */
-    private val procCdar: ScmProcedure by lazy {
-        object : ScmProcedure("cdar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cddr */
-    private val procCddr: ScmProcedure by lazy {
-        object : ScmProcedure("cddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caaar */
-    private val procCaaar: ScmProcedure by lazy {
-        object : ScmProcedure("caaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caadr */
-    private val procCaadr: ScmProcedure by lazy {
-        object : ScmProcedure("caadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cadar */
-    private val procCadar: ScmProcedure by lazy {
-        object : ScmProcedure("cadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cadar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caddr */
-    private val procCaddr: ScmProcedure by lazy {
-        object : ScmProcedure("caddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdaar */
-    private val procCdaar: ScmProcedure by lazy {
-        object : ScmProcedure("cdaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdadr */
-    private val procCdadr: ScmProcedure by lazy {
-        object : ScmProcedure("cdadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cddar */
-    private val procCddar: ScmProcedure by lazy {
-        object : ScmProcedure("cddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cddar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdddr */
-    private val procCdddr: ScmProcedure by lazy {
-        object : ScmProcedure("cdddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caaaar */
-    private val procCaaaar: ScmProcedure by lazy {
-        object : ScmProcedure("caaaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaaaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaaaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caaaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaaaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaaaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caaadr */
-    private val procCaaadr: ScmProcedure by lazy {
-        object : ScmProcedure("caaadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caaadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caadar */
-    private val procCaadar: ScmProcedure by lazy {
-        object : ScmProcedure("caadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caadar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caaddr */
-    private val procCaaddr: ScmProcedure by lazy {
-        object : ScmProcedure("caaddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCaaddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCaaddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caaddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCaaddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCaaddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cadaar */
-    private val procCadaar: ScmProcedure by lazy {
-        object : ScmProcedure("cadaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cadaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cadadr */
-    private val procCadadr: ScmProcedure by lazy {
-        object : ScmProcedure("cadadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cadadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: caddar */
-    private val procCaddar: ScmProcedure by lazy {
-        object : ScmProcedure("caddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.caddar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cadddr */
-    private val procCadddr: ScmProcedure by lazy {
-        object : ScmProcedure("cadddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCadddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCadddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cadddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCadddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCadddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdaaar */
-    private val procCdaaar: ScmProcedure by lazy {
-        object : ScmProcedure("cdaaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdaaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdaaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdaaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdaaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdaaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdaadr */
-    private val procCdaadr: ScmProcedure by lazy {
-        object : ScmProcedure("cdaadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdaadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdadar */
-    private val procCdadar: ScmProcedure by lazy {
-        object : ScmProcedure("cdadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdaadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdaadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdadar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdaadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdaadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdaddr */
-    private val procCdaddr: ScmProcedure by lazy {
-        object : ScmProcedure("cdaddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCdaddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCdaddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdaddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCdaddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCdaddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cddaar */
-    private val procCddaar: ScmProcedure by lazy {
-        object : ScmProcedure("cddaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCddaar.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCddaar.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cddaar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCddaar.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCddaar.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cddadr */
-    private val procCddadr: ScmProcedure by lazy {
-        object : ScmProcedure("cddadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCddadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCddadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cddadr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCddadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCddadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cdddar */
-    private val procCdddar: ScmProcedure by lazy {
-        object : ScmProcedure("cdddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCddadr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCddadr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cdddar(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCddadr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCddadr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: cddddr */
-    private val procCddddr: ScmProcedure by lazy {
-        object : ScmProcedure("cddddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procCddddr.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw IllegalArgumentException("${procCddddr.id} expected pair but got other")
-                        val result = try {
-                            ScmPair.cddddr(obj)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procCddddr.id} failed")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procCddddr.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: null? */
-    private val procNullQ: ScmProcedure by lazy {
-        object : ScmProcedure("null?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procNullQ.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj == null) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procNullQ.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: list? */
-    private val procListQ: ScmProcedure by lazy {
-        object : ScmProcedure("list?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procListQ.id} expected one object, but got nothing")
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (ScmPair.isProperList(obj)) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procListQ.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: make-list */
-    private val procMakeList: ScmProcedure by lazy {
-        object : ScmProcedure("make-list", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val result = when (n) {
-                    0 -> throw IllegalArgumentException("${procMakeList.id} expected two or more object, but got nothing")
-                    1 -> {
-                        val k = (vm.stack.index(vm.sp, 0) as? ScmInt)?.value
-                            ?: throw IllegalArgumentException("${procMakeList.id} expected int but got other")
-                        if (k < 0) throw IllegalArgumentException("${procMakeList.id} doesn't accept negative number")
-                        ScmMutablePair.makeList(k)
-                    }
-                    2 -> {
-                        val sp = vm.sp
-                        val k = (vm.stack.index(sp, 0) as? ScmInt)?.value
-                            ?: throw IllegalArgumentException("${procMakeList.id} expected int but got other")
-                        if (k < 0) throw IllegalArgumentException("${procMakeList.id} doesn't accept negative number")
-                        val fill = vm.stack.index(sp, 1)
-                        ScmMutablePair.makeList(k, fill)
-                    }
-                    else -> throw IllegalArgumentException("${procMakeList.id} expected two or more object, but got more")
-                }
-                vm.scmProcReturn(result, n, this)
-            }
-        }
-    }
-
-    /** procedure: list */
-    private val procList: ScmProcedure by lazy {
-        object : ScmProcedure("list", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                val sp = vm.sp
-                tailrec fun loop(index: Int, result: ScmPair?): ScmPair? =
-                    if (index < 0) {
-                        result
-                    } else {
-                        val obj = vm.stack.index(sp, index)
-                        loop(index - 1, ScmMutablePair(obj, result))
-                    }
-
-                val list = loop(index = n - 1, result = null)
-                vm.scmProcReturn(list, n, this)
-            }
-        }
-    }
-
-    /** procedure: length */
-    private val procLength: ScmProcedure by lazy {
-        object : ScmProcedure("length", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procLength.id} expected one object, but got nothing")
-                    1 -> {
-                        val list = vm.stack.index(vm.sp, 0)
-                        val length = try {
-                            ScmInt(ScmPair.length(list))
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procLength.id} expected a proper list, but got nothing")
-                        }
-                        vm.scmProcReturn(length, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procLength.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: reverse */
-    private val procReverse: ScmProcedure by lazy {
-        object : ScmProcedure("reverse", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procReverse.id} expected one object, but got nothing")
-                    1 -> {
-                        val list = vm.stack.index(vm.sp, 0)?.let {
-                            it as? ScmPair
-                                ?: throw IllegalArgumentException("${procReverse.id} expected a list, but got other")
-                        }
-                        val reversed = try {
-                            ScmPair.reverse(list)
-                        } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException("${procReverse.id} expected a proper list, but got other")
-                        }
-                        vm.scmProcReturn(reversed, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procReverse.id} expected one object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: append */
-    private val procAppend: ScmProcedure by lazy {
-        object : ScmProcedure("append", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procAppend.id} expected one or more object, but got nothing")
-                    1 -> throw IllegalArgumentException("${procAppend.id} expected one or more object, but got one")
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, result: ScmObject?): ScmObject? {
-                            return if (index < 0) {
-                                result
-                            } else {
-                                val list = vm.stack.index(sp, index)?.let {
-                                    it as? ScmPair
-                                        ?: throw IllegalArgumentException("${procAppend.id} expected proper list, but got other")
-                                }
-                                loop(index - 1, ScmPair.append(list, result))
-                            }
-                        }
-
-                        val last: ScmObject? = vm.stack.index(sp, n - 1)
-                        val result = loop(n - 2, last)
-                        vm.scmProcReturn(result, n, this)
-                    }
-                }
-            }
-        }
-    }
 
     /** procedure: make-vector */
     private val procMakeVector: ScmProcedure by lazy {
@@ -2115,28 +874,6 @@ class R7rs {
                         vm.scmProcReturn(result, n, this)
                     }
                     else -> throw IllegalArgumentException("${procEqualQ.id} expected 2 object, but got more")
-                }
-            }
-        }
-    }
-
-    /** procedure: zero? */
-    private val procZeroQ: ScmProcedure by lazy {
-        object : ScmProcedure("zero?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
-            override fun normalProc(n: Int, vm: KevesVM) {
-                when (n) {
-                    0 -> throw IllegalArgumentException("${procZeroQ.id} expected one object, but got nothing")
-                    1 -> {
-                        val result = when (val obj = vm.stack.index(vm.sp, 0)) {
-                            is ScmInt -> if (obj.value == 0) ScmConstant.TRUE else ScmConstant.FALSE
-                            is ScmFloat -> if (obj.value == 0f) ScmConstant.TRUE else ScmConstant.FALSE
-                            is ScmDouble -> if (obj.value == 0.0) ScmConstant.TRUE else ScmConstant.FALSE
-                            else -> throw IllegalArgumentException("${procZeroQ.id} expected number but got other")
-                        }
-                        vm.scmProcReturn(result, n, this)
-                    }
-                    else -> throw IllegalArgumentException("${procZeroQ.id} expected one object, but got more")
                 }
             }
         }

@@ -21,11 +21,11 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmConstant private constructor(override val type: ObjectType) : ScmObject() {
+class ScmConstant private constructor() : ScmObject() {
     override fun toStringForWrite(): String =
-        when (type) {
-            ObjectType.TRUE -> "#t"
-            ObjectType.FALSE -> "#f"
+        when (this) {
+            TRUE -> "#t"
+            FALSE -> "#f"
             else -> "#<undef>"
         }
 
@@ -33,8 +33,8 @@ class ScmConstant private constructor(override val type: ObjectType) : ScmObject
     override fun toString(): String = toStringForWrite()
 
     companion object {
-        val UNDEF = ScmConstant(ObjectType.UNDEF)
-        val TRUE = ScmConstant(ObjectType.TRUE)
-        val FALSE = ScmConstant(ObjectType.FALSE)
+        val UNDEF = ScmConstant()
+        val TRUE = ScmConstant()
+        val FALSE = ScmConstant()
     }
 }

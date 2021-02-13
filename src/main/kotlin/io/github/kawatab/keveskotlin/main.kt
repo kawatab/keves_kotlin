@@ -113,18 +113,18 @@ fun main(args: Array<String>) {
     )
 
     scheme.evaluate(
-"(list (equal? 'a 'a)\n" +
-        "(equal? '(a) '(a))\n" +
-        "(equal? '(a (b) c)\n" +
-        "'(a (b) c))\n" +
-        "(equal? \"abc\" \"abc\")\n" +
-        "(equal? 2 2)\n" +
-        "(equal? (make-vector 5 'a)\n" +
-        "(make-vector 5 'a))\n" +
-        // "(equal? '#1=(a b . #1#)\n" + // TODO
-        // "'#2=(a b a b . #2#))=⇒\n" + // TODO
-        "(equal? (lambda (x) x)\n" +
-        "(lambda (y) y)))\n"
+        "(list (equal? 'a 'a)\n" +
+                "(equal? '(a) '(a))\n" +
+                "(equal? '(a (b) c)\n" +
+                "'(a (b) c))\n" +
+                "(equal? \"abc\" \"abc\")\n" +
+                "(equal? 2 2)\n" +
+                "(equal? (make-vector 5 'a)\n" +
+                "(make-vector 5 'a))\n" +
+                // "(equal? '#1=(a b . #1#)\n" + // TODO
+                // "'#2=(a b a b . #2#))=⇒\n" + // TODO
+                "(equal? (lambda (x) x)\n" +
+                "(lambda (y) y)))\n"
     )
 
     scheme.evaluate(

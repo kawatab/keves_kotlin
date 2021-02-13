@@ -30,6 +30,66 @@ import kotlin.collections.ArrayDeque
 class KevesParser(private val text: String) {
     val errorList = mutableListOf<ScmError>()
 
+    // delimiter
+    private val regexWhiteSpaceAtHead = """^\s.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexVerticalLine = """\|.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexLeftParenthesis = """[(\[].*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexRightParenthesis = """[)\]].*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexDoubleQuotation = """".*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexComment = ";.*".toRegex(RegexOption.DOT_MATCHES_ALL)
+
+    // token
+    private val regexVector = """#\(.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexByteVector = """#u8\(.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexQuote = "'.*".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexQuasiQuote = "`.*".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexUnquote = ",.*".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexDotAtHead = """\..*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexBlockComment = """#\|.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexDatumComment = "#;.*".toRegex(RegexOption.DOT_MATCHES_ALL)
+    private val regexTrue1 =
+        """#t([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexTrue2 =
+        """#true([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexFalse1 =
+        """#f([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexFalse2 =
+        """#false([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+
+
+    private val regexChar =
+        ("""#\\(.|[\\x""" +
+                Char.MIN_HIGH_SURROGATE.toInt().toString(16) +
+                """-\\x""" +
+                Char.MAX_HIGH_SURROGATE.toInt().toString(16) +
+                """][\\x""" +
+                Char.MIN_LOW_SURROGATE.toInt().toString(16) +
+                """-\\x""" +
+                Char.MAX_LOW_SURROGATE.toInt().toString(16) +
+                """])([\s";()\[\]|].*|)""").toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexAlarm =
+        """#\\alarm([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexBackspace =
+        """#\\backspace([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexDelete =
+        """#\\delete([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexEscape =
+        """#\\escape([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexNewline =
+        """#\\newline([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexNull =
+        """#\\null([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexReturn =
+        """#\\return([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexSpace =
+        """#\\space([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexTab =
+        """#\\tab([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexHexScaleValue =
+        """#\\x[0-9a-f]+([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+    private val regexCrossHatch =
+        """#([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
+
     fun parse(): ScmPair? {
         errorList.clear()
         return parseTopLevel()
@@ -70,8 +130,9 @@ class KevesParser(private val text: String) {
         val stack = ArrayDeque<ScmObject?>()
 
         tokenizeLoop@ while (i < text.length) {
-            when (text[i]) {
-                ' ', '\n', '\r', '\t' -> {
+            val currentText = text.substring(i)
+            when {
+                regexWhiteSpaceAtHead matches currentText -> { // white spaces
                     if (previousPosition != i) {
                         val value = parseText(text.substring(previousPosition, i))
                         if (startChar.isEmpty()) return value to i + 1
@@ -80,7 +141,7 @@ class KevesParser(private val text: String) {
                     i += 1
                     previousPosition = i
                 }
-                '(', '[' -> {
+                regexLeftParenthesis matches currentText -> {
                     if (previousPosition != i) {
                         val value = parseText(text.substring(previousPosition, i))
                         if (startChar.isEmpty()) return value to i
@@ -98,7 +159,7 @@ class KevesParser(private val text: String) {
                         } ?: return null
                     }
                 }
-                ')', ']' -> {
+                regexRightParenthesis matches currentText -> {
                     return if (startChar.isNotEmpty()) {
                         if (startChar[startChar.length - 1] == text[i]) {
                             var result =
@@ -135,7 +196,7 @@ class KevesParser(private val text: String) {
                         null
                     }
                 }
-                ';' -> {
+                regexComment matches currentText -> { // ; ...
                     do {
                         i += 1
                         if (i >= text.length) return null to i
@@ -143,13 +204,13 @@ class KevesParser(private val text: String) {
                     } while (c != '\n' && c != '\r')
                     previousPosition = i
                 }
-                '\'' -> {
+                regexQuote matches currentText -> {
                     val result = parseDatum(index = i + 1, startChar = "") ?: return null.also {
                         errorList.add(
                             ScmError(
                                 "parser",
                                 "quote is unclosed. \n-----\n${
-                                    text.substring(i)
+                                    currentText
                                 }\n-----'"
                             )
                         )
@@ -163,13 +224,13 @@ class KevesParser(private val text: String) {
 
                     }
                 }
-                '`' -> {
+                regexQuasiQuote matches currentText -> {
                     val result = parseDatum(index = i + 1, startChar = "") ?: return null.also {
                         errorList.add(
                             ScmError(
                                 "parser",
                                 "quasiquote is unclosed. \n-----\n${
-                                    text.substring(i)
+                                    currentText
                                 }\n-----'"
                             )
                         )
@@ -182,14 +243,14 @@ class KevesParser(private val text: String) {
                         previousPosition = i
                     }
                 }
-                ',' -> {
+                regexUnquote matches currentText -> {
                     if (i + 1 < text.length && text[i + 1] == '@') {
                         val result = parseDatum(index = i + 2, startChar = "") ?: return null.also {
                             errorList.add(
                                 ScmError(
                                     "parser",
                                     "unquote-splicing is unclosed. \n-----\n${
-                                        text.substring(i)
+                                        currentText
                                     }\n-----'"
                                 )
                             )
@@ -207,7 +268,7 @@ class KevesParser(private val text: String) {
                                 ScmError(
                                     "parser",
                                     "unquote is unclosed. \n-----\n${
-                                        text.substring(i)
+                                        currentText
                                     }\n-----'"
                                 )
                             )
@@ -221,7 +282,7 @@ class KevesParser(private val text: String) {
                         }
                     }
                 }
-                '.' -> {
+                regexDotAtHead matches currentText -> {
                     if (previousPosition != i) {
                         i += 1
                         continue@tokenizeLoop
@@ -246,7 +307,7 @@ class KevesParser(private val text: String) {
                         }
                     }
                 }
-                '"' -> {
+                regexDoubleQuotation matches currentText -> {
                     do {
                         i += 1
                         if (i >= text.length) return null.also {
@@ -267,7 +328,7 @@ class KevesParser(private val text: String) {
                     i += 1
                     previousPosition = i
                 }
-                '|' -> {
+                regexVerticalLine matches currentText -> {
                     var symbol = ""
                     do {
                         i += 1
@@ -309,140 +370,191 @@ class KevesParser(private val text: String) {
                         }
                     } while (true)
                 }
-                '#' -> {
+                regexBlockComment matches currentText -> { // #| ... |#
+                    skipBlockComment(i + 2, 0)?.let { result ->
+                        i = result
+                        previousPosition = i
+                    } ?: return null.also {
+                        errorList.add(
+                            ScmError(
+                                "parser",
+                                "not found the end of comment block. \n-----\n${
+                                    currentText
+                                }\n-----'"
+                            )
+                        )
+                    }
+                }
+                regexDatumComment matches currentText -> { // #;...
+                    findNextDatumEnd(i + 2, 0)?.let { end ->
+                        i = end
+                        previousPosition = i
+                    } ?: return null.also {
+                        errorList.add(
+                            ScmError(
+                                "parser",
+                                "datum comment is unclosed. \n-----\n${
+                                    currentText
+                                }\n-----'"
+                            )
+                        )
+                    }
+                }
+                regexVector matches currentText -> {
+                    val result = parseDatum(index = i + 2, startChar = ")") ?: return null.also {
+                        errorList.add(
+                            ScmError(
+                                "parser",
+                                "constant vector is unclosed. \n-----\n${
+                                    currentText
+                                }\n-----'"
+                            )
+                        )
+                    }
+                    result.let { (value, index) ->
+                        val datum = (value as? ScmPair).toVector()
+                        if (startChar.isEmpty()) return datum to index
+                        stack.addLast(datum)
+                        i = index
+                        previousPosition = i
+                    }
+                }
+                regexByteVector matches currentText -> {
+                    val result = parseByteVector(i) ?: return null
+                    if (startChar.isEmpty()) return result
+                    result.let { (value, index) ->
+                        stack.addLast(value)
+                        i = index
+                        previousPosition = i
+                    }
+                }
+                regexTrue1 matches currentText -> { // #t
+                    if (startChar.isEmpty()) return ScmConstant.TRUE to i + 2
+                    stack.addLast(ScmConstant.TRUE)
+                    i += 2
+                    previousPosition = i
+                }
+                regexTrue2 matches currentText -> { // #true
+                    if (startChar.isEmpty()) return ScmConstant.TRUE to i + 5
+                    stack.addLast(ScmConstant.TRUE)
+                    i += 5
+                    previousPosition = i
+                }
+                regexFalse1 matches currentText -> { // #f
+                    if (startChar.isEmpty()) return ScmConstant.FALSE to i + 2
+                    stack.addLast(ScmConstant.FALSE)
+                    i += 2
+                    previousPosition = i
+                }
+                regexFalse2 matches currentText -> { // #false
+                    if (startChar.isEmpty()) return ScmConstant.FALSE to i + 6
+                    stack.addLast(ScmConstant.FALSE)
+                    i += 6
+                    previousPosition = i
+                }
+                regexChar matches currentText -> { // #\ <any character>
+                    val char1 = currentText[2]
+                    val (result, length) = if (char1.isSurrogate()) {
+                        val char2 = currentText[3]
+                        ScmChar(char1, char2) to 4
+                    } else {
+                        ScmChar(currentText[2]) to 3
+                    }
+                    if (startChar.isEmpty()) return result to i + length
+                    stack.addLast(result)
+                    i += length
+                    previousPosition = i
+                }
+                regexAlarm matches currentText -> { // #\alarm
+                    val result = ScmChar('\u0007')
+                    if (startChar.isEmpty()) return result to i + 7
+                    stack.addLast(result)
+                    i += 7
+                    previousPosition = i
+                }
+                regexBackspace matches currentText -> { // #\backspace
+                    val result = ScmChar('\u0008')
+                    if (startChar.isEmpty()) return result to i + 11
+                    stack.addLast(result)
+                    i += 11
+                    previousPosition = i
+                }
+                regexDelete matches currentText -> { // #\delete
+                    val result = ScmChar('\u007F')
+                    if (startChar.isEmpty()) return result to i + 8
+                    stack.addLast(result)
+                    i += 8
+                    previousPosition = i
+                }
+                regexEscape matches currentText -> { // #\escape
+                    val result = ScmChar('\u001B')
+                    if (startChar.isEmpty()) return result to i + 8
+                    stack.addLast(result)
+                    i += 8
+                    previousPosition = i
+                }
+                regexNewline matches currentText -> { // #\newline
+                    val result = ScmChar('\u000A')
+                    if (startChar.isEmpty()) return result to i + 9
+                    stack.addLast(result)
+                    i += 9
+                    previousPosition = i
+                }
+                regexNull matches currentText -> { // #\null
+                    val result = ScmChar('\u0000')
+                    if (startChar.isEmpty()) return result to i + 6
+                    stack.addLast(result)
+                    i += 6
+                    previousPosition = i
+                }
+                regexReturn matches currentText -> { // #\return
+                    val result = ScmChar('\u000D')
+                    if (startChar.isEmpty()) return result to i + 8
+                    stack.addLast(result)
+                    i += 8
+                    previousPosition = i
+                }
+                regexSpace matches currentText -> { // #\space
+                    val result = ScmChar(' ')
+                    if (startChar.isEmpty()) return result to i + 7
+                    stack.addLast(result)
+                    i += 7
+                    previousPosition = i
+                }
+                regexTab matches currentText -> { // #\tab
+                    val result = ScmChar('\u0009')
+                    if (startChar.isEmpty()) return result to i + 5
+                    stack.addLast(result)
+                    i += 5
+                    previousPosition = i
+                }
+                regexHexScaleValue matches currentText -> { // #\x <hex scale value>
+                    val hexValue =
+                        "[0-9a-f]+".toRegex(setOf(RegexOption.IGNORE_CASE)).find(currentText.substring(3))?.value
+                            ?: return null.also {
+                                errorList.add(
+                                    ScmError(
+                                        "parser",
+                                        "Hex scale value of character is wrong. \n-----\n${
+                                            currentText
+                                        }\n-----'"
+                                    )
+                                )
+                            }
+
+                    val value = hexValue.toInt(16)
+                    val result = ScmChar(value)
+                    if (startChar.isEmpty()) return result to i + 3 + hexValue.length
+                    stack.addLast(result)
+                    i += 3 + hexValue.length
+                    previousPosition = i
+                }
+                regexCrossHatch matches currentText -> { // #
+                    val result = ScmChar('#')
+                    if (startChar.isEmpty()) return result to i + 1
+                    stack.addLast(result)
                     i += 1
-                    if (i >= text.length) {
-                        val char = ScmChar('#')
-                        if (startChar.isEmpty()) return char to i
-                        stack.addLast(char)
-                        previousPosition = i
-                        continue@tokenizeLoop
-                    }
-
-                    val booleanValue =
-                        matchTrue(i)?.let { ScmConstant.TRUE to it } ?: matchFalse(i)?.let { ScmConstant.FALSE to it }
-                    if (booleanValue != null) {
-                        if (startChar.isEmpty()) return booleanValue
-                        booleanValue.let { (value, next) ->
-                            stack.addLast(value)
-                            i = next
-                        }
-                        previousPosition = i
-                        continue@tokenizeLoop
-                    }
-
-                    when (text[i]) {
-                        '\\' -> {
-                            if (i + 2 == text.length) {
-                                val char = ScmChar(text[i + 1])
-                                if (startChar.isEmpty()) return char to i + 1
-                                stack.addLast(char)
-                                previousPosition = i + 1
-                                continue@tokenizeLoop
-                            } else if (i + 2 < text.length) {
-                                when (text[i + 2]) {
-                                    ' ', '\t', '\r', '\n', ')' -> {
-                                        val char = ScmChar(text[i + 1])
-                                        if (startChar.isEmpty()) return char to i + 2
-                                        stack.addLast(char)
-                                        i += 2
-                                        previousPosition = i
-                                        continue@tokenizeLoop
-                                    }
-                                    else -> {
-                                        errorList.add(
-                                            ScmError(
-                                                "parser",
-                                                "malformed character. \n-----\n${
-                                                    text.substring(i)
-                                                }\n-----'"
-                                            )
-                                        )
-                                        i = text.length
-                                        previousPosition = i
-                                        continue@tokenizeLoop
-                                    }
-                                }
-                            } else {
-                                errorList.add(
-                                    ScmError(
-                                        "parser",
-                                        "constant vector is unclosed. \n-----\n${
-                                            text.substring(i)
-                                        }\n-----'"
-                                    )
-                                )
-                                i = text.length
-                                previousPosition = i
-                                continue@tokenizeLoop
-                            }
-                        }
-
-                        '(' -> {
-                            val result = parseDatum(index = i + 1, startChar = ")") ?: return null.also {
-                                errorList.add(
-                                    ScmError(
-                                        "parser",
-                                        "constant vector is unclosed. \n-----\n${
-                                            text.substring(i)
-                                        }\n-----'"
-                                    )
-                                )
-                            }
-                            result.let { (value, index) ->
-                                val datum = (value as? ScmPair).toVector()
-                                if (startChar.isEmpty()) return datum to index
-                                stack.addLast(datum)
-                                i = index
-                                previousPosition = i
-                            }
-                        }
-                        '|' -> {
-                            skipBlockComment(i + 1, 0)?.let { result ->
-                                i = result
-                                previousPosition = i
-                            } ?: return null.also {
-                                errorList.add(
-                                    ScmError(
-                                        "parser",
-                                        "not found the end of comment block. \n-----\n${
-                                            text.substring(i)
-                                        }\n-----'"
-                                    )
-                                )
-                            }
-                        }
-                        ';' -> {
-                            findNextDatumEnd(i + 1, 0)?.let { end ->
-                                i = end
-                                previousPosition = i
-                            } ?: return null.also {
-                                errorList.add(
-                                    ScmError(
-                                        "parser",
-                                        "datum comment is unclosed. \n-----\n${
-                                            text.substring(i)
-                                        }\n-----'"
-                                    )
-                                )
-                            }
-                        }
-                        'u' -> {
-                            val result = parseByteVector(i) ?: return null
-                            if (startChar.isEmpty()) return result
-                            result.let { (value, index) ->
-                                stack.addLast(value)
-                                i = index
-                                previousPosition = i
-                            }
-                        }
-                        else -> {
-                            val char = ScmChar('#')
-                            if (startChar.isEmpty()) return char to i
-                            stack.addLast(char)
-                            previousPosition = i
-                        }
-                    }
+                    previousPosition = i
                 }
                 else -> {
                     i += 1
@@ -471,65 +583,6 @@ class KevesParser(private val text: String) {
                 )
             }
         }
-    }
-
-    private fun matchTrue(begin: Int): Int? {
-        var i = begin
-        if (i <= text.length) {
-            when (text[i]) {
-                't', 'T' -> {
-                    i += 1
-                    if (i >= text.length) return i // end
-                    when (text[i]) { // delimiter
-                        ' ', '\t', '\r', '\n', ';', '#', '(', ')', '[', ']', '"' -> {
-                            return i
-                        }
-                        else -> {
-                            if (i + 2 < text.length && text.substring(i, i + 3).toLowerCase() == "rue") {
-                                return i + 3
-                            } else if (i + 3 == text.length) {
-                                return i + 3
-                            } else {
-                                when (text[i + 3]) {
-                                    ' ', '\t', '\r', '\n', ';', '#', '(', ')', '[', ']', '"' -> return i + 3
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    private fun matchFalse(begin: Int): Int? {
-        var i = begin
-        if (i <= text.length) {
-            when (text[i]) {
-                'f', 'F' -> {
-                    i += 1
-                    if (i >= text.length) return i // end
-                    when (text[i]) { // delimiter
-                        ' ', '\t', '\r', '\n', ';', '#', '(', ')', '[', ']', '"' -> {
-                            return i
-                        }
-                        else -> {
-                            @Suppress("SpellCheckingInspection")
-                            if (i + 3 < text.length && text.substring(i, i + 4).toLowerCase() == "alse") {
-                                return i + 4
-                            } else if (i + 4 == text.length) {
-                                return i + 4
-                            } else {
-                                when (text[i + 4]) {
-                                    ' ', '\t', '\r', '\n', ';', '#', '(', ')', '[', ']', '"' -> return i + 4
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null
     }
 
     private fun terminateImproperList(
@@ -587,53 +640,38 @@ class KevesParser(private val text: String) {
     }
 
     private fun parseByteVector(begin: Int): Pair<ScmByteVector, Int>? {
-        var i = begin
-        i += 1
-        if (i + 3 < text.length && text.substring(i, i + 2) == "8(") {
-            val truncatedBefore = text.substring(i + 2)
-            i += 2
-            val indexOfLast = truncatedBefore.indexOf(')')
-            if (indexOfLast < 0) return null.also {
-                errorList.add(
-                    ScmError(
-                        "parser",
-                        "bytevector is unclosed. \n-----\n${
-                            text.substring(i)
-                        }\n-----'"
-                    )
+        var i = begin + 4
+        val truncatedBefore = text.substring(i)
+        val indexOfLast = truncatedBefore.indexOf(')')
+        if (indexOfLast < 0) return null.also {
+            errorList.add(
+                ScmError(
+                    "parser",
+                    "bytevector is unclosed. \n-----\n${
+                        text.substring(i)
+                    }\n-----'"
                 )
-            }
-            i += indexOfLast + 1
-            val partOfByte = truncatedBefore.substring(0, indexOfLast)
-            val textArray = partOfByte.split(' ', '\t', '\r', '\n').filter { it.isNotBlank() }
-            val byteArray = ByteArray(textArray.size)
-            for (idx in textArray.indices) {
-                val value = textArray[idx].toIntOrNull()?.let { if (it in 0..255) it else null }
-                    ?: return null.also {
-                        errorList.add(
-                            ScmError(
-                                "parser",
-                                "included non byte object. \n-----\n${
-                                    text.substring(i)
-                                }\n-----'"
-                            )
-                        )
-                    }
-                byteArray[idx] = value.toByte()
-            }
-            return ScmByteVector(byteArray) to i
-        } else {
-            return null.also {
-                errorList.add(
-                    ScmError(
-                        "parser",
-                        "unknown prefix. \n-----\n${
-                            text.substring(begin - 1)
-                        }\n-----'"
-                    )
-                )
-            }
+            )
         }
+        i += indexOfLast + 1
+        val partOfByte = truncatedBefore.substring(0, indexOfLast)
+        val textArray = partOfByte.split(' ', '\t', '\r', '\n').filter { it.isNotBlank() }
+        val byteArray = ByteArray(textArray.size)
+        for (idx in textArray.indices) {
+            val value = textArray[idx].toIntOrNull()?.let { if (it in 0..255) it else null }
+                ?: return null.also {
+                    errorList.add(
+                        ScmError(
+                            "parser",
+                            "included non byte object. \n-----\n${
+                                text.substring(i)
+                            }\n-----'"
+                        )
+                    )
+                }
+            byteArray[idx] = value.toByte()
+        }
+        return ScmByteVector(byteArray) to i
     }
 
     private fun skipBlockComment(begin: Int, level: Int): Int? {

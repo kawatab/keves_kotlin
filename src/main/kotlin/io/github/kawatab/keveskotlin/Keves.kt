@@ -67,17 +67,6 @@ class Keves {
         )
     }
 
-    /*
-    fun evaluate(sExp: String) {
-        val parser = io.github.withlet11.WL11Parser(sExp)
-        val code: ScmPair? = parser.parse()
-        when (val build = io.github.withlet11.WL11Compiler().compile(code)) {
-            null -> directRun(null)
-            is ScmPair -> directRun(build)
-            else -> println(ScmObject.getStringForDisplay(build))
-        }
-    }
-     */
     fun evaluate2(sExp: String): ScmObject? {
         val parser = KevesParser(sExp)
 
@@ -113,7 +102,6 @@ class Keves {
                         compiler.compile(compiler.transform(parsed), null, null, ScmPair.list(ScmInstruction.HALT))
                             ?.let { compiled ->
                                 try {
-                                    // vm.vm(null, compiled, 0, ScmClosure("dummy lambda", null, 0, ScmVector(0)), 0)
                                     vm.evaluate(compiled)
                                 } catch (e: IllegalArgumentException) {
                                     val error = ScmError("vm", e.message ?: "")

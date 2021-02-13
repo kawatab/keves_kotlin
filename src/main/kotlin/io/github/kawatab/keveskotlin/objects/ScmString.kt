@@ -22,7 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmString(private val string: String) : ScmObject() {
-    override val type get() = ObjectType.STRING
     override fun toStringForWrite(): String = "\"${toStringForDisplay()}\""
     override fun toStringForDisplay(): String = string
     override fun equalQ(other: ScmObject?): Boolean =

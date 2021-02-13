@@ -22,8 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmByteVector(private var array: ByteArray) : ScmObject() {
-    override val type get() = ObjectType.BYTEVECTOR
-
     fun set(i: Int, byte: Byte) {
         array[i] = byte
     }
@@ -38,7 +36,7 @@ class ScmByteVector(private var array: ByteArray) : ScmObject() {
         if (this === other) return true
         if (other !is ScmByteVector || this.array.size != other.array.size) return false
         for (i in this.array.indices) {
-           if (this.array[i] != other.array[i]) return false
+            if (this.array[i] != other.array[i]) return false
         }
         return true
     }

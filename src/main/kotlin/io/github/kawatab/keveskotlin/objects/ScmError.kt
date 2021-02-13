@@ -22,7 +22,6 @@
 package io.github.kawatab.keveskotlin.objects
 
 class ScmError(private val who: String, private val message: String) : ScmObject() {
-    override val type get() = ObjectType.ERROR
     override fun toStringForWrite(): String = "*** ERROR: $message\n who: $who"
     override fun toStringForDisplay(): String = toStringForWrite()
 }

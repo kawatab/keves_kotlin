@@ -499,7 +499,8 @@ class VMTest {
                     "(define fib (lambda (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))\n" +
                             "(fib 15)"
                     // "(fib 38)" // 2m10s285ms 2021-02-03
-                    // "(fib 38)" // 56s47ms 2021-02-07
+                    // "(fib 38)" // 56s47ms 2021-02-07; remove unused arguments in normalProc of ScmProcedure
+                    // "(fib 38)" // 47s943ms 2021-02-08; remove unused type property in ScmObject
                 )
             )
         )
@@ -727,6 +728,425 @@ class VMTest {
         assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(null? 'a)")))
         assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(null? '(a b c))")))
         assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(null? '())")))
+    }
+
+    @Test
+    fun testListTail() {
+        assertEquals("(d)", ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 3)")))
+        assertEquals("(f)", ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d e f) 5)")))
+        assertEquals("(a b c d)", ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 0)")))
+    }
+
+    @Test
+    fun testListRef() {
+        assertEquals("d", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 3)")))
+        assertEquals("f", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d e f) 5)")))
+        assertEquals("a", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 0)")))
+    }
+
+    @Test
+    fun testSymbolEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'a 'b 'c 'd)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'abc)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'ab)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc 'abc 'abc)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc)")))
+    }
+
+    @Test
+    fun testStringEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"a\" \"b\" \"c\" \"d\")")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"abc\")"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"ab\")")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\" \"abc\" \"abc\")")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\")")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\")")))
+    }
+
+    @Test
+    fun testCharEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharLessThanQ() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharLessThanEqualQ() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharGraterThanQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a)")))
+    }
+
+    @Test
+    fun testCharGraterThanEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\a #\\A)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharCIEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharCILessThanQ() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\A #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharCILessThanEqualQ() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\a #\\A)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharCIGraterThanQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)"))
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b #\\A #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a)")))
+    }
+
+    @Test
+    fun testCharCIGraterThanEqualQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\c #\\d)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\c #\\D)")))
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)"))
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\a #\\A)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A)")))
+    }
+
+    @Test
+    fun testCharAlphabeticQ() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\λ)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\1)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0664)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0AE6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0EA6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\.)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\ )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\tab )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\return )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\newline )")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\語)")))
+    }
+
+    @Test
+    fun testCharNumericQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\λ)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\1)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0664)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0AE6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0EA6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\.)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\ )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\tab )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\return )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\newline )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\語)")))
+    }
+
+    @Test
+    fun testCharWhitespaceQ() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\λ)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\1)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0664)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0AE6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0EA6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\.)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\ )")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\tab )")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\return )")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\newline )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\語)")))
+    }
+
+    @Test
+    fun testDigitValue() {
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n")))
+        assertEquals("4", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n")))
+        assertEquals("0", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n")))
+    }
+
+    @Test
+    fun testCharToInteger() {
+        assertEquals("51", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\3)\n")))
+        assertEquals("1636", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0664)\n")))
+        assertEquals("2790", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0AE6)\n")))
+        assertEquals("3750", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0EA6)\n")))
+        assertEquals("69944", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\\uD804\uDD38)\n")))
+    }
+
+    @Test
+    fun testIntegerToChar() {
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 51)\n")))
+        assertEquals("٤", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 1636)\n")))
+        assertEquals("૦", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 2790)\n")))
+        assertEquals("\u0EA6", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 3750)\n")))
+        assertEquals("\uD804\uDD38", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 69944)\n")))
+    }
+
+    @Test
+    fun testCharUpperCase() {
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\a)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\B)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\λ)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\1)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0664)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0AE6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0EA6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\.)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\ )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\tab )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\return )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\newline )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\語)")))
+    }
+
+    @Test
+    fun testCharLowerCase() {
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\a)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\B)")))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\λ)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\1)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0664)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0AE6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0EA6)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\.)")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\ )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\tab )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\return )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\newline )")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\語)")))
+    }
+
+    @Test
+    fun testCharUpcase() {
+        assertEquals("#\\A", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\a)")))
+        assertEquals("#\\B", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\B)")))
+        assertEquals("#\\Λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\λ)")))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\1)")))
+        assertEquals("#\\\u0664", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0664)")))
+        assertEquals("#\\\u0AE6", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0AE6)")))
+        assertEquals("#\\\u0EA6", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0EA6)")))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\.)")))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\ )")))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\tab )")))
+        assertEquals("#\\return", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\return )")))
+        assertEquals("#\\newline", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\newline )")))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\語)")))
+    }
+
+    @Test
+    fun testCharDowncase() {
+        assertEquals("#\\a", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\a)")))
+        assertEquals("#\\b", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\B)")))
+        assertEquals("#\\λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\λ)")))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\1)")))
+        assertEquals("#\\\u0664", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0664)")))
+        assertEquals("#\\\u0AE6", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0AE6)")))
+        assertEquals("#\\\u0EA6", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0EA6)")))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\.)")))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\ )")))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\tab )")))
+        assertEquals("#\\return", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\return )")))
+        assertEquals("#\\newline", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\newline )")))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\語)")))
+    }
+
+    @Test
+    fun testCharFoldcase() {
+        assertEquals("#\\a", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\a)")))
+        assertEquals("#\\b", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\B)")))
+        assertEquals("#\\λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\λ)")))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\1)")))
+        assertEquals("#\\\u0664", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0664)")))
+        assertEquals("#\\\u0AE6", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0AE6)")))
+        assertEquals("#\\\u0EA6", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0EA6)")))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\.)")))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\ )")))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\tab )")))
+        assertEquals("#\\return", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\return )")))
+        assertEquals("#\\newline", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\newline )")))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\語)")))
     }
 
     @Test
@@ -970,7 +1390,7 @@ class VMTest {
         )
 
         /*
-        TODO("must implement assv")
+        TODO("must implement =>")
         assertEquals(
             "2",
             ScmObject.getStringForWrite(
@@ -1552,7 +1972,7 @@ class VMTest {
         )
 
         assertEquals(
-            "*** ERROR: car expected pair but got other\\n who: vm",
+            "*** ERROR: 'car' expected a pair, but got other\\n who: vm",
             ScmObject.getStringForWrite(scheme.evaluate2("(car '())")).replace("\n", "\\n")
         )
 
@@ -1567,7 +1987,7 @@ class VMTest {
         )
 
         assertEquals(
-            "*** ERROR: cdr expected pair but got other\\n who: vm",
+            "*** ERROR: 'cdr' expected a pair, but got other\\n who: vm",
             ScmObject.getStringForWrite(scheme.evaluate2("(cdr '())\n")).replace("\n", "\\n")
         )
 
@@ -1583,7 +2003,7 @@ class VMTest {
         )
 
         assertEquals(
-            "*** ERROR: set-car! expected mutable pair but got other\\n who: vm",
+            "*** ERROR: 'set-car!' expected a mutable pair, but got other\\n who: vm",
             ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define (f) (list 'not-a-constant-list))\n" +
@@ -1642,5 +2062,320 @@ class VMTest {
                 )
             )
         )
+
+        assertEquals(
+            "c",
+            ScmObject.getStringForWrite(scheme.evaluate2("(list-ref '(a b c d) 2)"))
+        )
+
+        /* TODO
+        assertEquals(
+            "c",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list-ref '(a b c d)\n" +
+                            "(exact (round 1.8)))"
+                )
+            )
+        )
+         */
+
+        assertEquals(
+            "(one two three)",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(let ((ls (list 'one 'two 'five!)))\n" +
+                            "(list-set! ls 2 'three)\n" +
+                            "ls)\n"
+                )
+            )
+        )
+
+        assertEquals(
+            "*** ERROR: 'list-set!' expected a mutable pair, but got other\\n who: vm",
+            ScmObject.getStringForWrite(scheme.evaluate2("(list-set! '(0 1 2) 1 \"oops\")\n")).replace("\n", "\\n")
+        )
+
+        assertEquals(
+            "((a b c) (b c) #f #f ((a) c)" +
+                    // // " (\"b\" \"c\")\n" +
+                    " #f (101 102))",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list (memq 'a '(a b c))\n" +
+                            "(memq 'b '(a b c))\n" +
+                            "(memq 'a '(b c d))\n" +
+                            "(memq (list 'a) '(b (a) c))\n" +
+                            "(member (list 'a)\n" +
+                            "'(b (a) c))\n" +
+                            // // "(member \"B\"\n" +
+                            // // "’(\"a\" \"b\" \"c\")\n" +
+                            // // "string-ci=?)\n" +  // TODO
+                            "(memq 101 '(100 101 102))\n" +
+                            "(memv 101 '(100 101 102)))\n",
+                )
+            ).replace("\n", "\\n")
+        )
+
+        assertEquals(
+            "((a 1) (b 2) #f #f ((a)) " +
+                    // "(2 4) " +
+                    "#f (5 7))",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(define e '((a 1) (b 2) (c 3)))\n" +
+                            "(list (assq 'a e)\n" +
+                            "(assq 'b e)\n" +
+                            "(assq 'd e)\n" +
+                            "(assq (list 'a) '(((a)) ((b)) ((c))))\n" +
+                            "(assoc (list 'a) '(((a)) ((b)) ((c))))\n" +
+                            // "(assoc 2.0 '((1 1) (2 4) (3 9)) =)\n" + // TODO
+                            "(assq 5 '((2 3) (5 7) (11 13)))\n" +
+                            "(assv 5 '((2 3) (5 7) (11 13))))\n"
+                )
+            )
+        )
+
+        assertEquals(
+            "((3 8 2 8) (1 8 2 8))",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(define a '(1 8 2 8)) ; a may be immutable\n" +
+                            "(define b (list-copy a))\n" +
+                            "(set-car! b 3) ; b is mutable\n" +
+                            "(list b a)",
+                )
+            )
+        )
     }
+
+    @Test
+    fun testR7RS0605() {
+        assertEquals(
+            "(#t #t #f #t #f #f)",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list (symbol? 'foo)\n" +
+                            "(symbol? (car '(a b)))\n" +
+                            "(symbol? \"bar\")\n" +
+                            "(symbol? 'nil)\n" +
+                            "(symbol? '())\n" +
+                            "(symbol? #f))\n"
+                )
+            )
+        )
+
+        assertEquals(
+            "(\"flying-fish\" \"Martin\" \"Malvina\")",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list (symbol->string 'flying-fish)\n" +
+                            "(symbol->string 'Martin)\n" +
+                            "(symbol->string\n" +
+                            "(string->symbol \"Malvina\")))\n",
+                )
+            )
+        )
+
+        assertEquals(
+            "(mISSISSIppi #t #t #t)",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list (string->symbol \"mISSISSIppi\")\n" +
+                            "(eqv? 'bitBlt (string->symbol \"bitBlt\"))\n" +
+                            "(eqv? 'LollyPop\n" +
+                            "(string->symbol\n" +
+                            "(symbol->string 'LollyPop)))\n" +
+                            "(string=? \"K. Harper, M.D.\"\n" +
+                            "(symbol->string\n" +
+                            "(string->symbol \"K. Harper, M.D.\"))))\n",
+                )
+            )
+        )
+
+        assertEquals(
+            "(#\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list #\\alarm ; U+0007\n" +
+                            "#\\backspace ; U+0008\n" +
+                            "#\\delete ; U+007F\n" +
+                            "#\\escape ; U+001B\n" +
+                            "#\\newline ; the linefeed character, U+000A\n" +
+                            "#\\null ; the null character, U+0000\n" +
+                            "#\\return ; the return character, U+000D\n" +
+                            "#\\space ; the preferred way to write a space\n" +
+                            "#\\tab ; the tab character, U+0009\n" +
+                            ")",
+                )
+            )
+        )
+
+        assertEquals(
+            """(#\a #\A #\( #\space #\λ)""", // #\ι)""",
+            ScmObject.getStringForWrite(
+                scheme.evaluate2(
+                    "(list #\\a ; lower case letter\n" +
+                            "#\\A ; upper case letter\n" +
+                            "#\\( ; left parenthesis\n" +
+                            "#\\ ; the space character\n" +
+                            "#\\x03BB ; λ (if character is supported)\n" +
+                            // "#\\iota ; ι (if character and name are supported)\n" +
+                            ")",
+                )
+            )
+        )
+    }
+
+    @Test
+    fun testR7RS0606() {
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n")))
+        assertEquals("4", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n")))
+        assertEquals("0", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n")))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n")))
+        assertEquals(
+            "(0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4)",
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2(
+                    "(list\n" +
+                            "(digit-value #\\x0030) ;; DIGIT ZERO - 0\n" +
+                            "(digit-value #\\x0661) ;; ARABIC-INDIC DIGIT ONE - ١\n" +
+                            "(digit-value #\\x06F2) ;; EXTENDED ARABIC-INDIC DIGIT TWO - ۲\n" +
+                            "(digit-value #\\x07C3) ;; NKO DIGIT THREE - \n" +
+                            "(digit-value #\\x096A) ;; DEVANAGARI DIGIT FOUR - ४\n" +
+                            "(digit-value #\\x09EB) ;; BENGALI DIGIT FIVE - ৫\n" +
+                            "(digit-value #\\x0A6C) ;; GURMUKHI DIGIT SIX - ੬\n" +
+                            "(digit-value #\\x0AED) ;; GUJARATI DIGIT SEVEN - ૭\n" +
+                            "(digit-value #\\x0B6E) ;; ORIYA DIGIT EIGHT - ୮\n" +
+                            "(digit-value #\\x0BEF) ;; TAMIL DIGIT NINE - ௯\n" +
+                            "(digit-value #\\x0C66) ;; TELUGU DIGIT ZERO - ౦\n" +
+                            "(digit-value #\\x0CE7) ;; KANNADA DIGIT ONE - ೧\n" +
+                            "(digit-value #\\x0D68) ;; MALAYALAM DIGIT TWO - ൨\n" +
+                            "(digit-value #\\x0DE9) ;; SINHALA LITH DIGIT THREE - ෩\n" +
+                            "(digit-value #\\x0E54) ;; THAI DIGIT FOUR - ๔\n" +
+                            "(digit-value #\\x0ED5) ;; LAO DIGIT FIVE - ໕\n" +
+                            "(digit-value #\\x0F26) ;; TIBETAN DIGIT SIX - ༦\n" +
+                            "(digit-value #\\x1047) ;; MYANMAR DIGIT SEVEN - ၇\n" +
+                            "(digit-value #\\x1098) ;; MYANMAR SHAN DIGIT EIGHT - ႘\n" +
+                            "(digit-value #\\x17E9) ;; KHMER DIGIT NINE - ៩\n" +
+                            "(digit-value #\\x1810) ;; MONGOLIAN DIGIT ZERO - ᠐\n" +
+                            "(digit-value #\\x1947) ;; LIMBU DIGIT ONE - ᥇\n" +
+                            "(digit-value #\\x19D2) ;; NEW TAI LUE DIGIT TWO - ᧒\n" +
+                            "(digit-value #\\x1A83) ;; TAI THAM HORA DIGIT THREE - ᪃\n" +
+                            "(digit-value #\\x1A94) ;; TAI THAM THAM DIGIT FOUR - ᪔\n" +
+                            "(digit-value #\\x1B55) ;; BALINESE DIGIT FIVE - ᭕\n" +
+                            "(digit-value #\\x1BB6) ;; SUNDANESE DIGIT SIX - ᮶\n" +
+                            "(digit-value #\\x1C47) ;; LEPCHA DIGIT SEVEN - ᱇\n" +
+                            "(digit-value #\\x1C58) ;; OL CHIKI DIGIT EIGHT - ᱘\n" +
+                            "(digit-value #\\xA629) ;; VAI DIGIT NINE - ꘩\n" +
+                            "(digit-value #\\xA8D0) ;; SAURASHTRA DIGIT ZERO - ꣐\n" +
+                            "(digit-value #\\xA901) ;; KAYAH LI DIGIT ONE - ꤁\n" +
+                            "(digit-value #\\xA9D2) ;; JAVANESE DIGIT TWO - ꧒\n" +
+                            "(digit-value #\\xA9F3) ;; MYANMAR TAI LAING DIGIT THREE - ꧳\n" +
+                            "(digit-value #\\xAA54) ;; CHAM DIGIT FOUR - ꩔\n" +
+                            "(digit-value #\\xABF5) ;; MEETEI MAYEK DIGIT FIVE - ꯵\n" +
+                            "(digit-value #\\xFF16) ;; FULLWIDTH DIGIT SIX - ６\n" +
+                            "(digit-value #\\x104A7) ;; OSMANYA DIGIT SEVEN - 𐒧\n" +
+                            "(digit-value #\\x10D38) ;; HANIFI ROHINGYA DIGIT EIGHT - 𐴸\n" +
+                            "(digit-value #\\x1106F) ;; BRAHMI DIGIT NINE - 𑁯\n" +
+                            "(digit-value #\\x110F0) ;; SORA SOMPENG DIGIT ZERO - 𑃰\n" +
+                            "(digit-value #\\x11137) ;; CHAKMA DIGIT ONE - 𑄷\n" +
+                            "(digit-value #\\x111D2) ;; SHARADA DIGIT TWO - 𑇒\n" +
+                            "(digit-value #\\x112F3) ;; KHUDAWADI DIGIT THREE - 𑋳\n" +
+                            "(digit-value #\\x11454) ;; NEWA DIGIT FOUR - 𑑔\n" +
+                            "(digit-value #\\x114D5) ;; TIRHUTA DIGIT FIVE - 𑓕\n" +
+                            "(digit-value #\\x11656) ;; MODI DIGIT SIX - 𑙖\n" +
+                            "(digit-value #\\x116C7) ;; TAKRI DIGIT SEVEN - 𑛇\n" +
+                            "(digit-value #\\x11738) ;; AHOM DIGIT EIGHT - 𑜸\n" +
+                            "(digit-value #\\x118E9) ;; WARANG CITI DIGIT NINE - 𑣩\n" +
+                            "(digit-value #\\x11950) ;; DIVES AKURU DIGIT ZERO - 𑥐\n" +
+                            "(digit-value #\\x11C51) ;; BHAIKSUKI DIGIT ONE - 𑱑\n" +
+                            "(digit-value #\\x11D52) ;; MASARAM GONDI DIGIT TWO - 𑵒\n" +
+                            "(digit-value #\\x11DA3) ;; GUNJALA GONDI DIGIT THREE - 𑶣\n" +
+                            "(digit-value #\\x16A64) ;; MRO DIGIT FOUR - 𖩤\n" +
+                            "(digit-value #\\x16B55) ;; PAHAWH HMONG DIGIT FIVE - 𖭕\n" +
+                            "(digit-value #\\x1D7D4) ;; MATHEMATICAL BOLD DIGIT SIX - 𝟔\n" +
+                            "(digit-value #\\x1D7DF) ;; MATHEMATICAL DOUBLE-STRUCK DIGIT SEVEN - 𝟟\n" +
+                            "(digit-value #\\x1D7EA) ;; MATHEMATICAL SANS-SERIF DIGIT EIGHT - 𝟪\n" +
+                            "(digit-value #\\x1D7F5) ;; MATHEMATICAL SANS-SERIF BOLD DIGIT NINE - 𝟵\n" +
+                            "(digit-value #\\x1D7F6) ;; MATHEMATICAL MONOSPACE DIGIT ZERO - 𝟶\n" +
+                            "(digit-value #\\x1E141) ;; NYIAKENG PUACHUE HMONG DIGIT ONE - 𞅁\n" +
+                            "(digit-value #\\x1E2F2) ;; WANCHO DIGIT TWO - 𞋲\n" +
+                            "(digit-value #\\x1E953) ;; ADLAM DIGIT THREE - \n" +
+                            "(digit-value #\\x1FBF4) ;; SEGMENTED DIGIT FOUR - 🯴\n" +
+                            ")"
+                )
+            )
+        )
+    }
+
+    /*
+    "(list\n" +
+    "#\\x0030 ;; DIGIT ZERO - 0\n" +
+"#\\x0661 ;; ARABIC-INDIC DIGIT ONE - ١\n" +
+"#\\x06F2 ;; EXTENDED ARABIC-INDIC DIGIT TWO - ۲\n" +
+"#\\x07C3 ;; NKO DIGIT THREE - "\n +߃
+"#\\x096A ;; DEVANAGARI DIGIT FOUR - ४\n" +
+"#\\x09EB ;; BENGALI DIGIT FIVE - ৫\n" +
+"#\\x0A6C ;; GURMUKHI DIGIT SIX - ੬\n" +
+"#\\x0AED ;; GUJARATI DIGIT SEVEN - ૭\n" +
+"#\\x0B6E ;; ORIYA DIGIT EIGHT - ୮\n" +
+"#\\x0BEF ;; TAMIL DIGIT NINE - ௯\n" +
+"#\\x0C66 ;; TELUGU DIGIT ZERO - ౦\n" +
+"#\\x0CE7 ;; KANNADA DIGIT ONE - ೧\n" +
+"#\\x0D68 ;; MALAYALAM DIGIT TWO - ൨\n" +
+"#\\x0DE9 ;; SINHALA LITH DIGIT THREE - ෩\n" +
+"#\\x0E54 ;; THAI DIGIT FOUR - ๔\n" +
+"#\\x0ED5 ;; LAO DIGIT FIVE - ໕\n" +
+"#\\x0F26 ;; TIBETAN DIGIT SIX - ༦\n" +
+"#\\x1047 ;; MYANMAR DIGIT SEVEN - ၇\n" +
+"#\\x1098 ;; MYANMAR SHAN DIGIT EIGHT - ႘\n" +
+"#\\x17E9 ;; KHMER DIGIT NINE - ៩\n" +
+"#\\x1810 ;; MONGOLIAN DIGIT ZERO - ᠐\n" +
+"#\\x1947 ;; LIMBU DIGIT ONE - ᥇\n" +
+"#\\x19D2 ;; NEW TAI LUE DIGIT TWO - ᧒\n" +
+"#\\x1A83 ;; TAI THAM HORA DIGIT THREE - ᪃\n" +
+"#\\x1A94 ;; TAI THAM THAM DIGIT FOUR - ᪔\n" +
+"#\\x1B55 ;; BALINESE DIGIT FIVE - ᭕\n" +
+"#\\x1BB6 ;; SUNDANESE DIGIT SIX - ᮶\n" +
+"#\\x1C47 ;; LEPCHA DIGIT SEVEN - ᱇\n" +
+"#\\x1C58 ;; OL CHIKI DIGIT EIGHT - ᱘\n" +
+"#\\xA629 ;; VAI DIGIT NINE - ꘩\n" +
+"#\\xA8D0 ;; SAURASHTRA DIGIT ZERO - ꣐\n" +
+"#\\xA901 ;; KAYAH LI DIGIT ONE - ꤁\n" +
+"#\\xA9D2 ;; JAVANESE DIGIT TWO - ꧒\n" +
+"#\\xA9F3 ;; MYANMAR TAI LAING DIGIT THREE - ꧳\n" +
+"#\\xAA54 ;; CHAM DIGIT FOUR - ꩔\n" +
+"#\\xABF5 ;; MEETEI MAYEK DIGIT FIVE - ꯵\n" +
+"#\\xFF16 ;; FULLWIDTH DIGIT SIX - ６\n" +
+"#\\x104A7 ;; OSMANYA DIGIT SEVEN - 𐒧\n" +
+"#\\x10D38 ;; HANIFI ROHINGYA DIGIT EIGHT - 𐴸\n" +
+"#\\x1106F ;; BRAHMI DIGIT NINE - 𑁯\n" +
+"#\\x110F0 ;; SORA SOMPENG DIGIT ZERO - 𑃰\n" +
+"#\\x11137 ;; CHAKMA DIGIT ONE - 𑄷\n" +
+"#\\x111D2 ;; SHARADA DIGIT TWO - 𑇒\n" +
+"#\\x112F3 ;; KHUDAWADI DIGIT THREE - 𑋳\n" +
+"#\\x11454 ;; NEWA DIGIT FOUR - 𑑔\n" +
+"#\\x114D5 ;; TIRHUTA DIGIT FIVE - 𑓕\n" +
+"#\\x11656 ;; MODI DIGIT SIX - 𑙖\n" +
+"#\\x116C7 ;; TAKRI DIGIT SEVEN - 𑛇\n" +
+"#\\x11738 ;; AHOM DIGIT EIGHT - 𑜸\n" +
+"#\\x118E9 ;; WARANG CITI DIGIT NINE - 𑣩\n" +
+"#\\x11950 ;; DIVES AKURU DIGIT ZERO - 𑥐\n" +
+"#\\x11C51 ;; BHAIKSUKI DIGIT ONE - 𑱑\n" +
+"#\\x11D52 ;; MASARAM GONDI DIGIT TWO - 𑵒\n" +
+"#\\x11DA3 ;; GUNJALA GONDI DIGIT THREE - 𑶣\n" +
+"#\\x16A64 ;; MRO DIGIT FOUR - 𖩤\n" +
+"#\\x16B55 ;; PAHAWH HMONG DIGIT FIVE - 𖭕\n" +
+"#\\x1D7D4 ;; MATHEMATICAL BOLD DIGIT SIX - 𝟔\n" +
+"#\\x1D7DF ;; MATHEMATICAL DOUBLE-STRUCK DIGIT SEVEN - 𝟟\n" +
+"#\\x1D7EA ;; MATHEMATICAL SANS-SERIF DIGIT EIGHT - 𝟪\n" +
+"#\\x1D7F5 ;; MATHEMATICAL SANS-SERIF BOLD DIGIT NINE - 𝟵\n" +
+"#\\x1D7F6 ;; MATHEMATICAL MONOSPACE DIGIT ZERO - 𝟶\n" +
+"#\\x1E141 ;; NYIAKENG PUACHUE HMONG DIGIT ONE - 𞅁\n" +
+"#\\x1E2F2 ;; WANCHO DIGIT TWO - 𞋲\n" +
+"#\\x1E953 ;; ADLAM DIGIT THREE - \n" +𞥓
+"#\\x1FBF4 ;; SEGMENTED DIGIT FOUR - 🯴\n" +
+")"
+     */
 }
