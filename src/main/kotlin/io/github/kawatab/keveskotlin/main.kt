@@ -74,7 +74,7 @@ fun main(args: Array<String>) {
     scheme.evaluate("(let ([a 1][b 1]) (+ a b))")
     scheme.evaluate("(let ([a 6][b 5][c (lambda (a b) (* a b))]) (c a b))")
     scheme.evaluate("(let () (+ 2 3))")
-    scheme.evaluate("((lambda (a) ((lambda () (+ a 5)))) 3)")
+    scheme.evaluate("((lambda (a b) ((lambda () (+ a 6)))) 3 7)")
     scheme.evaluate("(let ([a 3]) (let () (+ a 5)))")
     scheme.evaluate("(let* () (+ 2 3))")
     scheme.evaluate("(let* ([a 3]) (+ a 5))")

@@ -129,7 +129,7 @@ class VMTest {
 
         val m = 123
         val n = 456
-        val body = ScmPair.list(ScmInstruction.CONSTANT)
+        val body = ScmPair.list(ScmInstruction.Constant(null, null)) // CONSTANT)
         val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
         val x = ScmPair.list(ScmConstant.TRUE, ScmInt(m), ScmInt(n), body, next)
         assertEquals(m to n, (patternMatchClose.invoke(vm, x) as? Triple<*, *, *>)?.first)
@@ -156,7 +156,7 @@ class VMTest {
             vm.javaClass.getDeclaredMethod("patternMatchTest", ScmPair::class.java)
         patternMatchTest.isAccessible = true
 
-        val thn = ScmPair.list(ScmInstruction.CONSTANT)
+        val thn = ScmPair.list(ScmInstruction.Constant(null, null)) // CONSTANT)
         val els = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
         val x = ScmPair.list(ScmConstant.TRUE, thn, els)
         assertEquals(thn, (patternMatchTest.invoke(vm, x) as? Pair<*, *>)?.first)
@@ -497,10 +497,12 @@ class VMTest {
             ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(define fib (lambda (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))\n" +
-                            "(fib 15)"
+                            // "(fib 15)"
                     // "(fib 38)" // 2m10s285ms 2021-02-03
                     // "(fib 38)" // 56s47ms 2021-02-07; remove unused arguments in normalProc of ScmProcedure
                     // "(fib 38)" // 47s943ms 2021-02-08; remove unused type property in ScmObject
+                    // "(fib 38)" // 41s853ms 2021-02-14; replace list with array as code
+                    "(fib 38)" // 40s771ms 2021-02-14; replace list code with object of ScmInstruction partly
                 )
             )
         )

@@ -141,9 +141,13 @@ class KevesCompiler {
                 val bind = findBind(x)
                 val obj: ScmObject? = bind?.let { (_, obj) -> obj as? ScmSyntax ?: obj as? ScmProcedure }
                 if (obj != null) {
-                    ScmPair.list(ScmInstruction.CONSTANT, obj, next)
+                    ScmPair.list(ScmInstruction.Constant(obj, next)) // CONSTANT, obj, next)
                 } else {
-                    compileRefer(x, e, if (setMemberQ(x, s)) ScmPair.list(ScmInstruction.INDIRECT, next) else next)
+                    compileRefer(
+                        x,
+                        e,
+                        if (setMemberQ(x, s)) ScmPair.list(ScmInstruction.Indirect(next)/*INDIRECT, next*/) else next
+                    )
                 }
             }
             is ScmPair -> {
@@ -157,19 +161,19 @@ class KevesCompiler {
                         obj.syntax!!.compile(x, e, s, next, this)
                     }
                     else -> {
-                        val instApply = ScmMutablePair(ScmInstruction.APPLY, ScmPair.list(ScmInt(0)))
+                        val instApply = ScmMutablePair(ScmInstruction.Apply(0), null) // APPLY, ScmPair.list(ScmInt(0)))
                         fun loop(args: ScmPair?, c: ScmPair?, n: Int): ScmPair? =
                             if (args == null) {
-                                instApply.assignCdr(ScmPair.list(ScmInt(n)))
+                                instApply.assignCar(ScmInstruction.Apply(n))
                                 if (tailQ(next)) c
-                                else ScmPair.list(ScmInstruction.FRAME, next, c)
+                                else ScmPair.list(ScmInstruction.Frame(next, c)) // FRAME, next, c)
                             } else {
                                 loop(
                                     args.cdr?.let {
                                         it as? ScmPair
                                             ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
                                     },
-                                    compile(args.car, e, s, ScmPair.list(ScmInstruction.ARGUMENT, c)),
+                                    compile(args.car, e, s, ScmPair.list(ScmInstruction.Argument(c))), // ARGUMENT, c)),
                                     n + 1
                                 )
                             }
@@ -185,10 +189,11 @@ class KevesCompiler {
                                 s,
                                 if (tailQ(next)) {
                                     ScmPair.list(
-                                        ScmInstruction.SHIFT,
-                                        ScmInt(ScmPair.length(x.cdr as? ScmPair)),
-                                        ScmPair.cadr(next),
-                                        instApply
+                                        ScmInstruction.Shift( // SHIFT,
+                                            ScmPair.length(x.cdr as? ScmPair),
+                                            (ScmPair.car(next) as ScmInstruction.Return).n, // ScmPair.cadr(next),
+                                            instApply
+                                        )
                                     )
                                 } else {
                                     instApply
@@ -200,7 +205,7 @@ class KevesCompiler {
                 }
             }
             else -> {
-                ScmPair.list(ScmInstruction.CONSTANT, x, next)
+                ScmPair.list(ScmInstruction.Constant(x, next)) // CONSTANT, x, next)
             }
         }
 
@@ -290,8 +295,8 @@ class KevesCompiler {
             compileLookup(
                 x,
                 e,
-                { n: Int -> ScmPair.list(ScmInstruction.REFER_LOCAL, ScmInt(n), next) },
-                { n: Int -> ScmPair.list(ScmInstruction.REFER_FREE, ScmInt(n), next) }
+                { n: Int -> ScmPair.list(ScmInstruction.ReferLocal(n, next)) }, //REFER_LOCAL, ScmInt(n), next) },
+                { n: Int -> ScmPair.list(ScmInstruction.ReferFree(n, next)) } // REFER_FREE, ScmInt(n), next) }
             )
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("found undefined variable: ${x.toStringForWrite()}")
@@ -338,7 +343,7 @@ class KevesCompiler {
                 vars.car as? ScmSymbol
                     ?: throw IllegalArgumentException("'collect-free' got none symbol as identifier"),
                 e,
-                ScmPair.list(ScmInstruction.ARGUMENT, next)
+                ScmPair.list(ScmInstruction.Argument(next)) // ARGUMENT, next)
             )
         )
 
@@ -354,11 +359,20 @@ class KevesCompiler {
                 is ScmPair -> {
                     val carVars: ScmSymbol = vars.car as? ScmSymbol
                         ?: throw IllegalArgumentException("'make-box' got non symbol as vars")
-                    if (setMemberQ(carVars, sets)) ScmPair.list(ScmInstruction.BOX, ScmInt(n), f(vars.cdr, n + 1))
+                    if (setMemberQ(carVars, sets)) ScmPair.list(
+                        ScmInstruction.Box(/*BOX, ScmInt(*/n/*)*/,
+                            f(vars.cdr, n + 1)
+                        )
+                    )
                     else f(vars.cdr, n + 1)
                 }
                 is ScmSymbol -> {
-                    if (setMemberQ(vars, sets)) ScmPair.list(ScmInstruction.BOX_REST, ScmInt(n), next)
+                    if (setMemberQ(vars, sets)) ScmPair.list(
+                        ScmInstruction.BoxRest(
+                            n,
+                            next
+                        )
+                    ) //BOX_REST , ScmInt(n), next)
                     else next
                 }
                 else ->
@@ -451,23 +465,23 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 59
      */
-    fun tailQ(next: ScmPair?): Boolean = next != null && next.car === ScmInstruction.RETURN
+    fun tailQ(next: ScmPair?): Boolean = next != null && next.car is ScmInstruction.Return // === ScmInstruction.RETURN
 
-    /*
-    companion object {
-        val symbolBegin = ScmSymbol.get("begin")
+/*
+companion object {
+    val symbolBegin = ScmSymbol.get("begin")
 
-        // const val badSyntax = "bad syntax in '%s'"
-        // const val expectedSymbol = "'%s' expected a symbol, but got other"
-        // const val expected1DatumButGotNothing = "'%s' expected 1 datum, but got nothing"
-        // const val expected1DatumButGotMore = "'%s' expected 1 datum, but got more"
-        // const val expected2DatumButGotLess = "'%s' expected 2 datum, but got less"
-        // const val expected2DatumButGotMore = "'%s' expected 2 datum, but got more"
-        // const val expected2OrMoreDatumButGotLess = "'%s' expected 2 or more datum, but got less"
-        // const val expected3DatumButGotLess = "'%s' expected 3 datum, but got less"
-        // const val expected3DatumButGotMore = "'%s' expected 3 datum, but got more"
-    }
-     */
+    // const val badSyntax = "bad syntax in '%s'"
+    // const val expectedSymbol = "'%s' expected a symbol, but got other"
+    // const val expected1DatumButGotNothing = "'%s' expected 1 datum, but got nothing"
+    // const val expected1DatumButGotMore = "'%s' expected 1 datum, but got more"
+    // const val expected2DatumButGotLess = "'%s' expected 2 datum, but got less"
+    // const val expected2DatumButGotMore = "'%s' expected 2 datum, but got more"
+    // const val expected2OrMoreDatumButGotLess = "'%s' expected 2 or more datum, but got less"
+    // const val expected3DatumButGotLess = "'%s' expected 3 datum, but got less"
+    // const val expected3DatumButGotMore = "'%s' expected 3 datum, but got more"
+}
+ */
 
     fun splitBinds(binds: ScmPair?): Pair<ScmPair?, ScmPair?> {
         tailrec fun loop(binds: ScmPair?, variables: ScmPair?, values: ScmPair?): Pair<ScmPair?, ScmPair?> =

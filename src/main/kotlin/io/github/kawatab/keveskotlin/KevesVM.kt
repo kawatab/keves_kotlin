@@ -48,11 +48,15 @@ class KevesVM {
     private fun vm(): ScmObject? {
         while (true) {
             if (x != null) {
-                when (x?.car) {
+                when (val inst = x?.car) {
                     ScmInstruction.HALT -> {
                         return acc
                     }
 
+                    is ScmInstruction.ReferLocal -> inst.exec(this)
+                    is ScmInstruction.ReferFree -> inst.exec(this)
+
+                    /*
                     ScmInstruction.REFER_LOCAL -> {
                         val (n, nx) = patternMatchReferLocal(x)
                         acc = stack.index(fp, n)
@@ -72,7 +76,11 @@ class KevesVM {
                         // sp = sp
                         continue
                     }
+                     */
 
+                    is ScmInstruction.Indirect -> inst.exec(this)
+
+                    /*
                     ScmInstruction.INDIRECT -> {
                         val nx = patternMatchIndirect(x)
                         val unboxA = try {
@@ -87,7 +95,10 @@ class KevesVM {
                         // sp = sp
                         continue
                     }
+                     */
 
+                    is ScmInstruction.Constant -> inst.exec(this)
+                    /*
                     ScmInstruction.CONSTANT -> {
                         val (obj, nx) = patternMatchConstant(x)
                         acc = obj
@@ -98,6 +109,10 @@ class KevesVM {
                         continue
                     }
 
+                     */
+
+                    is ScmInstruction.Close -> inst.exec(this)
+                    /*
                     ScmInstruction.CLOSE -> {
                         val (counts, body, nx) = patternMatchClose(x)
                         val (n, numArg) = counts
@@ -109,6 +124,10 @@ class KevesVM {
                         continue
                     }
 
+                     */
+
+                    is ScmInstruction.Box -> inst.exec(this)
+                    /*
                     ScmInstruction.BOX -> {
                         val (n, nx) = patternMatchBox(x)
                         stack.indexSetE(sp, n, ScmBox(stack.index(sp, n)))
@@ -119,7 +138,10 @@ class KevesVM {
                         // sp = sp
                         continue
                     }
+                     */
 
+                    is ScmInstruction.BoxRest -> inst.exec(this)
+                    /*
                     ScmInstruction.BOX_REST -> {
                         val (n, nx) = patternMatchBox(x)
                         stack.indexSetE(sp, n, ScmBox(stack.index(sp, n)))
@@ -130,7 +152,10 @@ class KevesVM {
                         // sp = sp
                         continue
                     }
+                     */
 
+                    is ScmInstruction.Test -> inst.exec(this)
+                    /*
                     ScmInstruction.TEST -> {
                         val (thn, els) = patternMatchTest(x)
                         // acc = acc
@@ -140,7 +165,13 @@ class KevesVM {
                         // sp = sp
                         continue
                     }
+                     */
 
+                    is ScmInstruction.AssignLocal -> inst.exec(this)
+                    is ScmInstruction.AssignFree -> inst.exec(this)
+                    is ScmInstruction.Conti -> inst.exec(this)
+                    is ScmInstruction.Nuate -> inst.exec(this)
+                    /*
                     ScmInstruction.ASSIGN_LOCAL -> {
                         val (n, nx) = patternMatchAssignLocal(x)
                         val box: ScmBox = try {
@@ -192,7 +223,14 @@ class KevesVM {
                         sp = stack.restoreStack(s)
                         continue
                     }
+                     */
 
+                    is ScmInstruction.Frame -> inst.exec(this)
+                    is ScmInstruction.Argument -> inst.exec(this)
+                    is ScmInstruction.Shift -> inst.exec(this)
+                    is ScmInstruction.Apply -> inst.exec(this)
+                    is ScmInstruction.Return -> inst.exec(this)
+                    /*
                     ScmInstruction.FRAME -> {
                         val (ret, nx) = patternMatchFrame(x)
                         // acc = acc
@@ -249,6 +287,7 @@ class KevesVM {
                         sp = sp1 - 3
                         continue
                     }
+                    */
 
                     is ScmProcedure -> {
                         val procedure: ScmProcedure = x?.car as ScmProcedure
@@ -266,37 +305,214 @@ class KevesVM {
         }
     }
 
+    /*
+    fun evaluate2(code: List<ScmObject?>): ScmObject? {
+        acc = null
+        this.code = code
+        pc = 0
+        fp = 0
+        clsr2 = ScmClosure2("dummy lambda", 0, 0, ScmVector(0))
+        sp = 0
+        return vm2()
+    }
+
+    private fun vm2(): ScmObject? {
+        while (true) {
+            when (val x = code[pc++]) {
+                ScmInstruction.HALT -> {
+                    return acc
+                }
+
+                ScmInstruction.REFER_LOCAL -> {
+                    // println("REFER_LOCAL")
+                    val n = (code[pc++] as ScmInt).value
+                    acc = stack.index(fp, n)
+                }
+
+                ScmInstruction.REFER_FREE -> {
+                    val n = (code[pc++] as ScmInt).value
+                    acc = clsr2?.indexClosure(n)
+                }
+
+                ScmInstruction.INDIRECT -> {
+                    val unboxA = try {
+                        ScmBox.unbox(acc)
+                    } catch (e: IllegalArgumentException) {
+                        throw IllegalArgumentException("<INDIRECT> required box, but got other")
+                    }
+                    acc = unboxA
+                }
+
+                ScmInstruction.CONSTANT -> {
+                    // println("CONSTANT")
+                    acc = code[pc++]
+                }
+
+                ScmInstruction.CLOSE -> {
+                    // println("CLOSE")
+                    val n = (code[pc++] as ScmInt).value
+                    val numArg = (code[pc++] as ScmInt).value
+                    val body = (code[pc++] as ScmInt).value
+                    acc = closure2(body, numArg, n, sp)
+                    sp = (sp - n)
+                }
+
+                ScmInstruction.BOX -> {
+                    val n = (code[pc++] as ScmInt).value
+                    stack.indexSetE(sp, n, ScmBox(stack.index(sp, n)))
+                }
+
+                ScmInstruction.BOX_REST -> {
+                    val n = (code[pc++] as ScmInt).value
+                    stack.indexSetE(sp, n, ScmBox(stack.index(sp, n)))
+                }
+
+                ScmInstruction.TEST -> {
+                    pc = if (acc != ScmConstant.FALSE) (code[pc] as ScmInt).value else (code[pc + 1] as ScmInt).value
+                }
+
+                ScmInstruction.ASSIGN_LOCAL -> {
+                    val n = (code[pc++] as ScmInt).value
+                    val box: ScmBox = try {
+                        stack.index(fp, n) as? ScmBox
+                    } catch (e: IllegalArgumentException) {
+                        throw IllegalArgumentException("<ASSIGN_LOCAL> expected box but got other")
+                    } ?: throw IllegalArgumentException("<ASSIGN_LOCAL> expected box but got other")
+                    box.value = acc
+                }
+
+                ScmInstruction.ASSIGN_FREE -> {
+                    val n = (code[pc++] as ScmInt).value
+                    val box: ScmBox = try {
+                        clsr2?.indexClosure(n) as? ScmBox
+                    } catch (e: IllegalArgumentException) {
+                        throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
+                    } ?: throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
+                    box.value = acc
+                }
+
+                ScmInstruction.CONTI -> {
+                    acc = continuation(sp)
+                }
+
+                ScmInstruction.NUATE -> {
+                    val s = code[pc++] as ScmVector
+                    sp = stack.restoreStack(s)
+                }
+
+                ScmInstruction.FRAME -> {
+                    val ret = code[pc++] as ScmInt
+                    // println("FRAME: ret=$ret fp=$fp sp=$sp")
+                    sp = stack.push(ret, stack.push(ScmInt(fp), stack.push(clsr2, sp)))
+                }
+
+                ScmInstruction.ARGUMENT -> {
+                    // println("ARGUMENT")
+                    sp = stack.push(acc, sp)
+                }
+
+                ScmInstruction.SHIFT -> {
+                    // println("SHIFT")
+                    val n = (code[pc++] as ScmInt).value
+                    val m = (code[pc++] as ScmInt).value
+                    sp = shiftArgs(n, m, sp)
+                }
+
+                ScmInstruction.APPLY -> {
+                    val n = (code[pc] as ScmInt).value
+                    (acc as? ScmProcedure)?.normalProc(n, this)
+                        ?: throw IllegalArgumentException("<APPLY> got non procedure")
+                }
+
+                ScmInstruction.RETURN -> {
+                    val n = (code[pc] as ScmInt).value
+                    val sp1 = sp - n
+                    val s0: ScmInt = stack.index(sp1, 0) as? ScmInt
+                        ?: throw IllegalArgumentException("SP pointed by <RETURN> did not include pair")
+                    val s1: ScmInt = stack.index(sp1, 1) as? ScmInt
+                        ?: throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
+                    val s2: ScmClosure2 = stack.index(sp1, 2) as? ScmClosure2
+                        ?: throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
+                    pc = s0.value
+                    fp = s1.value
+                    clsr2 = s2
+                    sp = sp1 - 3
+                }
+
+                is ScmProcedure -> {
+                    x.directProc(acc, sp, this)
+                }
+
+                else -> {
+                    println("not instruction: ${ScmObject.getStringForDisplay(x)}")
+                    throw IllegalArgumentException("No instruction")
+                }
+            }
+        }
+    }
+
+     */
+
+
     /**
      * Builds a vector of the appropriate length, places the code for the body of the function
      * into the first vector slot and the free values found on the stack into the remaining slots
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 97
      */
-    private fun closure(body: ScmPair?, m: Int, n: Int, s: Int): ScmClosure =
+    fun closure(body: ScmPair?, m: Int, n: Int, s: Int): ScmClosure =
         ScmClosure("lambda", body, m, stack.makeScmVector(s, n))
+
+    /*
+    private fun closure2(body: Int, m: Int, n: Int, s: Int): ScmClosure2 =
+        ScmClosure2("lambda", body, m, stack.makeScmVector(s, n))
+
+     */
 
     /**
      * Creates a continuation
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 86
      */
-    private fun continuation(s: Int): ScmClosure =
+    fun continuation(s: Int): ScmClosure =
         closure(
             ScmPair.list(
                 ScmInstruction.REFER, ScmInt(0), ScmInt(0), // TODO("Is this OK?")
-                ScmPair.list(ScmInstruction.NUATE, stack.saveStack(s), ScmPair.list(ScmInstruction.RETURN, ScmInt(0)))
+                ScmPair.list(
+                    ScmInstruction.Nuate(
+                        stack.saveStack(s),
+                        ScmPair.list(ScmInstruction.Return(0)) // RETURN, ScmInt(0))
+                    )
+                )   // NUATE, stack.saveStack(s), ScmPair.list(ScmInstruction.RETURN, ScmInt(0)))
             ),
             1,
             0, // TODO("Is this OK?")
             0 // TODO("Is this OK?")
         )
 
+    /*
+    private fun continuation2(s: Int): ScmClosure2 =
+        closure2(
+            /*
+            ScmPair.list(
+                ScmInstruction.REFER, ScmInt(0), ScmInt(0), // TODO("Is this OK?")
+                ScmPair.list(ScmInstruction.NUATE, stack.saveStack(s), ScmPair.list(ScmInstruction.RETURN, ScmInt(0)))
+            ),
+             */
+            -1,
+            1,
+            0, // TODO("Is this OK?")
+            0 // TODO("Is this OK?")
+        )
+
+     */
+
     /**
      * Creates a continuation
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 111
      */
-    private fun shiftArgs(n: Int, m: Int, s: Int): Int {
+    fun shiftArgs(n: Int, m: Int, s: Int): Int {
         tailrec fun nextArg(i: Int) {
             if (i < 0) return
             stack.indexSetE(s, i + m, stack.index(s, i))
@@ -339,6 +555,8 @@ class KevesVM {
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("<REFER_LOCAL> got nothing as x")
         }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
+        // val n: Int = (ScmPair.cadr(x) as ScmInt).value
+        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
         return n to nx
     }
 
@@ -354,9 +572,13 @@ class KevesVM {
             throw IllegalArgumentException("<REFER_LOCAL> got nothing as x")
         }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
         return n to nx
+        // val n: Int = (ScmPair.cadr(x) as ScmInt).value
+        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
+        // return n to nx
     }
 
     private fun patternMatchIndirect(x: ScmPair?): ScmPair? =
+        // ScmPair.cadr(x) as? ScmPair
         try {
             ScmPair.cadr(x)
         } catch (e: IllegalArgumentException) {
@@ -374,6 +596,8 @@ class KevesVM {
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("<CONSTANT> got nothing as x")
         }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
+        // val obj: ScmObject? = ScmPair.cadr(x)
+        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
         return obj to nx
     }
 

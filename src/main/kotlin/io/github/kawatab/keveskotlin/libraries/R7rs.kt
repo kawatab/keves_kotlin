@@ -156,7 +156,7 @@ class R7rs {
 
             return patternMatchBegin(x)?.let { expressions ->
                 loop(ScmMutablePair.reverse(expressions), next)
-            } ?: ScmPair.list(ScmInstruction.CONSTANT, ScmConstant.UNDEF)
+            } ?: ScmPair.list(ScmInstruction.Constant(ScmConstant.UNDEF, next)) // CONSTANT, ScmConstant.UNDEF)
         }
 
         override fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair? {
@@ -179,7 +179,7 @@ class R7rs {
     private val syntaxQuote = object : ScmSyntax("quote") {
         override fun compile(x: ScmPair, e: ScmPair?, s: ScmPair?, next: ScmPair?, compiler: KevesCompiler): ScmPair {
             val obj = patternMatchQuote(x)
-            return ScmPair.list(ScmInstruction.CONSTANT, obj, next)
+            return ScmPair.list(ScmInstruction.Constant(obj, next)) // CONSTANT, obj, next)
         }
 
         override fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair? {
@@ -214,20 +214,21 @@ class R7rs {
                 free,
                 e,
                 ScmPair.list(
-                    ScmInstruction.CLOSE,
-                    ScmInt(ScmPair.length(free)),
-                    ScmInt(numArg),
-                    compiler.makeBoxes(
-                        sets,
-                        vars,
-                        compiler.compile(
-                            ScmPair(symbolBegin, body),
-                            ScmPair(varsAsProperList, free),
-                            compiler.setUnion(sets, compiler.setIntersect(s, free)),
-                            ScmPair.list(ScmInstruction.RETURN, ScmInt(ScmPair.length(varsAsProperList)))
-                        )
-                    ),
-                    next
+                    ScmInstruction.Close( // CLOSE,
+                        /*ScmInt(*/ScmPair.length(free)/*)*/,
+                        /*ScmInt(*/numArg/*)*/,
+                        compiler.makeBoxes(
+                            sets,
+                            vars,
+                            compiler.compile(
+                                ScmPair(symbolBegin, body),
+                                ScmPair(varsAsProperList, free),
+                                compiler.setUnion(sets, compiler.setIntersect(s, free)),
+                                ScmPair.list(ScmInstruction.Return(ScmPair.length(varsAsProperList))) // RETURN, ScmInt(ScmPair.length(varsAsProperList)))
+                            )
+                        ),
+                        next
+                    )
                 )
             )
         }
@@ -266,7 +267,7 @@ class R7rs {
             val (test, thn, els) = patternMatchIf(x)
             val thenC = compiler.compile(thn, e, s, next)
             val elseC = compiler.compile(els, e, s, next)
-            return compiler.compile(test, e, s, ScmPair.list(ScmInstruction.TEST, thenC, elseC))
+            return compiler.compile(test, e, s, ScmPair.list(ScmInstruction.Test(thenC, elseC))) // TEST, thenC, elseC))
         }
 
         override fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair? {
@@ -314,10 +315,20 @@ class R7rs {
                 variable,
                 e,
                 { n: Int ->
-                    compiler.compile(xx, e, s, ScmPair.list(ScmInstruction.ASSIGN_LOCAL, ScmInt(n), next))
+                    compiler.compile(
+                        xx,
+                        e,
+                        s,
+                        ScmPair.list(ScmInstruction.AssignLocal(n, next))
+                    ) // ASSIGN_LOCAL, ScmInt(n), next))
                 },
                 { n: Int ->
-                    compiler.compile(xx, e, s, ScmPair.list(ScmInstruction.ASSIGN_FREE, ScmInt(n), next))
+                    compiler.compile(
+                        xx,
+                        e,
+                        s,
+                        ScmPair.list(ScmInstruction.AssignFree(n, next))
+                    ) // ASSIGN_FREE, ScmInt(n), next))
                 }
             )
         }
@@ -680,24 +691,27 @@ class R7rs {
             ): ScmPair {
                 val xx = patternMatchCallCC(x)
                 val c = ScmPair.list(
-                    ScmInstruction.CONTI,
-                    ScmPair.list(
-                        ScmInstruction.ARGUMENT,
-                        compiler.compile(
-                            xx,
-                            e,
-                            s,
-                            if (compiler.tailQ(next)) ScmPair.list(
-                                ScmInstruction.SHIFT,
-                                ScmInt(1),
-                                ScmPair.cadr(next),
-                                ScmPair.list(ScmInstruction.APPLY, ScmInt(1))
+                    ScmInstruction.Conti(
+                        ScmPair.list(
+                            ScmInstruction.Argument( // ARGUMENT,
+                                compiler.compile(
+                                    xx,
+                                    e,
+                                    s,
+                                    if (compiler.tailQ(next)) ScmPair.list(
+                                        ScmInstruction.Shift( // SHIFT,
+                                            1, // ScmInt(1),
+                                            (ScmPair.car(next) as ScmInstruction.Return).n, // ScmPair.cadr(next),
+                                            ScmPair.list(ScmInstruction.Apply(1)) // APPLY, ScmInt(1))
+                                        )
+                                    )
+                                    else ScmPair.list(ScmInstruction.Apply(1)) // APPLY, ScmInt(1))
+                                )
                             )
-                            else ScmPair.list(ScmInstruction.APPLY, ScmInt(1))
                         )
                     )
                 )
-                return if (compiler.tailQ(next)) c else ScmPair.list(ScmInstruction.FRAME, next, c)
+                return if (compiler.tailQ(next)) c else ScmPair.list(ScmInstruction.Frame(next, c)) // FRAME, next, c)
             }
 
             override fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair? {
@@ -742,14 +756,15 @@ class R7rs {
                     e,
                     s,
                     if (compiler.tailQ(next)) ScmPair.list(
-                        ScmInstruction.SHIFT,
-                        ScmInt(1),
-                        ScmPair.cadr(next),
-                        ScmPair.list(procDisplay)
+                        ScmInstruction.Shift( // SHIFT,
+                            0, // ScmInt(0),
+                            (ScmPair.car(next) as ScmInstruction.Return).n, // ScmPair.cadr(next),
+                            ScmPair.list(procDisplay)
+                        )
                     )
                     else ScmPair.list(procDisplay)
                 )
-                return if (compiler.tailQ(next)) c!! else ScmPair.list(ScmInstruction.FRAME, next, c)
+                return if (compiler.tailQ(next)) c!! else ScmPair.list(ScmInstruction.Frame(next, c)) // FRAME, next, c)
             }
 
             override fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair? {

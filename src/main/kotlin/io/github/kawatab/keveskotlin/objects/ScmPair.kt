@@ -181,6 +181,14 @@ open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
         }
     }
 
+    fun ref2and3(): Pair<ScmObject?, ScmObject?> {
+        val cdr = this.cdr as? ScmPair ?: throw IllegalArgumentException("cdr was not pair")
+        val cddr = cdr.cdr as? ScmPair ?: throw IllegalArgumentException("cddr was not pair")
+        val obj1 = cdr.car
+        val obj2 = cddr.car
+        return obj1 to obj2
+    }
+
     companion object {
         fun length(list: ScmObject?): Int = length(list, 0, ArrayDeque())
 
