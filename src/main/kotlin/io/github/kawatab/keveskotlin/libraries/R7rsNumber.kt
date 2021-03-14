@@ -22,190 +22,287 @@
 package io.github.kawatab.keveskotlin.libraries
 
 import io.github.kawatab.keveskotlin.KevesExceptions
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.objects.*
 
-object R7rsNumber {
+class R7rsNumber(private val res: KevesResources) {
     /** procedure: number? */
-    val procNumberQ: ScmProcedure by lazy {
-        object : ScmProcedure("number?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procNumberQ by lazy {
+        res.addProcedure(object : ScmProcedure("number?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procNumberQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
                         val result =
-                            if (obj is ScmInt || obj is ScmFloat || obj is ScmDouble) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                            when (vm.stack.index(vm.sp, 0).toVal(res)) {
+                                is ScmInt, is ScmFloat, is ScmDouble -> res.constTrue
+                                else -> res.constFalse
+                            }
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procNumberQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
-    /** procedure: plus */
-    val procAdd: ScmProcedure by lazy {
-        object : ScmProcedure("+", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    /** procedure: add */
+    val procAdd by lazy {
+        res.addProcedure(object : ScmProcedure("+", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val sp = vm.sp
-                tailrec fun doubleLoop(index: Int, sum: Double): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(sp, index)) {
-                            is ScmInt -> doubleLoop(index + 1, sum + obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
-                            else -> throw KevesExceptions.expectedNumber(procAdd.id)
-                        }
-                    } else {
-                        ScmDouble(sum)
+                when (n) {
+                    0 -> {
+                        vm.scmProcReturn(ScmInt.make(0, vm.res), n)
                     }
-
-                tailrec fun loop(index: Int, sum: Int): ScmObject =
-                    if (index < n) {
-                        when (val obj = vm.stack.index(sp, index)) {
-                            is ScmInt -> loop(index + 1, sum + obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
-                            else -> throw KevesExceptions.expectedNumber(procAdd.id)
+                    1 -> {
+                        val ptr = vm.stack.index(sp, 0)
+                        when (ptr.toVal(res)) {
+                            is ScmInt, is ScmFloat, is ScmDouble -> vm.scmProcReturn(ptr, n)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
-                    } else {
-                        ScmInt(sum)
                     }
+                    2 -> {
+                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        vm.scmProcReturn(
+                            try {
+                                obj1.add(obj2, vm.res)
+                            } catch (e: IllegalArgumentException) {
+                                throw KevesExceptions.expectedNumber(id)
+                            },
+                            n
+                        )
+                    }
+                    else -> {
+                        tailrec fun doubleLoop(index: Int, sum: Double): PtrObject =
+                            if (index < n) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> doubleLoop(index + 1, sum + obj.value)
+                                    is ScmFloat -> doubleLoop(index + 1, sum + obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
+                            } else {
+                                ScmDouble.make(sum, vm.res)
+                            }
 
-                val sum = loop(0, 0)
-                vm.scmProcReturn(sum, n, this)
+                        tailrec fun floatLoop(index: Int, sum: Float): PtrObject =
+                            if (index < n) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> floatLoop(index + 1, sum + obj.value)
+                                    is ScmFloat -> floatLoop(index + 1, sum + obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
+                            } else {
+                                ScmFloat.make(sum, vm.res)
+                            }
+
+                        tailrec fun loop(index: Int, sum: Int): PtrObject =
+                            if (index < n) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> loop(index + 1, sum + obj.value)
+                                    is ScmFloat -> floatLoop(index + 1, sum + obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
+                            } else {
+                                ScmInt.make(sum, vm.res)
+                            }
+
+                        val sum = loop(0, 0)
+                        vm.scmProcReturn(sum, n)
+                    }
+                }
             }
-        }
+        })
     }
 
-    /** procedure: minus */
-    val procSubtract: ScmProcedure by lazy {
-        object : ScmProcedure("-", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    /** procedure: subtract */
+    val procSubtract by lazy {
+        res.addProcedure(object : ScmProcedure("-", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
-                val difference = when (n) {
-                    0 -> throw KevesExceptions.expected1OrMoreDatumGot0(procSubtract.id)
+                val difference: PtrObject = when (n) {
+                    0 -> throw KevesExceptions.expected1OrMoreDatumGot0(id)
                     1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0)) {
-                            is ScmInt -> ScmInt(-obj.value) // opposite
-                            is ScmDouble -> ScmDouble(-obj.value) // opposite
-                            else -> throw KevesExceptions.expectedNumber(procSubtract.id)
+                        when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
+                            is ScmInt -> ScmInt.make(-obj.value, vm.res) // opposite
+                            is ScmFloat -> ScmFloat.make(-obj.value, vm.res) // opposite
+                            is ScmDouble -> ScmDouble.make(-obj.value, vm.res) // opposite
+                            else -> throw KevesExceptions.expectedNumber(id)
+                        }
+                    }
+                    2 -> {
+                        val sp = vm.sp
+                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        try {
+                            obj1.subtract(obj2, vm.res)
+                        } catch (e: IllegalArgumentException) {
+                            throw KevesExceptions.expectedNumber(id)
                         }
                     }
                     else -> {
                         val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, difference: Double): ScmObject =
+                        tailrec fun doubleLoop(index: Int, difference: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt -> doubleLoop(index + 1, difference - obj.value)
+                                    is ScmFloat -> doubleLoop(index + 1, difference - obj.value)
                                     is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
-                                    else -> throw KevesExceptions.expectedNumber(procSubtract.id)
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmDouble(difference)
+                                ScmDouble.make(difference, vm.res)
                             }
 
-                        tailrec fun intLoop(index: Int, difference: Int): ScmObject =
+                        tailrec fun floatLoop(index: Int, difference: Float): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> intLoop(index + 1, difference - obj.value)
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> floatLoop(index + 1, difference - obj.value)
+                                    is ScmFloat -> floatLoop(index + 1, difference - obj.value)
                                     is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
-                                    else -> throw KevesExceptions.expectedNumber(procSubtract.id)
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmInt(difference)
+                                ScmFloat.make(difference, vm.res)
                             }
 
-                        when (val first = vm.stack.index(sp, 0)) {
+                        tailrec fun intLoop(index: Int, difference: Int): PtrObject =
+                            if (index < n) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> intLoop(index + 1, difference - obj.value)
+                                    is ScmFloat -> floatLoop(index + 1, difference - obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
+                            } else {
+                                ScmInt.make(difference, vm.res)
+                            }
+
+                        when (val first = vm.stack.index(sp, 0).toVal(res)) {
                             is ScmInt -> intLoop(1, first.value)
+                            is ScmFloat -> floatLoop(1, first.value)
                             is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw KevesExceptions.expectedNumber(procSubtract.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
                 }
 
-                vm.scmProcReturn(difference, n, this)
+                vm.scmProcReturn(difference, n)
             }
-        }
+        })
     }
 
     /** procedure: multiple */
-    val procMultiple: ScmProcedure by lazy {
-        object : ScmProcedure("*", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procMultiple by lazy {
+        res.addProcedure(object : ScmProcedure("*", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val i = vm.sp
-                tailrec fun doubleLoop(index: Int, product: Double): ScmObject =
+                tailrec fun doubleLoop(index: Int, product: Double): PtrObject =
                     if (index < n) {
-                        when (val obj = vm.stack.index(i, index)) {
-                            is ScmInt -> doubleLoop(index = index + 1, product = product * obj.value)
-                            is ScmDouble -> doubleLoop(index = index + 1, product = product * obj.value)
-                            else -> throw KevesExceptions.expectedNumber(procMultiple.id)
-                        }
+                        doubleLoop(
+                            index = index + 1,
+                            product = when (val obj = vm.stack.index(i, index).toVal(res)) {
+                                is ScmInt -> product * obj.value
+                                is ScmFloat -> product * obj.value
+                                is ScmDouble -> product * obj.value
+                                else -> throw KevesExceptions.expectedNumber(id)
+                            }
+                        )
                     } else {
-                        ScmDouble(product)
+                        ScmDouble.make(product, vm.res)
                     }
 
-                tailrec fun intLoop(index: Int, product: Int): ScmObject =
+                tailrec fun floatLoop(index: Int, product: Float): PtrObject =
                     if (index < n) {
-                        when (val obj = vm.stack.index(i, index)) {
-                            is ScmInt -> intLoop(index = index + 1, product = product * obj.value)
+                        when (val obj = vm.stack.index(i, index).toVal(res)) {
+                            is ScmInt -> floatLoop(index = index + 1, product = product * obj.value)
+                            is ScmFloat -> floatLoop(index = index + 1, product = product * obj.value)
                             is ScmDouble -> doubleLoop(index + 1, product * obj.value)
-                            else -> throw KevesExceptions.expectedNumber(procMultiple.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
                     } else {
-                        ScmInt(product)
+                        ScmFloat.make(product, vm.res)
+                    }
+
+                tailrec fun intLoop(index: Int, product: Int): PtrObject =
+                    if (index < n) {
+                        when (val obj = vm.stack.index(i, index).toVal(res)) {
+                            is ScmInt -> intLoop(index = index + 1, product = product * obj.value)
+                            is ScmFloat -> floatLoop(index + 1, product * obj.value)
+                            is ScmDouble -> doubleLoop(index + 1, product * obj.value)
+                            else -> throw KevesExceptions.expectedNumber(id)
+                        }
+                    } else {
+                        ScmInt.make(product, vm.res)
                     }
 
                 val product = intLoop(0, 1)
-                vm.scmProcReturn(product, n, this)
+                vm.scmProcReturn(product, n)
             }
-        }
+        })
     }
 
     /** procedure: divide */
-    val procDivide: ScmProcedure by lazy {
-        object : ScmProcedure("/", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procDivide by lazy {
+        res.addProcedure(object : ScmProcedure("/", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
-                val quotient = when (n) {
-                    0 -> throw KevesExceptions.expected1OrMoreDatumGot0(procDivide.id)
+                val quotient: PtrObject = when (n) {
+                    0 -> throw KevesExceptions.expected1OrMoreDatumGot0(id)
                     1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0)) {
+                        when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
                             is ScmInt -> when (obj.value) { // reciprocal
-                                0 -> throw KevesExceptions.expectedNonZero(procDivide.id)
-                                -1, 1 -> obj
-                                else -> ScmDouble(1.0 / obj.value.toDouble())
+                                0 -> throw KevesExceptions.expectedNonZero(id)
+                                -1, 1 -> ScmInt.make(obj.value, res) // TODO("remove ScmInt.make")
+                                else -> ScmDouble.make(1.0 / obj.value.toDouble(), vm.res)
                             }
 
-                            is ScmDouble -> ScmDouble(1.0 / obj.value) // reciprocal
+                            is ScmDouble -> ScmDouble.make(1.0 / obj.value, vm.res) // reciprocal
 
-                            else -> throw KevesExceptions.expectedNumber(procDivide.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
                     else -> {
                         val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, quotient: Double): ScmObject =
+                        tailrec fun doubleLoop(index: Int, quotient: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
-                                    is ScmInt -> doubleLoop(
-                                        index = index + 1,
-                                        quotient = quotient / obj.value.toDouble()
-                                    )
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
+                                    is ScmFloat -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
                                     is ScmDouble -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
-                                    else -> throw KevesExceptions.expectedNumber(procDivide.id)
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmDouble(quotient)
+                                ScmDouble.make(quotient, vm.res)
                             }
 
-                        tailrec fun intLoop(index: Int, quotient: Int): ScmObject =
+                        tailrec fun floatLoop(index: Int, quotient: Float): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
+                                    is ScmInt -> floatLoop(index = index + 1, quotient = quotient / obj.value)
+                                    is ScmFloat -> floatLoop(index = index + 1, quotient = quotient / obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, quotient / obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
+                            } else {
+                                ScmFloat.make(quotient, vm.res)
+                            }
+
+                        tailrec fun intLoop(index: Int, quotient: Int): PtrObject =
+                            if (index < n) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt -> {
                                         if (obj.value == 0) {
-                                            throw KevesExceptions.expectedNonZero(procDivide.id)
+                                            throw KevesExceptions.expectedNonZero(id)
                                         }
                                         val remainder = quotient % obj.value
                                         if (remainder == 0) {
@@ -214,205 +311,218 @@ object R7rsNumber {
                                             doubleLoop(index + 1, quotient.toDouble() / obj.value.toDouble())
                                         }
                                     }
-                                    is ScmDouble -> doubleLoop(index + 1, quotient.toDouble() / obj.value)
-                                    else -> throw KevesExceptions.expectedNumber(procDivide.id)
+                                    is ScmFloat -> floatLoop(index + 1, quotient / obj.value)
+                                    is ScmDouble -> doubleLoop(index + 1, quotient / obj.value)
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmInt(quotient)
+                                ScmInt.make(quotient, vm.res)
                             }
 
-                        when (val first = vm.stack.index(sp, 0)) {
+                        when (val first = vm.stack.index(sp, 0).toVal(res)) {
                             is ScmInt -> intLoop(1, first.value)
+                            is ScmFloat -> floatLoop(1, first.value)
                             is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw KevesExceptions.expectedNumber(procDivide.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
                 }
-                vm.scmProcReturn(quotient, n, this)
+                vm.scmProcReturn(quotient, n)
             }
-        }
+        })
     }
 
     /** procedure: = */
-    val procEqual: ScmProcedure by lazy {
-        object : ScmProcedure("=", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procEqual by lazy {
+        res.addProcedure(object : ScmProcedure("=", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procEqual.id)
+                    0 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
+                        tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last == obj.value.toDouble())
                                             doubleLoop(index = index + 1, last = obj.value.toDouble())
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last == obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procEqual.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
+                        tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last == obj.value) intLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last.toDouble() == obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procEqual.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0)) {
+                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
                             is ScmInt -> intLoop(1, first.value)
                             is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw KevesExceptions.expectedNumber(procEqual.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: '<' */
-    val procLessThan: ScmProcedure by lazy {
-        object : ScmProcedure("<", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procLessThan by lazy {
+        res.addProcedure(object : ScmProcedure("<", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procLessThan.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
+                    2 -> {
+                        val sp = vm.sp
+                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val result = try {
+                            if (obj1.isLessThan(obj2)) res.constTrue else res.constFalse
+                        } catch (e: IllegalArgumentException) {
+                            throw KevesExceptions.expectedNumber(id)
+                        }
+                        vm.scmProcReturn(result, n)
+                    }
                     else -> {
                         val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
+                        tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last < obj.value.toDouble()) doubleLoop(
                                             index = index + 1,
                                             last = obj.value.toDouble()
                                         )
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last < obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procLessThan.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
+                        tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last < obj.value) intLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last.toDouble() < obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procLessThan.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0)) {
+                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
                             is ScmInt -> intLoop(1, first.value)
                             is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw KevesExceptions.expectedNumber(procLessThan.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: '>' */
-    val procGraterThan: ScmProcedure by lazy {
-        object : ScmProcedure(">", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procGraterThan by lazy {
+        res.addProcedure(object : ScmProcedure(">", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procGraterThan.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        tailrec fun doubleLoop(index: Int, last: Double): ScmObject =
+                        tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last > obj.value.toDouble())
                                             doubleLoop(index = index + 1, last = obj.value.toDouble())
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last > obj.value) doubleLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procGraterThan.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        tailrec fun intLoop(index: Int, last: Int): ScmObject =
+                        tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index)) {
+                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
                                     is ScmInt ->
                                         if (last > obj.value) intLoop(index = index + 1, last = obj.value)
-                                        else ScmConstant.FALSE
+                                        else res.constFalse
                                     is ScmDouble ->
                                         if (last.toDouble() > obj.value) doubleLoop(index + 1, obj.value)
-                                        else ScmConstant.FALSE
-                                    else -> throw KevesExceptions.expectedNumber(procGraterThan.id)
+                                        else res.constFalse
+                                    else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmConstant.TRUE
+                                res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0)) {
+                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
                             is ScmInt -> intLoop(1, first.value)
                             is ScmDouble -> doubleLoop(1, first.value)
-                            else -> throw KevesExceptions.expectedNumber(procGraterThan.id)
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: zero? */
-    val procZeroQ: ScmProcedure by lazy {
-        object : ScmProcedure("zero?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procZeroQ by lazy {
+        res.addProcedure(object : ScmProcedure("zero?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procZeroQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val result = when (val obj = vm.stack.index(vm.sp, 0)) {
-                            is ScmInt -> if (obj.value == 0) ScmConstant.TRUE else ScmConstant.FALSE
-                            is ScmFloat -> if (obj.value == 0f) ScmConstant.TRUE else ScmConstant.FALSE
-                            is ScmDouble -> if (obj.value == 0.0) ScmConstant.TRUE else ScmConstant.FALSE
-                            else -> throw KevesExceptions.expectedNumber(procZeroQ.id)
+                        val result = when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
+                            is ScmInt -> if (obj.value == 0) res.constTrue else res.constFalse
+                            is ScmFloat -> if (obj.value == 0f) res.constTrue else res.constFalse
+                            is ScmDouble -> if (obj.value == 0.0) res.constTrue else res.constFalse
+                            else -> throw KevesExceptions.expectedNumber(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procZeroQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 }

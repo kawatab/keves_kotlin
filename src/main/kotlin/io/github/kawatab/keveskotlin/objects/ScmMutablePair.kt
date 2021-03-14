@@ -21,55 +21,89 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmMutablePair(car: ScmObject?, cdr: ScmObject?) : ScmPair(car, cdr) {
-    fun assignCar(x: ScmObject?) {
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrMutablePair
+import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.PtrPair
+
+class ScmMutablePair private constructor(car: PtrObject, cdr: PtrObject) : ScmPair(car, cdr) {
+    fun assignCar(x: PtrObject) {
         car = x
     }
 
-    fun assignCdr(x: ScmObject?) {
+    fun assignCdr(x: PtrObject) {
         cdr = x
     }
 
     companion object {
-        fun makeList(k: Int): ScmMutablePair? = makeList(k, ScmConstant.UNDEF, null)
-        fun makeList(k: Int, fill: ScmObject?): ScmMutablePair? = makeList(k, fill, null)
+        fun make(car: PtrObject, cdr: PtrObject, res: KevesResources) =
+            ScmMutablePair(car, cdr).let { res.addMutablePair(it) }
 
-        private tailrec fun makeList(k: Int, fill: ScmObject?, result: ScmMutablePair?): ScmMutablePair? =
-            if (k > 0) makeList(k - 1, fill, ScmMutablePair(fill, result))
+        fun makeList(k: Int, res: KevesResources): PtrMutablePair = res.makeList(k, res.constUndef, PtrMutablePair(0))
+        fun makeList(k: Int, fill: PtrObject, res: KevesResources): PtrMutablePair =
+            res.makeList(k, fill, PtrMutablePair(0))
+
+        private tailrec fun KevesResources.makeList(
+            k: Int,
+            fill: PtrObject,
+            result: PtrMutablePair
+        ): PtrMutablePair =
+            if (k > 0) makeList(k - 1, fill, make(fill, PtrObject(result.ptr), this))
             else result
 
-        fun append(list1: ScmPair?, list2: ScmObject?): ScmObject? = appendHelper(list1?.let { reverse(it) }, list2)
+        fun append(list1: PtrPair, list2: PtrObject, res: KevesResources): PtrObject =
+            if (list1.isNull()) list2 else res.appendHelper(reverse(list1.toPairNonNull(), res), list2)
 
-        private tailrec fun appendHelper(reversedList: ScmPair?, result: ScmObject?): ScmObject? =
-            if (reversedList == null) result
-            else appendHelper(reversedList.cdr as? ScmPair, ScmMutablePair(reversedList.car, result))
-
-        fun listCopy(list: ScmPair): ScmPair = ScmMutablePair(list.car, null).also { copy ->
-            listCopy(list.cdr, copy, ArrayDeque())
+        private tailrec fun KevesResources.appendHelper(
+            reversedList: PtrPair,
+            result: PtrObject
+        ): PtrObject {
+            val valReversedList = getPair(reversedList)
+            return if (valReversedList == null) PtrObject(result.ptr)
+            else appendHelper(PtrPair(valReversedList.cdr.ptr), PtrObject(make(valReversedList.car, result, this).ptr))
         }
 
-        private tailrec fun listCopy(rest: ScmObject?, last: ScmMutablePair, tracedPair: ArrayDeque<ScmPair>) {
-            if (rest is ScmPair) {
+        fun listCopy(list: PtrPair, res: KevesResources): PtrPair =
+            PtrPair(make(res.getPair(list)!!.car, PtrObject(0), res).also { copy ->
+                res.listCopy(res.getPair(list)!!.cdr, copy, ArrayDeque())
+            }.ptr)
+
+        private tailrec fun KevesResources.listCopy(
+            rest: PtrObject,
+            last: PtrMutablePair,
+            tracedPair: ArrayDeque<PtrObject>
+        ) {
+            val valRest = get(rest)
+            if (valRest is ScmPair) {
                 if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot copy circulated list")
                 tracedPair.addLast(rest)
-                val next = ScmMutablePair(rest.car, null)
-                last.assignCdr(next)
-                listCopy(rest.cdr, next, tracedPair)
+                val next = make(valRest.car, PtrObject(0), this)
+                getMutablePair(last)!!.assignCdr(PtrObject(next.ptr))
+                listCopy(valRest.cdr, PtrMutablePair(next.ptr), tracedPair)
             } else {
-                last.assignCdr(rest)
+                getMutablePair(last)!!.assignCdr(rest)
             }
         }
 
-        fun reverse(list: ScmPair): ScmPair? =
-            reverse(list.cdr, ScmMutablePair(list.car, null), ArrayDeque<ScmPair>().apply { addLast(list) })
+        fun reverse(list: PtrPair, res: KevesResources): PtrMutablePair {
+            val valList = res.getPair(list)
+            return res.reverse(
+                valList!!.cdr,
+                make(valList.car, PtrObject(0), res),
+                ArrayDeque<PtrObject>().apply { addLast(PtrObject(list.ptr)) })
+        }
 
-        private tailrec fun reverse(rest: ScmObject?, result: ScmPair?, tracedPair: ArrayDeque<ScmPair>): ScmPair? =
-            when (rest) {
+        private tailrec fun KevesResources.reverse(
+            rest: PtrObject,
+            result: PtrMutablePair,
+            tracedPair: ArrayDeque<PtrObject>
+        ): PtrMutablePair =
+            when (val valRest = get(rest)) {
                 null -> result
                 is ScmPair -> {
                     if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
                     tracedPair.addLast(rest)
-                    reverse(rest.cdr, ScmMutablePair(rest.car, result), tracedPair)
+                    reverse(valRest.cdr, make(valRest.car, PtrObject(result.ptr), this), tracedPair)
                 }
                 else -> throw IllegalArgumentException("cannot reverse improper list")
             }

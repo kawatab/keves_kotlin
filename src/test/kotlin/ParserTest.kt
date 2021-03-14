@@ -20,7 +20,6 @@
  */
 
 import io.github.kawatab.keveskotlin.Keves
-import io.github.kawatab.keveskotlin.Keves.Companion.getStringForWrite
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -29,7 +28,7 @@ class ParserTest {
     fun test001() {
         val scheme = Keves()
         val result = scheme.parse("()")
-        assertEquals("(begin ())", getStringForWrite(result.first))
+        assertEquals("(begin ())", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -37,7 +36,7 @@ class ParserTest {
     fun test002() {
         val scheme = Keves()
         val result = scheme.parse("symbol")
-        assertEquals("(begin symbol)", getStringForWrite(result.first))
+        assertEquals("(begin symbol)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -45,7 +44,7 @@ class ParserTest {
     fun test003() {
         val scheme = Keves()
         val result = scheme.parse("\"string\"")
-        assertEquals("(begin \"string\")", getStringForWrite(result.first))
+        assertEquals("(begin \"string\")", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -53,7 +52,7 @@ class ParserTest {
     fun test004() {
         val scheme = Keves()
         val result = scheme.parse("123")
-        assertEquals("(begin 123)", getStringForWrite(result.first))
+        assertEquals("(begin 123)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -61,7 +60,7 @@ class ParserTest {
     fun test005() {
         val scheme = Keves()
         val result = scheme.parse("-123.45")
-        assertEquals("(begin -123.45)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -69,7 +68,7 @@ class ParserTest {
     fun test006() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 123 abc")
-        assertEquals("(begin -123.45 123 abc)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 123 abc)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -77,7 +76,7 @@ class ParserTest {
     fun test007() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 (123 abc)")
-        assertEquals("(begin -123.45 (123 abc))", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 (123 abc))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -85,7 +84,7 @@ class ParserTest {
     fun test008() {
         val scheme = Keves()
         val result = scheme.parse("(123 abc)")
-        assertEquals("(begin (123 abc))", getStringForWrite(result.first))
+        assertEquals("(begin (123 abc))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -100,7 +99,7 @@ class ParserTest {
     fun test010() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 ;; ) \n 123 abc")
-        assertEquals("(begin -123.45 123 abc)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 123 abc)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -108,7 +107,7 @@ class ParserTest {
     fun test011() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 #t;; ) \n #t #true 123 abc #f")
-        assertEquals("(begin -123.45 #t #t #t 123 abc #f)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 #t #t #t 123 abc #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -116,7 +115,7 @@ class ParserTest {
     fun test012() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 #t;; ) \n#true\n #f #true 123 abc #true")
-        assertEquals("(begin -123.45 #t #t #f #t 123 abc #t)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 #t #t #f #t 123 abc #t)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -124,7 +123,7 @@ class ParserTest {
     fun test013() {
         val scheme = Keves()
         val result = scheme.parse("-123.45 #false;; ) \n#true\n #f #true 123 abc #false")
-        assertEquals("(begin -123.45 #f #t #f #t 123 abc #f)", getStringForWrite(result.first))
+        assertEquals("(begin -123.45 #f #t #f #t 123 abc #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -132,7 +131,7 @@ class ParserTest {
     fun test014() {
         val scheme = Keves()
         val result = scheme.parse("#|-123.45 #false;; ) \n#true\n|# #f #true 123 abc #false")
-        assertEquals("(begin #f #t 123 abc #f)", getStringForWrite(result.first))
+        assertEquals("(begin #f #t 123 abc #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -140,7 +139,7 @@ class ParserTest {
     fun test015() {
         val scheme = Keves()
         val result = scheme.parse("13 \"abc\" #| #|-123.45 #false;; ) \n#true\n|# #f #true|# 123 abc #false")
-        assertEquals("(begin 13 \"abc\" 123 abc #f)", getStringForWrite(result.first))
+        assertEquals("(begin 13 \"abc\" 123 abc #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -148,7 +147,7 @@ class ParserTest {
     fun test016() {
         val scheme = Keves()
         val result = scheme.parse("13 \"abc\"#| #|-123.45 #false;; ) \n#true\n|# #f #true |# 123 abc #false")
-        assertEquals("(begin 13 \"abc\" 123 abc #f)", getStringForWrite(result.first))
+        assertEquals("(begin 13 \"abc\" 123 abc #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -156,7 +155,7 @@ class ParserTest {
     fun test017() {
         val scheme = Keves()
         val result = scheme.parse("    ")
-        assertEquals("()", getStringForWrite(result.first))
+        assertEquals("()", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -164,7 +163,7 @@ class ParserTest {
     fun test018() {
         val scheme = Keves()
         val result = scheme.parse("#;13 \"abc\"#| #|-123.45 #false;; ) \n#true\n|# #f #true |# 123 def #false")
-        assertEquals("(begin \"abc\" 123 def #f)", getStringForWrite(result.first))
+        assertEquals("(begin \"abc\" 123 def #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -173,7 +172,7 @@ class ParserTest {
         val scheme = Keves()
         val result =
             scheme.parse("(13 \"abc\"#| #|-123.45 (#false;; )) \n#true\n|# #f #true |# (123 (def) (134 567)) #false)")
-        assertEquals("(begin (13 \"abc\" (123 (def) (134 567)) #f))", getStringForWrite(result.first))
+        assertEquals("(begin (13 \"abc\" (123 (def) (134 567)) #f))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -182,7 +181,7 @@ class ParserTest {
         val scheme = Keves()
         val result =
             scheme.parse("#;13 #;\"abc\"#| #|-123.45 (#false;; )) \n#true\n|# #f #true |# (123 (def) (134 567)) #false")
-        assertEquals("(begin (123 (def) (134 567)) #f)", getStringForWrite(result.first))
+        assertEquals("(begin (123 (def) (134 567)) #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -191,7 +190,7 @@ class ParserTest {
         val scheme = Keves()
         val result =
             scheme.parse("#;13 #;  \"abc\"#| #|-123.45 (#false;; )) \n#true\n|# #f #true |# (123 (def) #;(134 (567) \"abc\")) #false")
-        assertEquals("(begin (123 (def)) #f)", getStringForWrite(result.first))
+        assertEquals("(begin (123 (def)) #f)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -209,7 +208,7 @@ class ParserTest {
         )
         assertEquals(
             "(begin ... + +soup+ <=? ->string a34kTMNs lambda list->vector q V17a |two words| the-word-recursion-has-many-meanings)",
-            getStringForWrite(result.first)
+            scheme.getStringForWrite(result.first.toVal(scheme.res))
         )
         assertEquals(true, result.second.isEmpty())
     }
@@ -218,7 +217,7 @@ class ParserTest {
     fun test023() {
         val scheme = Keves()
         val result = scheme.parse("'a")
-        assertEquals("(begin (quote a))", getStringForWrite(result.first))
+        assertEquals("(begin (quote a))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -226,7 +225,7 @@ class ParserTest {
     fun test024() {
         val scheme = Keves()
         val result = scheme.parse("'    a")
-        assertEquals("(begin (quote a))", getStringForWrite(result.first))
+        assertEquals("(begin (quote a))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -234,7 +233,7 @@ class ParserTest {
     fun test025() {
         val scheme = Keves()
         val result = scheme.parse("'    a   b")
-        assertEquals("(begin (quote a) b)", getStringForWrite(result.first))
+        assertEquals("(begin (quote a) b)", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -242,7 +241,7 @@ class ParserTest {
     fun test026() {
         val scheme = Keves()
         val result = scheme.parse("'(    a   b)")
-        assertEquals("(begin (quote (a b)))", getStringForWrite(result.first))
+        assertEquals("(begin (quote (a b)))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -250,7 +249,7 @@ class ParserTest {
     fun test027() {
         val scheme = Keves()
         val result = scheme.parse("'(  (123 4.5)  a ()  b)")
-        assertEquals("(begin (quote ((123 4.5) a () b)))", getStringForWrite(result.first))
+        assertEquals("(begin (quote ((123 4.5) a () b)))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -258,7 +257,7 @@ class ParserTest {
     fun test028() {
         val scheme = Keves()
         val result = scheme.parse("'(list a b)")
-        assertEquals("(begin (quote (list a b)))", getStringForWrite(result.first))
+        assertEquals("(begin (quote (list a b)))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -266,7 +265,7 @@ class ParserTest {
     fun test029() {
         val scheme = Keves()
         val result = scheme.parse("`(list a b)")
-        assertEquals("(begin (quasiquote (list a b)))", getStringForWrite(result.first))
+        assertEquals("(begin (quasiquote (list a b)))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -274,7 +273,7 @@ class ParserTest {
     fun test030() {
         val scheme = Keves()
         val result = scheme.parse("'(list a 'b)")
-        assertEquals("(begin (quote (list a (quote b))))", getStringForWrite(result.first))
+        assertEquals("(begin (quote (list a (quote b))))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -282,7 +281,7 @@ class ParserTest {
     fun test031() {
         val scheme = Keves()
         val result = scheme.parse("'(list #\\a #\\b #\\語 #\\𑄸 #\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)")
-        assertEquals("(begin (quote (list #\\a #\\b #\\語 #\\𑄸 #\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)))", getStringForWrite(result.first).replace("\n", "\\n"))
+        assertEquals("(begin (quote (list #\\a #\\b #\\語 #\\𑄸 #\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)))", scheme.getStringForWrite(result.first.toVal(scheme.res)).replace("\n", "\\n"))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -295,15 +294,15 @@ class ParserTest {
     fun testR7RS0201() {
         val scheme = Keves()
         val result1 = scheme.parse("|H\\x65;llo|")
-        assertEquals("(begin Hello)", getStringForWrite(result1.first))
+        assertEquals("(begin Hello)", scheme.getStringForWrite(result1.first.toVal(scheme.res)))
         assertEquals(true, result1.second.isEmpty())
 
         val result2 = scheme.parse("|\\x3BB;|")
-        assertEquals("(begin λ)", getStringForWrite(result2.first))
+        assertEquals("(begin λ)", scheme.getStringForWrite(result2.first.toVal(scheme.res)))
         assertEquals(true, result2.second.isEmpty())
 
         val result3 = scheme.parse("|\\t\\t|")
-        assertEquals("(begin |\\x09;\\x09;|)", getStringForWrite(result3.first))
+        assertEquals("(begin |\\x09;\\x09;|)", scheme.getStringForWrite(result3.first.toVal(scheme.res)))
         assertEquals(true, result3.second.isEmpty())
 
         val result4 = scheme.parse(
@@ -317,7 +316,7 @@ class ParserTest {
         )
         assertEquals(
             "(begin ... + +soup+ <=? ->string a34kTMNs lambda list->vector q V17a |two words| |two words| the-word-recursion-has-many-meanings)",
-            getStringForWrite(result4.first)
+            scheme.getStringForWrite(result4.first.toVal(scheme.res))
         )
         assertEquals(true, result4.second.isEmpty())
     }
@@ -339,7 +338,7 @@ class ParserTest {
         )
         assertEquals(
             "(begin (define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1)))))))",
-            getStringForWrite(result.first)
+            scheme.getStringForWrite(result.first.toVal(scheme.res))
         )
         assertEquals(true, result.second.isEmpty())
     }
@@ -348,10 +347,11 @@ class ParserTest {
     fun testR7RS040104() {
         val scheme = Keves()
         val result1 = scheme.parse("((lambda x x) 3 4 5 6)")
-        val result2 = scheme.parse("((lambda (x y . z) z) 3 4 (list 5 6))")
-        assertEquals("(begin ((lambda x x) 3 4 5 6))", getStringForWrite(result1.first))
+        assertEquals("(begin ((lambda x x) 3 4 5 6))", scheme.getStringForWrite(result1.first.toVal(scheme.res)))
         assertEquals(true, result1.second.isEmpty())
-        assertEquals("(begin ((lambda (x y . z) z) 3 4 (list 5 6)))", getStringForWrite(result2.first))
+        val scheme2 = Keves()
+        val result2 = scheme2.parse("((lambda (x y . z) z) 3 4 (list 5 6))")
+        assertEquals("(begin ((lambda (x y . z) z) 3 4 (list 5 6)))", scheme2.getStringForWrite(result2.first.toVal(scheme2.res)))
         assertEquals(true, result2.second.isEmpty())
     }
 
@@ -374,7 +374,7 @@ class ParserTest {
                     "(quasiquote ((foo (unquote (- 10 3))) (unquote-splicing (cdr (quote (c)))) unquote (car (quote (cons))))) " +
                     "(quasiquote #(10 5 (unquote (sqrt 4)) (unquote-splicing (map sqrt (quote (16 9)))) 8)) " +
                     "(let ((foo (quote (foo bar))) (@baz (quote baz))) (quasiquote (list (unquote-splicing foo) (unquote @baz)))))",
-            getStringForWrite(result.first)
+            scheme.getStringForWrite(result.first.toVal(scheme.res))
         )
         assertEquals(true, result.second.isEmpty())
     }
@@ -383,7 +383,7 @@ class ParserTest {
     fun testR7RS060901() {
         val scheme = Keves()
         val result = scheme.parse("#u8(0 10\n 5)")
-        assertEquals("(begin #u8(0 10 5))", getStringForWrite(result.first))
+        assertEquals("(begin #u8(0 10 5))", scheme.getStringForWrite(result.first.toVal(scheme.res)))
         assertEquals(true, result.second.isEmpty())
     }
 
@@ -391,43 +391,43 @@ class ParserTest {
     fun testR7RS0601() {
         val scheme = Keves()
         val expectedEq01 = "(begin (eq? (quote a) (quote a)))"
-        val expectedEq02 = "(begin (eq? (quote (a)) (quote (a))))"
-        val expectedEq03 = "(begin (eq? (list (quote a)) (list (quote a))))"
-        val expectedEq04 = "(begin (eq? \"a\" \"a\"))"
-        val expectedEq05 = "(begin (eq? \"\" \"\"))"
-        val expectedEq06 = "(begin (eq? (quote ()) (quote ())))"
-        val expectedEq07 = "(begin (eq? + 2 2))"
-        val expectedEq08 = "(begin (eq? #\\A #\\A))"
-        val expectedEq09 = "(begin (eq? car car))"
-        val expectedEq10 = "(begin (let ((n (+ 2 3))) (eq? n n)))"
-        val expectedEq11 = "(begin (let ((x (quote (a)))) (eq? x x)))"
-        val expectedEq12 = "(begin (let ((x (quote #()))) (eq? x x)))"
-        val expectedEq13 = "(begin (let ((p (lambda (x) x))) (eq? p p)))"
         val testEq01 = scheme.parse("(eq? (quote a) (quote a))")
+        assertEquals(expectedEq01, scheme.getStringForWrite(testEq01.first.toVal(scheme.res)))
+        val expectedEq02 = "(begin (eq? (quote (a)) (quote (a))))"
         val testEq02 = scheme.parse("(eq? (quote (a)) (quote (a)))")
+        assertEquals(expectedEq02, scheme.getStringForWrite(testEq02.first.toVal(scheme.res)))
+        val expectedEq03 = "(begin (eq? (list (quote a)) (list (quote a))))"
         val testEq03 = scheme.parse("(eq? (list (quote a)) (list (quote a)))")
+        assertEquals(expectedEq03, scheme.getStringForWrite(testEq03.first.toVal(scheme.res)))
+        val expectedEq04 = "(begin (eq? \"a\" \"a\"))"
         val testEq04 = scheme.parse("(eq? \"a\" \"a\")")
+        assertEquals(expectedEq04, scheme.getStringForWrite(testEq04.first.toVal(scheme.res)))
+        val expectedEq05 = "(begin (eq? \"\" \"\"))"
         val testEq05 = scheme.parse("(eq? \"\" \"\")")
+        assertEquals(expectedEq05, scheme.getStringForWrite(testEq05.first.toVal(scheme.res)))
+        val expectedEq06 = "(begin (eq? (quote ()) (quote ())))"
         val testEq06 = scheme.parse("(eq? (quote ()) (quote ()))")
+        assertEquals(expectedEq06, scheme.getStringForWrite(testEq06.first.toVal(scheme.res)))
+        val expectedEq07 = "(begin (eq? + 2 2))"
         val testEq07 = scheme.parse("(eq? + 2 2)")
+        assertEquals(expectedEq07, scheme.getStringForWrite(testEq07.first.toVal(scheme.res)))
+        val expectedEq08 = "(begin (eq? #\\A #\\A))"
         val testEq08 = scheme.parse("(eq? #\\A #\\A)")
+        assertEquals(expectedEq08, scheme.getStringForWrite(testEq08.first.toVal(scheme.res)))
+        val expectedEq09 = "(begin (eq? car car))"
         val testEq09 = scheme.parse("(eq? car car)")
+        assertEquals(expectedEq09, scheme.getStringForWrite(testEq09.first.toVal(scheme.res)))
+        val expectedEq10 = "(begin (let ((n (+ 2 3))) (eq? n n)))"
         val testEq10 = scheme.parse("(let ((n (+ 2 3))) (eq? n n))")
+        assertEquals(expectedEq10, scheme.getStringForWrite(testEq10.first.toVal(scheme.res)))
+        val expectedEq11 = "(begin (let ((x (quote (a)))) (eq? x x)))"
         val testEq11 = scheme.parse("(let ((x (quote (a)))) (eq? x x))")
+        assertEquals(expectedEq11, scheme.getStringForWrite(testEq11.first.toVal(scheme.res)))
+        val expectedEq12 = "(begin (let ((x (quote #()))) (eq? x x)))"
         val testEq12 = scheme.parse("(let ((x (quote #()))) (eq? x x))")
+        assertEquals(expectedEq12, scheme.getStringForWrite(testEq12.first.toVal(scheme.res)))
+        val expectedEq13 = "(begin (let ((p (lambda (x) x))) (eq? p p)))"
         val testEq13 = scheme.parse("(let ((p (lambda (x) x))) (eq? p p))\n")
-        assertEquals(expectedEq01, getStringForWrite(testEq01.first))
-        assertEquals(expectedEq02, getStringForWrite(testEq02.first))
-        assertEquals(expectedEq03, getStringForWrite(testEq03.first))
-        assertEquals(expectedEq04, getStringForWrite(testEq04.first))
-        assertEquals(expectedEq05, getStringForWrite(testEq05.first))
-        assertEquals(expectedEq06, getStringForWrite(testEq06.first))
-        assertEquals(expectedEq07, getStringForWrite(testEq07.first))
-        assertEquals(expectedEq08, getStringForWrite(testEq08.first))
-        assertEquals(expectedEq09, getStringForWrite(testEq09.first))
-        assertEquals(expectedEq10, getStringForWrite(testEq10.first))
-        assertEquals(expectedEq11, getStringForWrite(testEq11.first))
-        assertEquals(expectedEq12, getStringForWrite(testEq12.first))
-        assertEquals(expectedEq13, getStringForWrite(testEq13.first))
+        assertEquals(expectedEq13, scheme.getStringForWrite(testEq13.first.toVal(scheme.res)))
     }
 }

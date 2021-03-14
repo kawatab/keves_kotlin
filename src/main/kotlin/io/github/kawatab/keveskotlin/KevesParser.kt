@@ -27,8 +27,8 @@ import io.github.kawatab.keveskotlin.objects.*
 import io.github.kawatab.keveskotlin.objects.ScmVector.Companion.toVector
 import kotlin.collections.ArrayDeque
 
-class KevesParser(private val text: String) {
-    val errorList = mutableListOf<ScmError>()
+class KevesParser(private val text: String, private val res: KevesResources) {
+    val errorList = mutableListOf<PtrError>()
 
     // delimiter
     private val regexWhiteSpaceAtHead = """^\s.*""".toRegex(RegexOption.DOT_MATCHES_ALL)
@@ -90,26 +90,30 @@ class KevesParser(private val text: String) {
     private val regexCrossHatch =
         """#([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
 
-    fun parse(): ScmPair? {
+    fun parse(): PtrPair {
         errorList.clear()
         return parseTopLevel()
     }
 
-    private fun parseText(text: String): ScmObject {
+    private fun parseText(text: String): PtrObjectNonNull {
         when (text) {
-            "+nan.0" -> return ScmDouble(Double.NaN)
-            "+inf.0" -> return ScmDouble(Double.POSITIVE_INFINITY)
-            "-inf.0" -> return ScmDouble(Double.NEGATIVE_INFINITY)
+            "+nan.0" -> return res.constNaN.toNonNull()
+            "+inf.0" -> return res.constPositiveInfinity.toNonNull()
+            "-inf.0" -> return res.constNegativeInfinity.toNonNull()
         }
-        text.toIntOrNull()?.let { return@parseText ScmInt(it) }
-        text.replace('l', 'e', true).toDoubleOrNull()?.let { return@parseText ScmDouble(it) }
-        text.replace('s', 'e', true).replace('f', 'e', true).toFloatOrNull()?.let { return@parseText ScmFloat(it) }
-        return ScmSymbol.get(text)
+        text.toIntOrNull()?.let { return@parseText ScmInt.make(it, res).toNonNull() }
+        text.replace('l', 'e', true).toDoubleOrNull()
+            ?.let { return@parseText ScmDouble.make(it, res).toNonNull() }
+        text.replace('s', 'e', true).replace('f', 'e', true).toFloatOrNull()
+            ?.let { return@parseText ScmFloat.make(it, res).toNonNull() }
+        return ScmSymbol.get(text, res).toObject().let {
+            if (it.isNotNull()) it.toNonNull() else throw RuntimeException("parseText got null as symbol")
+        }
     }
 
-    private fun parseTopLevel(): ScmPair? {
+    private fun parseTopLevel(): PtrPair {
         var i = 0
-        val stack = ArrayDeque<ScmObject?>()
+        val stack = ArrayDeque<PtrObject>()
         while (i < text.length) {
             parseDatum(index = i, startChar = "")?.let { result ->
                 if (errorList.isEmpty()) stack.addLast(result.first)
@@ -117,17 +121,20 @@ class KevesParser(private val text: String) {
             } ?: break
         }
 
-        var result: ScmPair? = null
+        var result = PtrPair(0)
         while (stack.isNotEmpty()) {
-            result = ScmPair(stack.removeLast(), result)
+            result = ScmPair.make(stack.removeLast(), result.toObject(), res)
         }
-        return result?.let { ScmPair(ScmSymbol.get("begin"), result) }
+        return result.let {
+            if (it.isNull()) it
+            else ScmPair.make(ScmSymbol.get("begin", res).toObject(), result.toObject(), res)
+        }
     }
 
-    private fun parseDatum(index: Int, startChar: String): Pair<ScmObject?, Int>? {
+    private fun parseDatum(index: Int, startChar: String): Pair<PtrObject, Int>? {
         var previousPosition = index
         var i = index
-        val stack = ArrayDeque<ScmObject?>()
+        val stack = ArrayDeque<PtrObject>()
 
         tokenizeLoop@ while (i < text.length) {
             val currentText = text.substring(i)
@@ -135,8 +142,8 @@ class KevesParser(private val text: String) {
                 regexWhiteSpaceAtHead matches currentText -> { // white spaces
                     if (previousPosition != i) {
                         val value = parseText(text.substring(previousPosition, i))
-                        if (startChar.isEmpty()) return value to i + 1
-                        stack.addLast(value)
+                        if (startChar.isEmpty()) return value.toObject() to i + 1
+                        stack.addLast(value.toObject())
                     }
                     i += 1
                     previousPosition = i
@@ -144,8 +151,8 @@ class KevesParser(private val text: String) {
                 regexLeftParenthesis matches currentText -> {
                     if (previousPosition != i) {
                         val value = parseText(text.substring(previousPosition, i))
-                        if (startChar.isEmpty()) return value to i
-                        stack.addLast(value)
+                        if (startChar.isEmpty()) return value.toObject() to i
+                        stack.addLast(value.toObject())
                         previousPosition = i
                     }
                     val result = parseDatum(index = i + 1, startChar = startChar + if (text[i] == '(') ')' else ']')
@@ -162,35 +169,39 @@ class KevesParser(private val text: String) {
                 regexRightParenthesis matches currentText -> {
                     return if (startChar.isNotEmpty()) {
                         if (startChar[startChar.length - 1] == text[i]) {
-                            var result =
-                                if (previousPosition != i) ScmPair.list(parseText(text.substring(previousPosition, i)))
-                                else null
+                            var result: PtrObject =
+                                if (previousPosition != i)
+                                    ScmPair.list(parseText(text.substring(previousPosition, i)).toObject(), res)
+                                        .toObject()
+                                else PtrObject(0)
                             while (stack.isNotEmpty()) {
                                 val value = stack.removeLast()
-                                result = ScmPair(value, result)
+                                result = ScmPair.make(value, result, res).toObject()
                             }
                             result to i + 1
                         } else {
                             errorList.add(
-                                ScmError(
+                                ScmError.make(
                                     "parser",
                                     "Expected ${startChar[startChar.length - 1]}, but got ${text[i]}\n" +
                                             "-----\n" +
-                                            text.substring(previousPosition)
+                                            text.substring(previousPosition),
+                                    res
                                 )
                             )
                             null
                         }
                     } else if (previousPosition != i) {
-                        parseText(text.substring(previousPosition, i)) to i
+                        parseText(text.substring(previousPosition, i)).toObject() to i
                     } else {
                         val openPosition = text.lastIndexOf('\n') + 1
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "not found the begin of parenthesis, but the end was found. \n-----\n${
                                     text.substring(openPosition)
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                         null
@@ -199,7 +210,7 @@ class KevesParser(private val text: String) {
                 regexComment matches currentText -> { // ; ...
                     do {
                         i += 1
-                        if (i >= text.length) return null to i
+                        if (i >= text.length) return PtrObject(0) to i
                         val c = text[i]
                     } while (c != '\n' && c != '\r')
                     previousPosition = i
@@ -207,16 +218,21 @@ class KevesParser(private val text: String) {
                 regexQuote matches currentText -> {
                     val result = parseDatum(index = i + 1, startChar = "") ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "quote is unclosed. \n-----\n${
                                     currentText
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
                     result.let { (value, index) ->
-                        val datum = ScmPair(ScmSymbol.get("quote"), ScmPair(value, null))
+                        val datum: PtrObject = ScmPair.make(
+                            ScmSymbol.get("quote", res).toObject(),
+                            ScmPair.make(value, PtrObject(0), res).toObject(),
+                            res
+                        ).toObject()
                         if (startChar.isEmpty()) return datum to index
                         stack.addLast(datum)
                         i = index
@@ -227,16 +243,21 @@ class KevesParser(private val text: String) {
                 regexQuasiQuote matches currentText -> {
                     val result = parseDatum(index = i + 1, startChar = "") ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "quasiquote is unclosed. \n-----\n${
                                     currentText
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
                     result.let { (value, index) ->
-                        val datum = ScmPair(ScmSymbol.get("quasiquote"), ScmPair(value, null))
+                        val datum: PtrObject = ScmPair.make(
+                            ScmSymbol.get("quasiquote", res).toObject(),
+                            ScmPair.make(value, PtrObject(0), res).toObject(),
+                            res
+                        ).toObject()
                         if (startChar.isEmpty()) return datum to index
                         stack.addLast(datum)
                         i = index
@@ -247,16 +268,21 @@ class KevesParser(private val text: String) {
                     if (i + 1 < text.length && text[i + 1] == '@') {
                         val result = parseDatum(index = i + 2, startChar = "") ?: return null.also {
                             errorList.add(
-                                ScmError(
+                                ScmError.make(
                                     "parser",
                                     "unquote-splicing is unclosed. \n-----\n${
                                         currentText
-                                    }\n-----'"
+                                    }\n-----'",
+                                    res
                                 )
                             )
                         }
                         result.let { (value, index) ->
-                            val datum = ScmPair(ScmSymbol.get("unquote-splicing"), ScmPair(value, null))
+                            val datum: PtrObject = ScmPair.make(
+                                ScmSymbol.get("unquote-splicing", res).toObject(),
+                                ScmPair.make(value, PtrObject(0), res).toObject(),
+                                res
+                            ).toObject()
                             if (startChar.isEmpty()) return datum to index
                             stack.addLast(datum)
                             i = index
@@ -265,16 +291,21 @@ class KevesParser(private val text: String) {
                     } else {
                         val result = parseDatum(index = i + 1, startChar = "") ?: return null.also {
                             errorList.add(
-                                ScmError(
+                                ScmError.make(
                                     "parser",
                                     "unquote is unclosed. \n-----\n${
                                         currentText
-                                    }\n-----'"
+                                    }\n-----'",
+                                    res
                                 )
                             )
                         }
                         result.let { (value, index) ->
-                            val datum = ScmPair(ScmSymbol.get("unquote"), ScmPair(value, null))
+                            val datum: PtrObject = ScmPair.make(
+                                ScmSymbol.get("unquote", res).toObject(),
+                                ScmPair.make(value, PtrObject(0), res).toObject(),
+                                res
+                            ).toObject()
                             if (startChar.isEmpty()) return datum to index
                             stack.addLast(datum)
                             i = index
@@ -289,11 +320,12 @@ class KevesParser(private val text: String) {
                     }
                     if (i >= text.length) return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "found no object after dot. \n-----\n${
                                     text.substring(previousPosition)
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
@@ -312,17 +344,18 @@ class KevesParser(private val text: String) {
                         i += 1
                         if (i >= text.length) return null.also {
                             errorList.add(
-                                ScmError(
+                                ScmError.make(
                                     "parser",
                                     "not found the end of quotation. \n-----\n${
                                         text.substring(previousPosition)
-                                    }\n-----'"
+                                    }\n-----'",
+                                    res
                                 )
                             )
                         }
                     } while (text[i] != '"')
 
-                    val value = ScmString(text.substring(previousPosition + 1, i))
+                    val value = ScmString.make(text.substring(previousPosition + 1, i), res)
                     if (startChar.isEmpty()) return value to i + 1
                     stack.addLast(value)
                     i += 1
@@ -334,11 +367,12 @@ class KevesParser(private val text: String) {
                         i += 1
                         if (i >= text.length) return null.also {
                             errorList.add(
-                                ScmError(
+                                ScmError.make(
                                     "parser",
                                     "not found the end of symbol with vertical lines. \n-----\n${
                                         text.substring(previousPosition)
-                                    }\n-----'"
+                                    }\n-----'",
+                                    res
                                 )
                             )
                         }
@@ -349,17 +383,18 @@ class KevesParser(private val text: String) {
                                     i = index
                                 } ?: return null.also {
                                     errorList.add(
-                                        ScmError(
+                                        ScmError.make(
                                             "parser",
                                             "malformed character \n-----\n${
                                                 text.substring(previousPosition)
-                                            }\n-----'"
+                                            }\n-----'",
+                                            res
                                         )
                                     )
                                 }
                             }
                             '|' -> {
-                                val value = ScmSymbol.get(symbol)
+                                val value: PtrObject = ScmSymbol.get(symbol, res).toObject()
                                 if (startChar.isEmpty()) return value to i + 1
                                 stack.addLast(value)
                                 i += 1
@@ -376,11 +411,12 @@ class KevesParser(private val text: String) {
                         previousPosition = i
                     } ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "not found the end of comment block. \n-----\n${
                                     currentText
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
@@ -391,11 +427,12 @@ class KevesParser(private val text: String) {
                         previousPosition = i
                     } ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "datum comment is unclosed. \n-----\n${
                                     currentText
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
@@ -403,16 +440,17 @@ class KevesParser(private val text: String) {
                 regexVector matches currentText -> {
                     val result = parseDatum(index = i + 2, startChar = ")") ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
                                 "constant vector is unclosed. \n-----\n${
                                     currentText
-                                }\n-----'"
+                                }\n-----'",
+                                res
                             )
                         )
                     }
                     result.let { (value, index) ->
-                        val datum = (value as? ScmPair).toVector()
+                        val datum = (value.toVal(res) as? ScmPair).toVector(res)
                         if (startChar.isEmpty()) return datum to index
                         stack.addLast(datum)
                         i = index
@@ -429,26 +467,26 @@ class KevesParser(private val text: String) {
                     }
                 }
                 regexTrue1 matches currentText -> { // #t
-                    if (startChar.isEmpty()) return ScmConstant.TRUE to i + 2
-                    stack.addLast(ScmConstant.TRUE)
+                    if (startChar.isEmpty()) return res.constTrue to i + 2
+                    stack.addLast(res.constTrue)
                     i += 2
                     previousPosition = i
                 }
                 regexTrue2 matches currentText -> { // #true
-                    if (startChar.isEmpty()) return ScmConstant.TRUE to i + 5
-                    stack.addLast(ScmConstant.TRUE)
+                    if (startChar.isEmpty()) return res.constTrue to i + 5
+                    stack.addLast(res.constTrue)
                     i += 5
                     previousPosition = i
                 }
                 regexFalse1 matches currentText -> { // #f
-                    if (startChar.isEmpty()) return ScmConstant.FALSE to i + 2
-                    stack.addLast(ScmConstant.FALSE)
+                    if (startChar.isEmpty()) return res.constFalse to i + 2
+                    stack.addLast(res.constFalse)
                     i += 2
                     previousPosition = i
                 }
                 regexFalse2 matches currentText -> { // #false
-                    if (startChar.isEmpty()) return ScmConstant.FALSE to i + 6
-                    stack.addLast(ScmConstant.FALSE)
+                    if (startChar.isEmpty()) return res.constFalse to i + 6
+                    stack.addLast(res.constFalse)
                     i += 6
                     previousPosition = i
                 }
@@ -456,9 +494,9 @@ class KevesParser(private val text: String) {
                     val char1 = currentText[2]
                     val (result, length) = if (char1.isSurrogate()) {
                         val char2 = currentText[3]
-                        ScmChar(char1, char2) to 4
+                        ScmChar.make(char1, char2, res) to 4
                     } else {
-                        ScmChar(currentText[2]) to 3
+                        ScmChar.make(currentText[2], res) to 3
                     }
                     if (startChar.isEmpty()) return result to i + length
                     stack.addLast(result)
@@ -466,63 +504,63 @@ class KevesParser(private val text: String) {
                     previousPosition = i
                 }
                 regexAlarm matches currentText -> { // #\alarm
-                    val result = ScmChar('\u0007')
+                    val result = ScmChar.make('\u0007', res)
                     if (startChar.isEmpty()) return result to i + 7
                     stack.addLast(result)
                     i += 7
                     previousPosition = i
                 }
                 regexBackspace matches currentText -> { // #\backspace
-                    val result = ScmChar('\u0008')
+                    val result = ScmChar.make('\u0008', res)
                     if (startChar.isEmpty()) return result to i + 11
                     stack.addLast(result)
                     i += 11
                     previousPosition = i
                 }
                 regexDelete matches currentText -> { // #\delete
-                    val result = ScmChar('\u007F')
+                    val result = ScmChar.make('\u007F', res)
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexEscape matches currentText -> { // #\escape
-                    val result = ScmChar('\u001B')
+                    val result = ScmChar.make('\u001B', res)
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexNewline matches currentText -> { // #\newline
-                    val result = ScmChar('\u000A')
+                    val result = ScmChar.make('\u000A', res)
                     if (startChar.isEmpty()) return result to i + 9
                     stack.addLast(result)
                     i += 9
                     previousPosition = i
                 }
                 regexNull matches currentText -> { // #\null
-                    val result = ScmChar('\u0000')
+                    val result = ScmChar.make('\u0000', res)
                     if (startChar.isEmpty()) return result to i + 6
                     stack.addLast(result)
                     i += 6
                     previousPosition = i
                 }
                 regexReturn matches currentText -> { // #\return
-                    val result = ScmChar('\u000D')
+                    val result = ScmChar.make('\u000D', res)
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexSpace matches currentText -> { // #\space
-                    val result = ScmChar(' ')
+                    val result = ScmChar.make(' ', res)
                     if (startChar.isEmpty()) return result to i + 7
                     stack.addLast(result)
                     i += 7
                     previousPosition = i
                 }
                 regexTab matches currentText -> { // #\tab
-                    val result = ScmChar('\u0009')
+                    val result = ScmChar.make('\u0009', res)
                     if (startChar.isEmpty()) return result to i + 5
                     stack.addLast(result)
                     i += 5
@@ -533,24 +571,25 @@ class KevesParser(private val text: String) {
                         "[0-9a-f]+".toRegex(setOf(RegexOption.IGNORE_CASE)).find(currentText.substring(3))?.value
                             ?: return null.also {
                                 errorList.add(
-                                    ScmError(
+                                    ScmError.make(
                                         "parser",
                                         "Hex scale value of character is wrong. \n-----\n${
                                             currentText
-                                        }\n-----'"
+                                        }\n-----'",
+                                        res
                                     )
                                 )
                             }
 
                     val value = hexValue.toInt(16)
-                    val result = ScmChar(value)
+                    val result = ScmChar.make(value, res)
                     if (startChar.isEmpty()) return result to i + 3 + hexValue.length
                     stack.addLast(result)
                     i += 3 + hexValue.length
                     previousPosition = i
                 }
                 regexCrossHatch matches currentText -> { // #
-                    val result = ScmChar('#')
+                    val result = ScmChar.make('#', res)
                     if (startChar.isEmpty()) return result to i + 1
                     stack.addLast(result)
                     i += 1
@@ -564,7 +603,7 @@ class KevesParser(private val text: String) {
 
         return if (startChar.isEmpty()) {
             if (previousPosition < text.length) {
-                val value = parseText(text.substring(previousPosition, text.length))
+                val value: PtrObject = parseText(text.substring(previousPosition, text.length)).toObject()
                 value to text.length
             } else {
                 null
@@ -574,11 +613,12 @@ class KevesParser(private val text: String) {
                 // TODO("Not detect correct begin position, if there are any comments")
                 val openPosition = text.lastIndexOf('(')
                 errorList.add(
-                    ScmError(
+                    ScmError.make(
                         "parser",
                         "not found the end of parenthesis. The begin is\n-----\n${
                             text.substring(openPosition)
-                        }\n-----'"
+                        }\n-----'",
+                        res
                     )
                 )
             }
@@ -586,16 +626,17 @@ class KevesParser(private val text: String) {
     }
 
     private fun terminateImproperList(
-        stack: ArrayDeque<ScmObject?>,
+        stack: ArrayDeque<PtrObject>,
         i: Int,
         startChar: String
-    ): Pair<ScmObject?, Int>? {
+    ): Pair<PtrObject, Int>? {
         if (startChar.isNotEmpty()) {
             if (stack.isEmpty()) {
                 errorList.add(
-                    ScmError(
+                    ScmError.make(
                         "parser",
-                        "no object before dot. \n-----\n${text.substring(i)}\n-----'"
+                        "no object before dot. \n-----\n${text.substring(i)}\n-----'",
+                        res
                     )
                 )
                 return null
@@ -605,51 +646,55 @@ class KevesParser(private val text: String) {
                 parseDatum(index = i + 1, startChar = startChar.substring(startChar.length - 1))
                     ?: return null.also {
                         errorList.add(
-                            ScmError(
+                            ScmError.make(
                                 "parser",
-                                "dot used illegally. \n-----\n${text.substring(i)}\n-----'"
+                                "dot used illegally. \n-----\n${text.substring(i)}\n-----'",
+                                res
                             )
                         )
                     }
 
-            if ((last as? ScmPair)?.cdr != null) {
+            if ((last.toVal(res) as? ScmPair)?.cdr?.isNotNull() != false) {
                 errorList.add(
-                    ScmError(
+                    ScmError.make(
                         "parser",
-                        "found more than one object after dot. \n-----\n${text.substring(i)}\n-----'"
+                        "found more than one object after dot. \n-----\n${text.substring(i)}\n-----'",
+                        res
                     )
                 )
                 return null
             }
 
-            var result = (last as? ScmPair)?.car
+            var result: PtrObject = (last.toVal(res) as? ScmPair)?.car ?: PtrObject(0)
             while (stack.isNotEmpty()) {
                 val value = stack.removeLast()
-                result = ScmPair(value, result)
+                result = ScmPair.make(value, result, res).toObject()
             }
             return result to next
         } else {
             errorList.add(
-                ScmError(
+                ScmError.make(
                     "parser",
-                    "found dot at top level. \n-----\n${text.substring(i)}\n-----'"
+                    "found dot at top level. \n-----\n${text.substring(i)}\n-----'",
+                    res
                 )
             )
             return null
         }
     }
 
-    private fun parseByteVector(begin: Int): Pair<ScmByteVector, Int>? {
+    private fun parseByteVector(begin: Int): Pair<PtrObject, Int>? {
         var i = begin + 4
         val truncatedBefore = text.substring(i)
         val indexOfLast = truncatedBefore.indexOf(')')
         if (indexOfLast < 0) return null.also {
             errorList.add(
-                ScmError(
+                ScmError.make(
                     "parser",
                     "bytevector is unclosed. \n-----\n${
                         text.substring(i)
-                    }\n-----'"
+                    }\n-----'",
+                    res
                 )
             )
         }
@@ -661,17 +706,18 @@ class KevesParser(private val text: String) {
             val value = textArray[idx].toIntOrNull()?.let { if (it in 0..255) it else null }
                 ?: return null.also {
                     errorList.add(
-                        ScmError(
+                        ScmError.make(
                             "parser",
                             "included non byte object. \n-----\n${
                                 text.substring(i)
-                            }\n-----'"
+                            }\n-----'",
+                            res
                         )
                     )
                 }
             byteArray[idx] = value.toByte()
         }
-        return ScmByteVector(byteArray) to i
+        return ScmByteVector.make(byteArray, res).toObject() to i
     }
 
     private fun skipBlockComment(begin: Int, level: Int): Int? {

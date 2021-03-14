@@ -21,12 +21,12 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-import io.github.kawatab.keveskotlin.KevesCompiler
+import io.github.kawatab.keveskotlin.*
 
-abstract class ScmMacro(private val id: String) : ScmObject() {
-    override fun toStringForWrite(): String = "#<macro $id>"
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+abstract class ScmMacro protected constructor(private val id: String) : ScmObject() {
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+    override fun toString(): String = "#<macro $id>"
 
-    abstract fun transform(x: ScmPair, compiler: KevesCompiler): ScmObject?
+    abstract fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject
 }

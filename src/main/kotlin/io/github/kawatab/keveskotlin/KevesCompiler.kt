@@ -24,110 +24,136 @@ package io.github.kawatab.keveskotlin
 import io.github.kawatab.keveskotlin.libraries.R7rs
 import io.github.kawatab.keveskotlin.objects.*
 
-class KevesCompiler {
-    private val r7rs = R7rs()
+class KevesCompiler(private val res: KevesResources) {
+    private val r7rs = R7rs(res)
     private val listOfBinds = r7rs.listOfBinds
 
 
-    fun transform(x: ScmObject?): ScmObject? {
+    fun transform(x: PtrObject): PtrObject {
         val removedDefine = transformDefine(x)
         return transformWithMacro(removedDefine)
     }
 
-    private fun transformDefine(x: ScmObject?): ScmObject? =
-        if (x is ScmPair) {
-            when (val car = x.car) {
-                is ScmPair -> ScmPair(transformDefine(x = car), transformDefine(x = x.cdr))
+    private fun transformDefine(x: PtrObject): PtrObject {
+        val valX = x.toVal(res)
+        return if (valX is ScmPair) {
+            val car = valX.car
+            when (car.toVal(res)) {
+                is ScmPair -> ScmPair.make(transformDefine(car), transformDefine(valX.cdr), res).toObject()
                 is ScmSymbol -> {
                     when (car) {
-                        ScmSymbol.get("begin") -> {
-                            val (definition, body) = findDefinition(sequence = x.cdr, definition = null)
-                            if (definition == null) {
-                                ScmPair(car, transformDefine(x = x.cdr))
+                        ScmSymbol.get("begin", res).toObject() -> {
+                            val (definition, body) = findDefinition(sequence = valX.cdr, definition = PtrPair(0))
+                            if (definition.isNull()) {
+                                ScmPair.make(car, transformDefine(x = valX.cdr), res).toObject()
                             } else {
                                 ScmPair.list(
                                     car,
                                     ScmPair.listStar(
-                                        ScmSymbol.get("letrec*"),
-                                        ScmPair.reverse(definition),
-                                        transformDefine(x = body)
-                                    )
-                                )
+                                        ScmSymbol.get("letrec*", res).toObject(),
+                                        ScmPair.reverse(definition.toPairNonNull(), res).toObject(),
+                                        transformDefine(x = body),
+                                        res
+                                    ).toObject(),
+                                    res
+                                ).toObject()
                             }
                         }
-                        else -> ScmPair(car, transformDefine(x = x.cdr))
+                        else -> ScmPair.make(car, transformDefine(x = valX.cdr), res).toObject()
                     }
                 }
-                else -> ScmPair(car, transform(x.cdr))
+                else -> ScmPair.make(car, transform(valX.cdr), res).toObject()
             }
         } else {
             x
         }
+    }
 
-    private tailrec fun findDefinition(sequence: ScmObject?, definition: ScmPair?): Pair<ScmPair?, ScmObject?> {
-        if (sequence is ScmPair) {
-            val obj = sequence.car
-            if (obj is ScmPair) {
-                val car = obj.car
-                if (car === ScmSymbol.get("define"))
+    private tailrec fun findDefinition(sequence: PtrObject, definition: PtrPair): Pair<PtrPair, PtrObject> {
+        val valSequence = sequence.toVal(res)
+        if (valSequence is ScmPair) {
+            val obj = valSequence.car
+            val valObj = obj.toVal(res)
+            if (valObj is ScmPair) {
+                val car = valObj.car
+                if (car == ScmSymbol.get("define", res).toObject())
                     return findDefinition(
-                        sequence = sequence.cdr,
-                        definition = ScmPair(findLambda(obj.cdr), definition)
+                        sequence = valSequence.cdr,
+                        definition = ScmPair.make(findLambda(valObj.cdr).toObject(), definition.toObject(), res)
                     )
             }
         }
-        return definition to (findNextDefinition(sequence, null) ?: sequence)
+        return definition to (findNextDefinition(sequence, PtrPair(0))
+            .let { if (it.isNull()) sequence else it.toObject() })
     }
 
-    private fun findLambda(definition: ScmObject?): ScmPair {
-        if (definition !is ScmPair) throw IllegalArgumentException("define is malformed")
-        val car = definition.car
-        val cdr = definition.cdr
-        return when (car) {
-            is ScmSymbol -> definition
+    private fun findLambda(definition: PtrObject): PtrPairNonNull {
+        val valDefinition = definition.toVal(res)
+        if (valDefinition !is ScmPair) throw IllegalArgumentException("define is malformed")
+        val car = valDefinition.car
+        val cdr = valDefinition.cdr
+        return when (val valCar = car.toVal(res)) {
+            is ScmSymbol -> definition.toPairNonNull()
             is ScmPair -> {
-                val variable = car.car
-                val formals = car.cdr
-                if (variable != null && variable !is ScmSymbol) throw IllegalArgumentException("found no identifier in definition")
-                ScmPair.list(variable, ScmPair.listStar(ScmSymbol.get("lambda"), formals, cdr))
+                val variable = valCar.car
+                val formals = valCar.cdr
+                if (variable.isNotNull() && variable.isNotSymbol(res)) throw IllegalArgumentException("found no identifier in definition")
+                ScmPair.list(
+                    variable,
+                    ScmPair.listStar(ScmSymbol.get("lambda", res).toObject(), formals, cdr, res).toObject(),
+                    res
+                ).toPairNonNull()
             }
             else -> throw IllegalArgumentException("found no identifier in definition")
         }
     }
 
-    private tailrec fun findNextDefinition(sequence: ScmObject?, notDefinition: ScmPair?): ScmPair? {
-        tailrec fun loop(rest: ScmPair?, result: ScmPair?): ScmPair? =
-            if (rest == null) result
-            else loop(rest = rest.cdr as? ScmPair, result = ScmPair(rest.car, result))
+    private tailrec fun findNextDefinition(sequence: PtrObject, notDefinition: PtrPair): PtrPair {
+        tailrec fun loop(rest: PtrPair, result: PtrPair): PtrPair =
+            if (rest.isNull()) result
+            else {
+                loop(
+                    rest = rest.cdr(res).let { if (it.isPair(res)) it.toPair() else PtrPair(0) },
+                    result = ScmPair.make(rest.car(res), result.toObject(), res)
+                )
+            }
 
-        if (sequence is ScmPair) {
-            val obj = sequence.car
-            if (obj is ScmPair) {
-                val car = obj.car
-                if (car !== ScmSymbol.get("define"))
+        val valSequence = sequence.toVal(res)
+        if (valSequence is ScmPair) {
+            val obj = valSequence.car
+            val valObj = obj.toVal(res)
+            if (valObj is ScmPair) {
+                val car = valObj.car
+                if (car != ScmSymbol.get("define", res).toObject())
                     return findNextDefinition(
-                        sequence = sequence.cdr,
-                        notDefinition = ScmPair(sequence.car, notDefinition)
+                        sequence = valSequence.cdr,
+                        notDefinition = ScmPair.make(valSequence.car, notDefinition.toObject(), res)
                     )
             }
         }
 
-        return sequence?.let { loop(notDefinition, ScmPair(ScmSymbol.get("begin"), sequence)) }
+        return valSequence?.let {
+            loop(notDefinition, ScmPair.make(ScmSymbol.get("begin", res).toObject(), sequence, res))
+        } ?: PtrPair(0)
     }
 
-    private fun transformWithMacro(x: ScmObject?): ScmObject? =
-        if (x is ScmPair) {
-            when (val car = x.car) {
-                is ScmPair -> ScmPair(transformWithMacro(car), transformWithMacro(x = x.cdr))
-                is ScmSymbol -> {
-                    val obj = findBind(car)?.second
-                    if (obj is ScmMacro) transformWithMacro(x = obj.transform(x, this))
-                    else ScmPair(car, transformWithMacro(x = x.cdr))
+    private fun transformWithMacro(x: PtrObject): PtrObject =
+        when (val valX = x.toVal(res)) {
+            is ScmPair -> {
+                val car = valX.car
+                when (car.toVal(res)) {
+                    is ScmPair -> ScmPair.make(transformWithMacro(car), transformWithMacro(valX.cdr), res).toObject()
+                    is ScmSymbol -> {
+                        val obj: ScmObject? = findBind(car.toSymbol())?.second?.toVal(res)
+                        if (obj is ScmMacro) transformWithMacro(x = obj.transform(x.toPairNonNull(), this))
+                        else ScmPair.make(car, transformWithMacro(x = valX.cdr), res).toObject()
+                    }
+                    else -> ScmPair.make(car, transformWithMacro(x = valX.cdr), res).toObject()
                 }
-                else -> ScmPair(car, transformWithMacro(x = x.cdr))
             }
-        } else {
-            x
+            else -> {
+                x
+            }
         }
 
     /**
@@ -135,68 +161,77 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 110
      */
-    fun compile(x: ScmObject?, e: ScmPair?, s: ScmPair?, next: ScmPair?): ScmPair? =
-        when (x) {
+    fun compile(x: PtrObject, e: PtrPair, s: PtrPair, next: PtrInstruction): PtrInstruction =
+        when (val valX = x.toVal(res)) {
             is ScmSymbol -> {
-                val bind = findBind(x)
-                val obj: ScmObject? = bind?.let { (_, obj) -> obj as? ScmSyntax ?: obj as? ScmProcedure }
-                if (obj != null) {
-                    ScmPair.list(ScmInstruction.Constant(obj, next)) // CONSTANT, obj, next)
+                val bind = findBind(x.toSymbol())
+                val obj: PtrObject = bind?.let { (_, obj) ->
+                    when (obj.toVal(res)) {
+                        is ScmSyntax, is ScmProcedure -> obj
+                        else -> PtrObject(0)
+                    }
+                } ?: PtrObject(0)
+                if (obj.isNotNull()) {
+                    ScmInstruction.Constant.make(obj, next, res)
                 } else {
                     compileRefer(
-                        x,
+                        x.toSymbol(),
                         e,
-                        if (setMemberQ(x, s)) ScmPair.list(ScmInstruction.Indirect(next)/*INDIRECT, next*/) else next
+                        if (setMemberQ(x.toSymbol(), s)) ScmInstruction.Indirect.make(next, res) else next
                     )
                 }
             }
             is ScmPair -> {
-                val bind = (x.car as? ScmSymbol)?.let { symbol: ScmSymbol -> findBind(symbol) }
-                val obj = bind?.second
+                val bind = valX.car.let {
+                    if (it.isSymbol(res)) findBind(it.toSymbol()) else null
+                }
+                val obj: ScmObject? = bind?.second?.toVal(res)
                 when {
                     obj is ScmSyntax -> {
-                        obj.compile(x, e, s, next, this)
+                        obj.compile(x.toPairNonNull(), e, s, next, this)
                     }
                     (obj as? ScmProcedure)?.syntax != null -> {
-                        obj.syntax!!.compile(x, e, s, next, this)
+                        obj.syntax!!.compile(x.toPairNonNull(), e, s, next, this)
                     }
                     else -> {
-                        val instApply = ScmMutablePair(ScmInstruction.Apply(0), null) // APPLY, ScmPair.list(ScmInt(0)))
-                        fun loop(args: ScmPair?, c: ScmPair?, n: Int): ScmPair? =
-                            if (args == null) {
-                                instApply.assignCar(ScmInstruction.Apply(n))
-                                if (tailQ(next)) c
-                                else ScmPair.list(ScmInstruction.Frame(next, c)) // FRAME, next, c)
+                        val ptrInstApply = ScmInstruction.Apply.make(0, res)
+                        val instApply = ptrInstApply.toVal(res) as ScmInstruction.Apply
+                        fun loop(args: PtrPair, c: PtrInstruction, n: Int): PtrInstruction =
+                            if (args.isNull()) {
+                                instApply.n = n
+                                if (tailQ(next, res)) c
+                                else ScmInstruction.Frame.make(next, c, res)
                             } else {
                                 loop(
-                                    args.cdr?.let {
-                                        it as? ScmPair
-                                            ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
-                                    },
-                                    compile(args.car, e, s, ScmPair.list(ScmInstruction.Argument(c))), // ARGUMENT, c)),
+                                    args.cdr(res).also {
+                                        if (it.isNeitherNullNorPair(res))
+                                            throw IllegalArgumentException(
+                                                KevesExceptions.badSyntax(x.toVal(res)!!.toStringForWrite(res))
+                                            )
+                                    }.toPair(),
+                                    compile(args.car(res), e, s, ScmInstruction.Argument.make(c, res)),
                                     n + 1
                                 )
                             }
 
                         loop(
-                            x.cdr?.let {
-                                it as? ScmPair
-                                    ?: throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite()))
-                            },
+                            valX.cdr.also {
+                                if (it.isNeitherNullNorPair(res))
+                                    throw IllegalArgumentException(KevesExceptions.badSyntax(valX.toStringForWrite(res)))
+                            }.toPair(),
                             compile(
-                                x.car,
+                                valX.car,
                                 e,
                                 s,
-                                if (tailQ(next)) {
-                                    ScmPair.list(
-                                        ScmInstruction.Shift( // SHIFT,
-                                            ScmPair.length(x.cdr as? ScmPair),
-                                            (ScmPair.car(next) as ScmInstruction.Return).n, // ScmPair.cadr(next),
-                                            instApply
-                                        )
+                                if (tailQ(next, res)) {
+                                    ScmInstruction.Shift.make( // SHIFT,
+                                        ScmPair.length(valX.cdr.toVal(res) as? ScmPair, res),
+                                        (next.toVal(res) as ScmInstruction.Return).n, // ScmPair.cadr(next),
+                                        ptrInstApply,
+                                        res
                                     )
                                 } else {
-                                    instApply
+                                    ptrInstApply
                                 }
                             ),
                             0
@@ -204,47 +239,50 @@ class KevesCompiler {
                     }
                 }
             }
-            else -> {
-                ScmPair.list(ScmInstruction.Constant(x, next)) // CONSTANT, x, next)
-            }
+            else -> ScmInstruction.Constant.make(x, next, res)
         }
 
-    private fun findBind(symbol: ScmSymbol): Pair<ScmSymbol, ScmObject?>? =
-        listOfBinds.find { (id, _) -> symbol === id }
+    private fun findBind(symbol: PtrSymbol): Pair<PtrSymbol, PtrObject>? =
+        listOfBinds.find { (id, _) -> symbol == id }?.let { it.first to it.second }
 
     /**
      * Looks for assignments to any of the set of variables [v]
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 101
      */
-    fun findSets(x: ScmObject?, v: ScmPair?): ScmPair? =
-        when (x) {
+    fun findSets(x: PtrObject, v: PtrPair): PtrPair =
+        when (val valX = x.toVal(res)) {
             is ScmSymbol ->
-                null
+                PtrPair(0)
             is ScmPair -> {
-                val bind = (x.car as? ScmSymbol)?.let { symbol: ScmSymbol -> findBind(symbol) }
+                val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+                val second = bind?.second?.toVal(res)
                 when {
-                    bind?.second as? ScmSyntax != null ->
-                        (bind.second as ScmSyntax).findSets(x, v, this)
-                    (bind?.second as? ScmProcedure)?.syntax != null ->
-                        (bind.second as ScmProcedure).syntax!!.findSets(x, v, this)
+                    second as? ScmSyntax != null ->
+                        second.findSets(x.toPairNonNull(), v, this)
+                    (second as? ScmProcedure)?.syntax != null ->
+                        second.syntax!!.findSets(x.toPairNonNull(), v, this)
                     else -> {
-                        fun next(x: ScmPair?): ScmPair? =
-                            if (x == null) null
+                        fun next(x: PtrPair): PtrPair =
+                            if (x.isNull()) PtrPair(0)
                             else {
                                 val cdrX = try {
-                                    ScmPair.cdr(x)
+                                    x.cdr(res)
+                                        .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair") }
+                                        .toPair()
                                 } catch (e: IllegalArgumentException) {
                                     throw IllegalArgumentException("'next' got improper list")
-                                }?.let { it as? ScmPair ?: throw IllegalArgumentException("'next' got non pair") }
-                                setUnion(findSets(ScmPair.car(x), v), next(cdrX))
+                                }
+                                setUnion(findSets(x.car(res), v), next(cdrX))
                             }
-                        next(x = if (bind == null) x else (x.cdr as? ScmPair))
+                        next(
+                            if (bind == null) x.toPair()
+                            else valX.cdr.let { if (it.isPair(res)) it.toPair() else PtrPair(0) }
+                        )
                     }
                 }
             }
-            else ->
-                null
+            else -> PtrPair(0)
         }
 
     /**
@@ -252,37 +290,40 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 104
      */
-    fun findFree(x: ScmObject?, b: ScmPair?): ScmPair? =
-        when (x) {
+    fun findFree(x: PtrObject, b: PtrPair): PtrPair =
+        when (val valX = x.toVal(res)) {
             is ScmSymbol -> {
                 when {
-                    findBind(x) != null -> null
-                    setMemberQ(x, b) -> null
-                    else -> ScmPair.list(x)
+                    findBind(x.toSymbol()) != null -> PtrPair(0)
+                    setMemberQ(x.toSymbol(), b) -> PtrPair(0)
+                    else -> ScmPair.list(x, res)
                 }
             }
             is ScmPair -> {
-                val bind = (x.car as? ScmSymbol)?.let { symbol: ScmSymbol -> findBind(symbol) }
+                val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+                val second = bind?.second?.toVal(res)
                 when {
-                    bind?.second as? ScmSyntax != null ->
-                        (bind.second as ScmSyntax).findFree(x, b, this)
-                    (bind?.second as? ScmProcedure)?.syntax != null ->
-                        (bind.second as ScmProcedure).syntax!!.findFree(x, b, this)
+                    second as? ScmSyntax != null ->
+                        second.findFree(x.toPairNonNull(), b, this)
+                    (second as? ScmProcedure)?.syntax != null ->
+                        second.syntax!!.findFree(x.toPairNonNull(), b, this)
                     else -> {
-                        fun next(x: ScmPair?): ScmPair? =
-                            if (x == null) null
+                        fun next(x: PtrPair): PtrPair =
+                            if (x.isNull()) PtrPair(0)
                             else {
-                                val cdrX: ScmPair? = x.cdr?.let {
-                                    it as? ScmPair ?: throw IllegalArgumentException("'next' got non pair")
-                                }
-                                setUnion(findFree(x.car, b), next(cdrX))
+                                val cdrX = x.cdr(res).also {
+                                    if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair")
+                                }.toPair()
+                                setUnion(findFree(x.car(res), b), next(cdrX))
                             }
-                        next(x = if (bind == null) x else (x.cdr as? ScmPair))
+                        next(
+                            x = if (bind == null) x.toPair()
+                            else x.toPair().cdr(res).let { if (it.isPair(res)) it.toPair() else PtrPair(0) }
+                        )
                     }
                 }
             }
-            else ->
-                null
+            else -> PtrPair(0)
         }
 
     /**
@@ -290,16 +331,20 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 95
      */
-    private fun compileRefer(x: ScmSymbol, e: ScmPair?, next: ScmPair?): ScmPair? =
+    private fun compileRefer(x: PtrSymbol, e: PtrPair, next: PtrInstruction): PtrInstruction =
         try {
             compileLookup(
                 x,
                 e,
-                { n: Int -> ScmPair.list(ScmInstruction.ReferLocal(n, next)) }, //REFER_LOCAL, ScmInt(n), next) },
-                { n: Int -> ScmPair.list(ScmInstruction.ReferFree(n, next)) } // REFER_FREE, ScmInt(n), next) }
+                { n: Int ->
+                    ScmInstruction.ReferLocal.make(n, next, res)
+                }, //REFER_LOCAL, ScmInt(n), next) },
+                { n: Int ->
+                    ScmInstruction.ReferFree.make(n, next, res)
+                } // REFER_FREE, ScmInt(n), next) }
             )
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("found undefined variable: ${x.toStringForWrite()}")
+            throw IllegalArgumentException("found undefined variable: ${x.toVal(res)?.toStringForWrite(res)}")
         }
 
     /**
@@ -308,23 +353,23 @@ class KevesCompiler {
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 95
      */
     fun compileLookup(
-        x: ScmSymbol,
-        e: ScmPair?,
-        returnLocal: (Int) -> ScmPair?,
-        returnFree: (Int) -> ScmPair?
-    ): ScmPair? {
-        tailrec fun nextFree(free: ScmObject?, n: Int): ScmPair? =
-            if (x === ScmPair.car(free)) returnFree(n)
-            else nextFree(free = ScmPair.cdr(free), n = n + 1)
+        x: PtrSymbol,
+        e: PtrPair,
+        returnLocal: (Int) -> PtrInstruction,
+        returnFree: (Int) -> PtrInstruction
+    ): PtrInstruction {
+        tailrec fun nextFree(free: PtrObject, n: Int): PtrInstruction =
+            if (x.toObject() == ScmPair.car(free.toVal(res))) returnFree(n)
+            else nextFree(free = ScmPair.cdr(free.toVal(res)), n = n + 1)
 
-        tailrec fun nextLocal(locals: ScmObject?, n: Int): ScmPair? =
+        tailrec fun nextLocal(locals: PtrObject, n: Int): PtrInstruction =
             when {
-                locals == null -> nextFree(free = ScmPair.cdr(e), n = 0)
-                x === ScmPair.car(locals) -> returnLocal(n)
-                else -> nextLocal(locals = ScmPair.cdr(locals), n = n + 1)
+                locals.isNull() -> nextFree(free = ScmPair.cdr(e.toVal(res)), n = 0)
+                x.toObject() == ScmPair.car(locals.toVal(res)) -> returnLocal(n)
+                else -> nextLocal(locals = ScmPair.cdr(locals.toVal(res)), n = n + 1)
             }
 
-        return nextLocal(locals = ScmPair.car(e), n = 0)
+        return nextLocal(locals = ScmPair.car(e.toVal(res)), n = 0)
     }
 
     /**
@@ -332,18 +377,19 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 95
      */
-    tailrec fun collectFree(vars: ScmPair?, e: ScmPair?, next: ScmPair?): ScmPair? =
-        if (vars == null) next
+    tailrec fun collectFree(vars: PtrPair, e: PtrPair, next: PtrInstruction): PtrInstruction =
+        if (vars.isNull()) next
         else collectFree(
-            vars = vars.cdr?.let {
-                it as? ScmPair ?: throw IllegalArgumentException("'collect-free' got none pair as vars")
-            },
+            vars = vars.cdr(res)
+                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'collect-free' got none pair as vars") }
+                .toPair(),
             e = e,
             next = compileRefer(
-                vars.car as? ScmSymbol
-                    ?: throw IllegalArgumentException("'collect-free' got none symbol as identifier"),
+                vars.car(res)
+                    .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'collect-free' got none symbol as identifier") }
+                    .toSymbol(),
                 e,
-                ScmPair.list(ScmInstruction.Argument(next)) // ARGUMENT, next)
+                ScmInstruction.Argument.make(next, res)
             )
         )
 
@@ -352,27 +398,19 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 102
      */
-    fun makeBoxes(sets: ScmPair?, vars: ScmObject?, next: ScmPair?): ScmPair? {
-        fun f(vars: ScmObject?, n: Int): ScmPair? =
-            when (vars) {
+    fun makeBoxes(sets: PtrPair, vars: PtrObject, next: PtrInstruction): PtrInstruction {
+        fun f(vars: PtrObject, n: Int): PtrInstruction =
+            when (val valVars = vars.toVal(res)) {
                 null -> next
                 is ScmPair -> {
-                    val carVars: ScmSymbol = vars.car as? ScmSymbol
-                        ?: throw IllegalArgumentException("'make-box' got non symbol as vars")
-                    if (setMemberQ(carVars, sets)) ScmPair.list(
-                        ScmInstruction.Box(/*BOX, ScmInt(*/n/*)*/,
-                            f(vars.cdr, n + 1)
-                        )
-                    )
-                    else f(vars.cdr, n + 1)
+                    val carVars = valVars.car
+                        .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'make-box' got non symbol as vars") }
+                        .toSymbol()
+                    if (setMemberQ(carVars, sets)) ScmInstruction.Box.make(n, f(valVars.cdr, n + 1), res)
+                    else f(valVars.cdr, n + 1)
                 }
                 is ScmSymbol -> {
-                    if (setMemberQ(vars, sets)) ScmPair.list(
-                        ScmInstruction.BoxRest(
-                            n,
-                            next
-                        )
-                    ) //BOX_REST , ScmInt(n), next)
+                    if (setMemberQ(vars.toSymbol(), sets)) ScmInstruction.BoxRest.make(n, next, res)
                     else next
                 }
                 else ->
@@ -386,16 +424,14 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    tailrec fun setMemberQ(x: ScmSymbol, s: ScmPair?): Boolean =
+    tailrec fun setMemberQ(x: PtrSymbol, s: PtrPair): Boolean =
         when {
-            s == null -> false
-
-            s.car === x -> true
-
+            s.isNull() -> false
+            s.car(res) == x.toObject() -> true
             else -> {
-                val cdrS: ScmPair? = s.cdr?.let {
-                    it as? ScmPair ?: throw IllegalArgumentException("'set-member?' got non pair")
-                }
+                val cdrS = s.cdr(res)
+                    .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-member?' got non pair") }
+                    .toPair()
                 setMemberQ(x = x, s = cdrS)
             }
         }
@@ -405,22 +441,24 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    private fun setCons(x: ScmSymbol, s: ScmPair?): ScmPair? = if (setMemberQ(x, s)) s else ScmPair(x, s)
+    private fun setCons(x: PtrSymbol, s: PtrPair): PtrPair =
+        if (setMemberQ(x, s)) s else ScmPair.make(x.toObject(), s.toObject(), res)
 
     /**
      *
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    tailrec fun setUnion(s1: ScmPair?, s2: ScmPair?): ScmPair? =
-        if (s1 == null) {
+    tailrec fun setUnion(s1: PtrPair, s2: PtrPair): PtrPair =
+        if (s1.isNull()) {
             s2
         } else {
-            val carS1: ScmSymbol =
-                s1.car as? ScmSymbol ?: throw IllegalArgumentException("'set-union' got illegal pair")
-            val cdrS1: ScmPair? = s1.cdr?.let {
-                it as? ScmPair ?: throw IllegalArgumentException("'set-union' got non pair")
-            }
+            val carS1 = s1.car(res)
+                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-union' got illegal pair") }
+                .toSymbol()
+            val cdrS1 = s1.cdr(res)
+                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-union' got non pair") }
+                .toPair()
             setUnion(s1 = cdrS1, s2 = setCons(carS1, s2))
         }
 
@@ -429,17 +467,18 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    fun setMinus(s1: ScmPair?, s2: ScmPair?): ScmPair? =
-        if (s1 == null) {
-            null
+    fun setMinus(s1: PtrPair, s2: PtrPair): PtrPair =
+        if (s1.isNull()) {
+            PtrPair(0)
         } else {
-            val carS1: ScmSymbol = s1.car as? ScmSymbol
-                ?: throw IllegalArgumentException("'set-minus' got non symbol as identifier")
-            val cdrS1: ScmPair? = s1.cdr?.let {
-                it as? ScmPair ?: throw IllegalArgumentException("'set-minus' got non pair")
-            }
+            val carS1 = s1.car(res)
+                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-minus' got non symbol as identifier") }
+                .toSymbol()
+            val cdrS1 = s1.cdr(res)
+                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-minus' got non pair") }
+                .toPair()
             if (setMemberQ(carS1, s2)) setMinus(s1 = cdrS1, s2 = s2)
-            else ScmPair(carS1, setMinus(s1 = cdrS1, s2 = s2))
+            else ScmPair.make(carS1.toObject(), setMinus(s1 = cdrS1, s2 = s2).toObject(), res)
         }
 
     /**
@@ -447,16 +486,17 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    fun setIntersect(s1: ScmPair?, s2: ScmPair?): ScmPair? =
-        if (s1 == null) {
-            null
+    fun setIntersect(s1: PtrPair, s2: PtrPair): PtrPair =
+        if (s1.isNull()) {
+            PtrPair(0)
         } else {
-            val carS1: ScmSymbol = s1.car as? ScmSymbol
-                ?: throw IllegalArgumentException("'set-intersect' got non symbol as identifier")
-            val cdrS1: ScmPair? = s1.cdr?.let {
-                it as? ScmPair ?: throw IllegalArgumentException("'set-intersect' got non pair")
-            }
-            if (setMemberQ(carS1, s2)) ScmPair(carS1, setIntersect(s1 = cdrS1, s2 = s2))
+            val carS1 = s1.car(res)
+                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-intersect' got non symbol as identifier") }
+                .toSymbol()
+            val cdrS1 = s1.cdr(res)
+                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-intersect' got non pair") }
+                .toPair()
+            if (setMemberQ(carS1, s2)) ScmPair.make(carS1.toObject(), setIntersect(s1 = cdrS1, s2 = s2).toObject(), res)
             else setIntersect(s1 = cdrS1, s2 = s2)
         }
 
@@ -465,7 +505,8 @@ class KevesCompiler {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 59
      */
-    fun tailQ(next: ScmPair?): Boolean = next != null && next.car is ScmInstruction.Return // === ScmInstruction.RETURN
+// fun tailQ(next: ScmPair?): Boolean = next != null && next.car is ScmInstruction.Return // === ScmInstruction.RETURN
+    fun tailQ(next: PtrInstruction, res: KevesResources): Boolean = next.toVal(res) is ScmInstruction.Return
 
 /*
 companion object {
@@ -483,20 +524,29 @@ companion object {
 }
  */
 
-    fun splitBinds(binds: ScmPair?): Pair<ScmPair?, ScmPair?> {
-        tailrec fun loop(binds: ScmPair?, variables: ScmPair?, values: ScmPair?): Pair<ScmPair?, ScmPair?> =
-            if (binds == null) {
+    fun splitBinds(binds: PtrPair): Pair<PtrPair, PtrPair> {
+        tailrec fun loop(binds: PtrPair, variables: PtrPair, values: PtrPair): Pair<PtrPair, PtrPair> =
+            if (binds.isNull()) {
                 variables to values
             } else {
-                val pair = binds.car as? ScmPair ?: throw IllegalArgumentException("syntax error")
-                val variable: ScmSymbol = pair.car as? ScmSymbol ?: throw IllegalArgumentException("syntax error")
-                val value: ScmObject? = ScmPair.cadr(pair)
-                val cdr: ScmPair? =
-                    binds.cdr?.let { (it as? ScmPair) ?: throw IllegalArgumentException("Syntax error") }
-                loop(cdr, ScmPair(variable, variables), ScmPair(value, values))
+                val pair = binds.car(res)
+                    .also { if (it.isNotPair(res)) throw IllegalArgumentException("syntax error") }
+                    .toPairNonNull()
+                val variable = pair.car(res)
+                    .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("syntax error") }
+                val value = ScmPair.cadr(pair.toVal(res), res)
+                val cdr = binds.cdr(res)
+                    .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("Syntax error") }
+                    .toPair()
+                loop(
+                    cdr,
+                    ScmPair.make(variable, variables.toObject(), res),
+                    ScmPair.make(value, values.toObject(), res)
+                )
             }
-        return loop(binds, null, null).let { (variables, values) ->
-            variables?.let { ScmPair.reverse(it) } to values?.let { ScmPair.reverse(it) }
+        return loop(binds, PtrPair(0), PtrPair(0)).let { (variables, values) ->
+            (if (variables.isNotNull()) ScmPair.reverse(variables.toPairNonNull(), res) else PtrPair(0)) to
+                    (if (values.isNotNull()) ScmPair.reverse(values.toPairNonNull(), res) else PtrPair(0))
         }
     }
 }

@@ -21,10 +21,45 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmDouble(val value: Double) : ScmObject() {
-    override fun toStringForWrite(): String = value.toString()
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
+
+class ScmDouble private constructor(val value: Double) : ScmObject() {
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+    override fun toString(): String = value.toString()
     override fun eqvQ(other: ScmObject?): Boolean = other is ScmDouble && this.value == other.value
-    override fun equalQ(other: ScmObject?): Boolean = eqvQ(other)
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean = eqvQ(other)
+
+    override fun add(other: ScmObject, res: KevesResources): PtrObject =
+        when (other) {
+            is ScmInt -> make(this.value + other.value, res)
+            is ScmFloat -> make(this.value + other.value, res)
+            is ScmDouble -> make(this.value + other.value, res)
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    override fun subtract(other: ScmObject, res: KevesResources): PtrObject =
+        when (other) {
+            is ScmInt -> make(this.value - other.value, res)
+            is ScmFloat -> make(this.value - other.value, res)
+            is ScmDouble -> make(this.value - other.value, res)
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    override fun isLessThan(other: ScmObject): Boolean =
+        when (other) {
+            is ScmInt -> this.value < other.value
+            is ScmFloat -> this.value < other.value
+            is ScmDouble -> this.value < other.value
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    companion object {
+        fun make(value: Double, res: KevesResources) = ScmDouble(value).let { res.add(it) }
+
+        val NaN = ScmDouble(Double.NaN)
+        val POSITIVE_INFINITY = ScmDouble(Double.POSITIVE_INFINITY)
+        val NEGATIVE_INFINITY = ScmDouble(Double.NEGATIVE_INFINITY)
+    }
 }

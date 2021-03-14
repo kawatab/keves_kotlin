@@ -21,16 +21,23 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
+
 abstract class ScmObject {
-    abstract fun toStringForWrite(): String
-    abstract fun toStringForDisplay(): String
+    abstract fun toStringForWrite(res: KevesResources): String
+    abstract fun toStringForDisplay(res: KevesResources): String
     open fun eqvQ(other: ScmObject?): Boolean = this === other
-    open fun equalQ(other: ScmObject?): Boolean = this === other
+    open fun equalQ(other: ScmObject?, res: KevesResources): Boolean = this === other
+
+    open fun add(other: ScmObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
+    open fun subtract(other: ScmObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
+    open fun isLessThan(other: ScmObject): Boolean = throw IllegalArgumentException("not number")
 
     companion object {
-        fun getStringForWrite(obj: ScmObject?): String = obj?.toStringForWrite() ?: "()"
-        fun getStringForDisplay(obj: ScmObject?): String = obj?.toStringForDisplay() ?: "()"
+        fun getStringForWrite(obj: ScmObject?, res: KevesResources): String = obj?.toStringForWrite(res) ?: "()"
+        fun getStringForDisplay(obj: ScmObject?, res: KevesResources): String = obj?.toStringForDisplay(res) ?: "()"
         fun eqvQ(obj1: ScmObject?, obj2: ScmObject?): Boolean = obj1?.eqvQ(obj2) ?: (obj2 == null)
-        fun equalQ(obj1: ScmObject?, obj2: ScmObject?): Boolean = obj1?.equalQ(obj2) ?: (obj2 == null)
+        fun equalQ(obj1: ScmObject?, obj2: ScmObject?, res: KevesResources): Boolean = obj1?.equalQ(obj2, res) ?: (obj2 == null)
     }
 }

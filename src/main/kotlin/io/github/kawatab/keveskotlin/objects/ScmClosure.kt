@@ -21,28 +21,32 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrInstruction
+import io.github.kawatab.keveskotlin.PtrObject
 import java.lang.IllegalArgumentException
 
-class ScmClosure(
+class ScmClosure private constructor(
     id: String,
-    private val body: ScmPair?,
+    private val body: PtrInstruction,
     private val numArg: Int,
-    private val closure: ScmVector
+    private var closure: IntArray
 ) : ScmProcedure(id, null) {
-    override fun toStringForWrite(): String = "#<procedure $id>"
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+    override fun toStringForWrite(res: KevesResources): String = "#<procedure $id>"
+    override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
+    override fun toString(): String = "#<procedure $id>"
 
-    override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
 
     override fun normalProc(n: Int, vm: KevesVM) {
         when {
             numArg == n -> {
                 val sp = vm.sp
-                vm.x = body
+                vm.x = body.toVal(vm.res)
                 vm.fp = sp
-                vm.clsr = vm.acc as ScmClosure
+                // vm.clsr = vm.acc as ScmClosure
+                vm.clsr = vm.acc.toClosure()
             }
             numArg < 0 -> {
                 val shift = numArg + n
@@ -50,17 +54,17 @@ class ScmClosure(
                 when {
                     shift >= 0 -> {
                         vm.shrinkArgs(sp, n, shift)
-                        vm.x = body
+                        vm.x = body.toVal(vm.res)
                         vm.fp = sp - shift
-                        vm.clsr = vm.acc as ScmClosure
+                        vm.clsr = vm.acc.toClosure()
                         vm.sp = sp - shift
                     }
                     shift == -1 -> {
                         vm.addNullAtEndOfArgs(sp, n)
                         // vm.acc = acc
-                        vm.x = body
+                        vm.x = body.toVal(vm.res)
                         vm.fp = sp + 1
-                        vm.clsr = vm.acc as ScmClosure
+                        vm.clsr = vm.acc.toClosure()
                         vm.sp = sp + 1
                     }
                     else -> {
@@ -79,5 +83,16 @@ class ScmClosure(
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 98
      */
-    fun indexClosure(n: Int): ScmObject? = closure.at(n)
+    fun indexClosure(n: Int): PtrObject = PtrObject(closure[n])
+
+    companion object {
+        fun make(
+            id: String,
+            body: PtrInstruction,
+            numArg: Int,
+            // closure: Array<ScmObject?>,
+            closure: IntArray,
+            res: KevesResources
+        ) = res.addClosure(ScmClosure(id, body, numArg, closure))
+    }
 }

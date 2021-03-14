@@ -53,6 +53,7 @@ fun main(args: Array<String>) {
     scheme.compile("(letrec () (+ 1 2))")
     scheme.compile("(letrec* () (+ 1 2))")
     scheme.compile("(letrec* ((a 1)(b 2)) (+ a b))")
+    scheme.compile("(letrec* ((a 1)(b 2)(c 3)) (+ a b c))")
     scheme.compile("(define a 234) (+ a 432)")
     scheme.compile("(let ([a #t]) (if a (+ 2 3) (* 4 5)))")
     scheme.compile("(define a 234) (define b 455) (define c +) (c a b)")
@@ -130,7 +131,7 @@ fun main(args: Array<String>) {
     scheme.evaluate(
         "(define x (list 'a 'b 'c))\n" +
                 "(define y x)\n" +
-                "y\n" /*+
+                "y\n" +
                 "(list? y)\n" +
                 "(set-cdr! x 4)\n" +
                 "x\n" +
@@ -139,6 +140,12 @@ fun main(args: Array<String>) {
                 "(list? y)\n" +
                 "(set-cdr! x x)\n" +
                 "(list? x)\n"
-                */
+    )
+    scheme.evaluate(
+        "(list (append '(x) '(y))\n" +
+                "(append '(a) '(b c d))\n" +
+                "(append '(a (b)) '((c)))\n" +
+                "(append '(a b) '(c . d))\n" +
+                "(append '() 'a))\n"
     )
 }

@@ -21,1191 +21,1202 @@
 
 package io.github.kawatab.keveskotlin.libraries
 
-import io.github.kawatab.keveskotlin.KevesExceptions
-import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.*
 import io.github.kawatab.keveskotlin.objects.*
 
-object R7rsList {
+class R7rsList(private val res: KevesResources) {
     /** procedure: pair? */
-    val procPairQ: ScmProcedure by lazy {
-        object : ScmProcedure("pair?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procPairQ by lazy {
+        res.addProcedure(object : ScmProcedure("pair?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procPairQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (ScmPair.isPair(obj)) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val ptr = vm.stack.index(vm.sp, 0)
+                        val result =
+                            if (ScmPair.isPair(res.get(ptr))) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procPairQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cons */
-    val procCons: ScmProcedure by lazy {
-        object : ScmProcedure("cons", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCons by lazy {
+        res.addProcedure(object : ScmProcedure("cons", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procCons.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj1 = vm.stack.index(sp, 0)
                         val obj2 = vm.stack.index(sp, 1)
-                        val result = ScmMutablePair(obj1, obj2)
-                        vm.scmProcReturn(result, n, this)
+                        val result = ScmMutablePair.make(obj1, obj2, vm.res)
+                        vm.scmProcReturn(result.toObject(), n)
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procCons.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: car */
-    val procCar: ScmProcedure by lazy {
-        object : ScmProcedure("car", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCar by lazy {
+        res.addProcedure(object : ScmProcedure("car", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val pair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCar.id)
-                        vm.scmProcReturn(pair.car, n, this)
+                        val pair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
+                        vm.scmProcReturn(pair.car, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdr */
-    val procCdr: ScmProcedure by lazy {
-        object : ScmProcedure("cdr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdr by lazy {
+        res.addProcedure(object : ScmProcedure("cdr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val pair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdr.id)
-                        vm.scmProcReturn(pair.cdr, n, this)
+                        val pair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
+                        vm.scmProcReturn(pair.cdr, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: set-car! */
-    val procSetCarE: ScmProcedure by lazy {
-        object : ScmProcedure("set-car!", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procSetCarE by lazy {
+        res.addProcedure(object : ScmProcedure("set-car!", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procSetCarE.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val value = vm.stack.index(sp, 1)
-                        val pair = vm.stack.index(sp, 0) as? ScmMutablePair
-                            ?: throw KevesExceptions.expectedMutablePair(procSetCarE.id)
-                        pair.assignCar(value)
-                        vm.scmProcReturn(ScmConstant.UNDEF, n, this)
+                        val pair = vm.stack.index(sp, 0)
+                            .also { if (it.isNotMutablePair(res)) throw KevesExceptions.expectedMutablePair(id) }
+                            .toMutablePair()
+                        pair.toVal(res)!!.assignCar(value)
+                        vm.scmProcReturn(res.constUndef, n)
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procSetCarE.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: set-cdr! */
-    val procSetCdrE: ScmProcedure by lazy {
-        object : ScmProcedure("set-cdr!", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procSetCdrE by lazy {
+        res.addProcedure(object : ScmProcedure("set-cdr!", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procSetCdrE.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val value = vm.stack.index(sp, 1)
-                        val pair = vm.stack.index(sp, 0) as? ScmMutablePair
-                            ?: throw KevesExceptions.expectedMutablePair(procSetCdrE.id)
-                        pair.assignCdr(value)
-                        vm.scmProcReturn(ScmConstant.UNDEF, n, this)
+                        val pair = vm.stack.index(sp, 0).toMutablePair()
+                            .also { if (it.toObject().isNull()) throw KevesExceptions.expectedMutablePair(id) }
+                        pair.toVal(res)!!.assignCdr(value)
+                        vm.scmProcReturn(res.constUndef, n)
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procSetCdrE.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caar */
-    val procCaar: ScmProcedure by lazy {
-        object : ScmProcedure("caar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaar by lazy {
+        res.addProcedure(object : ScmProcedure("caar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caar(obj)
+                            ScmPair.caar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cadr */
-    val procCadr: ScmProcedure by lazy {
-        object : ScmProcedure("cadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCadr by lazy {
+        res.addProcedure(object : ScmProcedure("cadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cadr(obj)
+                            ScmPair.cadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdar */
-    val procCdar: ScmProcedure by lazy {
-        object : ScmProcedure("cdar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdar by lazy {
+        res.addProcedure(object : ScmProcedure("cdar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdar(obj)
+                            ScmPair.cdar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cddr */
-    val procCddr: ScmProcedure by lazy {
-        object : ScmProcedure("cddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCddr by lazy {
+        res.addProcedure(object : ScmProcedure("cddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cddr(obj)
+                            ScmPair.cddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caaar */
-    val procCaaar: ScmProcedure by lazy {
-        object : ScmProcedure("caaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaaar by lazy {
+        res.addProcedure(object : ScmProcedure("caaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caaar(obj)
+                            ScmPair.caaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caadr */
-    val procCaadr: ScmProcedure by lazy {
-        object : ScmProcedure("caadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaadr by lazy {
+        res.addProcedure(object : ScmProcedure("caadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caadr(obj)
+                            ScmPair.caadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cadar */
-    val procCadar: ScmProcedure by lazy {
-        object : ScmProcedure("cadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCadar by lazy {
+        res.addProcedure(object : ScmProcedure("cadar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cadar(obj)
+                            ScmPair.cadar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caddr */
-    val procCaddr: ScmProcedure by lazy {
-        object : ScmProcedure("caddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaddr by lazy {
+        res.addProcedure(object : ScmProcedure("caddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caddr(obj)
+                            ScmPair.caddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdaar */
-    val procCdaar: ScmProcedure by lazy {
-        object : ScmProcedure("cdaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdaar by lazy {
+        res.addProcedure(object : ScmProcedure("cdaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdaar(obj)
+                            ScmPair.cdaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdadr */
-    val procCdadr: ScmProcedure by lazy {
-        object : ScmProcedure("cdadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdadr by lazy {
+        res.addProcedure(object : ScmProcedure("cdadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdadr(obj)
+                            ScmPair.cdadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cddar */
-    val procCddar: ScmProcedure by lazy {
-        object : ScmProcedure("cddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCddar by lazy {
+        res.addProcedure(object : ScmProcedure("cddar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cddar(obj)
+                            ScmPair.cddar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdddr */
-    val procCdddr: ScmProcedure by lazy {
-        object : ScmProcedure("cdddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdddr by lazy {
+        res.addProcedure(object : ScmProcedure("cdddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdddr(obj)
+                            ScmPair.cdddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caaaar */
-    val procCaaaar: ScmProcedure by lazy {
-        object : ScmProcedure("caaaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaaaar by lazy {
+        res.addProcedure(object : ScmProcedure("caaaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaaaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaaaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caaaar(obj)
+                            ScmPair.caaaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaaaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaaaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caaadr */
-    val procCaaadr: ScmProcedure by lazy {
-        object : ScmProcedure("caaadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaaadr by lazy {
+        res.addProcedure(object : ScmProcedure("caaadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caaadr(obj)
+                            ScmPair.caaadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caadar */
-    val procCaadar: ScmProcedure by lazy {
-        object : ScmProcedure("caadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaadar by lazy {
+        res.addProcedure(object : ScmProcedure("caadar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caadar(obj)
+                            ScmPair.caadar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caaddr */
-    val procCaaddr: ScmProcedure by lazy {
-        object : ScmProcedure("caaddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaaddr by lazy {
+        res.addProcedure(object : ScmProcedure("caaddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCaaddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCaaddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caaddr(obj)
+                            ScmPair.caaddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCaaddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCaaddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cadaar */
-    val procCadaar: ScmProcedure by lazy {
-        object : ScmProcedure("cadaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCadaar by lazy {
+        res.addProcedure(object : ScmProcedure("cadaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cadaar(obj)
+                            ScmPair.cadaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cadadr */
-    val procCadadr: ScmProcedure by lazy {
-        object : ScmProcedure("cadadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCadadr by lazy {
+        res.addProcedure(object : ScmProcedure("cadadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cadadr(obj)
+                            ScmPair.cadadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: caddar */
-    val procCaddar: ScmProcedure by lazy {
-        object : ScmProcedure("caddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCaddar by lazy {
+        res.addProcedure(object : ScmProcedure("caddar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.caddar(obj)
+                            ScmPair.caddar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cadddr */
-    val procCadddr: ScmProcedure by lazy {
-        object : ScmProcedure("cadddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCadddr by lazy {
+        res.addProcedure(object : ScmProcedure("cadddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCadddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCadddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cadddr(obj)
+                            ScmPair.cadddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCadddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCadddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdaaar */
-    val procCdaaar: ScmProcedure by lazy {
-        object : ScmProcedure("cdaaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdaaar by lazy {
+        res.addProcedure(object : ScmProcedure("cdaaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdaaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdaaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdaaar(obj)
+                            ScmPair.cdaaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdaaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdaaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdaadr */
-    val procCdaadr: ScmProcedure by lazy {
-        object : ScmProcedure("cdaadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdaadr by lazy {
+        res.addProcedure(object : ScmProcedure("cdaadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdaadr(obj)
+                            ScmPair.cdaadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdadar */
-    val procCdadar: ScmProcedure by lazy {
-        object : ScmProcedure("cdadar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdadar by lazy {
+        res.addProcedure(object : ScmProcedure("cdadar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdaadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdaadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdadar(obj)
+                            ScmPair.cdadar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdaadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdaadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdaddr */
-    val procCdaddr: ScmProcedure by lazy {
-        object : ScmProcedure("cdaddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdaddr by lazy {
+        res.addProcedure(object : ScmProcedure("cdaddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCdaddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCdaddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdaddr(obj)
+                            ScmPair.cdaddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCdaddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCdaddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cddaar */
-    val procCddaar: ScmProcedure by lazy {
-        object : ScmProcedure("cddaar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCddaar by lazy {
+        res.addProcedure(object : ScmProcedure("cddaar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCddaar.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCddaar.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cddaar(obj)
+                            ScmPair.cddaar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCddaar.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCddaar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cddadr */
-    val procCddadr: ScmProcedure by lazy {
-        object : ScmProcedure("cddadr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCddadr by lazy {
+        res.addProcedure(object : ScmProcedure("cddadr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCddadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCddadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cddadr(obj)
+                            ScmPair.cddadr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCddadr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCddadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cdddar */
-    val procCdddar: ScmProcedure by lazy {
-        object : ScmProcedure("cdddar", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCdddar by lazy {
+        res.addProcedure(object : ScmProcedure("cdddar", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCddadr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCddadr.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cdddar(obj)
+                            ScmPair.cdddar(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw IllegalArgumentException(procCddadr.id)
+                            throw IllegalArgumentException(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCddadr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: cddddr */
-    val procCddddr: ScmProcedure by lazy {
-        object : ScmProcedure("cddddr", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCddddr by lazy {
+        res.addProcedure(object : ScmProcedure("cddddr", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procCddddr.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(procCddddr.id)
+                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                            ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
-                            ScmPair.cddddr(obj)
+                            ScmPair.cddddr(obj, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procCddddr.id)
+                            throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCddddr.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: null? */
-    val procNullQ: ScmProcedure by lazy {
-        object : ScmProcedure("null?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procNullQ by lazy {
+        res.addProcedure(object : ScmProcedure("null?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procNullQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj == null) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val ptr = vm.stack.index(vm.sp, 0)
+                        val result =
+                            if (ptr == PtrObject(0)) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procNullQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: list? */
-    val procListQ: ScmProcedure by lazy {
-        object : ScmProcedure("list?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procListQ by lazy {
+        res.addProcedure(object : ScmProcedure("list?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procListQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (ScmPair.isProperList(obj)) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val result = if (ScmPair.isProperList(
+                                obj,
+                                res
+                            )
+                        ) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procListQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: make-list */
-    val procMakeList: ScmProcedure by lazy {
-        object : ScmProcedure("make-list", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procMakeList by lazy {
+        res.addProcedure(object : ScmProcedure("make-list", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val result = when (n) {
-                    0 -> throw KevesExceptions.expected1Or2DatumGot0(procMakeList.id)
+                    0 -> throw KevesExceptions.expected1Or2DatumGot0(id)
                     1 -> {
-                        val k = (vm.stack.index(vm.sp, 0) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procMakeList.id)
-                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(procMakeList.id)
-                        ScmMutablePair.makeList(k)
+                        val k = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
+                        ScmMutablePair.makeList(k, vm.res)
                     }
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 0) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procMakeList.id)
-                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(procMakeList.id)
+                        val k = (vm.stack.index(sp, 0).toVal(res) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val fill = vm.stack.index(sp, 1)
-                        ScmMutablePair.makeList(k, fill)
+                        ScmMutablePair.makeList(k, fill, vm.res)
                     }
-                    else -> throw KevesExceptions.expected1Or2DatumGotMore(procMakeList.id)
+                    else -> throw KevesExceptions.expected1Or2DatumGotMore(id)
                 }
-                vm.scmProcReturn(result, n, this)
+                vm.scmProcReturn(result.toObject(), n)
             }
-        }
+        })
     }
 
     /** procedure: list */
-    val procList: ScmProcedure by lazy {
-        object : ScmProcedure("list", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procList by lazy {
+        res.addProcedure(object : ScmProcedure("list", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val sp = vm.sp
-                tailrec fun loop(index: Int, result: ScmPair?): ScmPair? =
+                tailrec fun loop(index: Int, result: PtrPair): PtrPair =
                     if (index < 0) {
                         result
                     } else {
                         val obj = vm.stack.index(sp, index)
-                        loop(index - 1, ScmMutablePair(obj, result))
+                        loop(index - 1, ScmMutablePair.make(obj, result.toObject(), vm.res).toPair())
                     }
 
-                val list = loop(index = n - 1, result = null)
-                vm.scmProcReturn(list, n, this)
+                val list = loop(index = n - 1, result = PtrPair(0))
+                vm.scmProcReturn(list.toObject(), n)
             }
-        }
+        })
     }
 
     /** procedure: length */
-    val procLength: ScmProcedure by lazy {
-        object : ScmProcedure("length", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procLength by lazy {
+        res.addProcedure(object : ScmProcedure("length", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procLength.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         val list = vm.stack.index(vm.sp, 0)
                         try {
-                            val length = ScmInt(ScmPair.length(list))
-                            vm.scmProcReturn(length, n, this)
+                            val length = ScmInt.make(ScmPair.length(list.toVal(res), res), vm.res)
+                            vm.scmProcReturn(length, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.expectedProperList(procLength.id)
+                            throw KevesExceptions.expectedProperList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procLength.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: append */
-    val procAppend: ScmProcedure by lazy {
-        object : ScmProcedure("append", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procAppend by lazy {
+        res.addProcedure(object : ScmProcedure("append", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procAppend.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        tailrec fun loop(index: Int, result: ScmObject?): ScmObject? {
+                        tailrec fun loop(index: Int, result: PtrObject): PtrObject {
                             return if (index < 0) {
                                 result
                             } else {
-                                val list = vm.stack.index(sp, index)?.let {
-                                    it as? ScmPair
-                                        ?: throw KevesExceptions.expectedProperList(procAppend.id)
-                                }
-                                loop(index - 1, ScmMutablePair.append(list, result))
+                                val list = vm.stack.index(sp, index)
+                                    .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedProperList(id) }
+                                    .toPair()
+                                loop(
+                                    index - 1,
+                                    ScmMutablePair.append(list, result, vm.res)
+                                )
                             }
                         }
 
-                        val last: ScmObject? = vm.stack.index(sp, n - 1)
+                        val last: PtrObject = vm.stack.index(sp, n - 1)
                         val result = loop(n - 2, last)
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: reverse */
-    val procReverse: ScmProcedure by lazy {
-        object : ScmProcedure("reverse", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procReverse by lazy {
+        res.addProcedure(object : ScmProcedure("reverse", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procReverse.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val reversed = vm.stack.index(vm.sp, 0)?.let { obj ->
-                            (obj as? ScmPair)?.let { list ->
-                                try {
-                                    ScmMutablePair.reverse(list)
+                        val reversed: PtrObject = vm.stack.index(vm.sp, 0).let { obj ->
+                            when {
+                                obj.isNull() -> PtrObject(0)
+                                obj.toVal(res) !is ScmPair -> throw KevesExceptions.expectedList(id)
+                                else -> try {
+                                    ScmMutablePair.reverse(obj.toPair(), vm.res).toObject()
                                 } catch (e: IllegalArgumentException) {
-                                    throw KevesExceptions.expectedProperList(procReverse.id)
+                                    throw KevesExceptions.expectedProperList(id)
                                 }
-                            } ?: throw KevesExceptions.expectedList(procReverse.id)
+                            }
                         }
-                        vm.scmProcReturn(reversed, n, this)
+                        vm.scmProcReturn(reversed, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procReverse.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: list-tail */
-    val procListTail: ScmProcedure by lazy {
-        object : ScmProcedure("list-tail", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procListTail by lazy {
+        res.addProcedure(object : ScmProcedure("list-tail", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procListTail.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 1) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procListTail.id)
-                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(procListTail.id)
-                        val list = vm.stack.index(sp, 0)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procListTail.id)
-                        }
+                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
+                        val list = vm.stack.index(sp, 0)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .toPair()
+
                         try {
-                            val result = ScmPair.listTail(list, k)
-                            return vm.scmProcReturn(result, n, this)
+                            val result: PtrObject = ScmPair.listTail(list, k, res).toObject()
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.tooShortList(procListTail.id)
+                            throw KevesExceptions.tooShortList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procListTail.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: list-set! */
-    val procListSetE: ScmProcedure by lazy {
-        object : ScmProcedure("list-set!", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procListSetE by lazy {
+        res.addProcedure(object : ScmProcedure("list-set!", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    in 0..2 -> throw KevesExceptions.expected3DatumGotLess(procListSetE.id)
+                    in 0..2 -> throw KevesExceptions.expected3DatumGotLess(id)
                     3 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 2)
-                        val k = (vm.stack.index(sp, 1) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procListSetE.id)
-                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(procListSetE.id)
-                        val list = vm.stack.index(sp, 0)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procListSetE.id)
-                        }
+                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
+                        val list = vm.stack.index(sp, 0)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .toPair()
                         val listTail = try {
-                            ScmPair.listTail(list, k)
+                            ScmPair.listTail(list, k, res)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.tooShortList(procListSetE.id)
+                            throw KevesExceptions.tooShortList(id)
                         }
-                        (listTail as? ScmMutablePair)?.assignCar(obj)
-                            ?: throw KevesExceptions.expectedMutablePair(procListSetE.id)
-                        return vm.scmProcReturn(ScmConstant.UNDEF, n, this)
+                        (listTail.toVal(res) as? ScmMutablePair)?.assignCar(obj)
+                            ?: throw KevesExceptions.expectedMutablePair(id)
+                        return vm.scmProcReturn(res.constUndef, n)
                     }
-                    else -> throw KevesExceptions.expected3DatumGotMore(procListSetE.id)
+                    else -> throw KevesExceptions.expected3DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: list-ref */
-    val procListRef: ScmProcedure by lazy {
-        object : ScmProcedure("list-ref", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procListRef by lazy {
+        res.addProcedure(object : ScmProcedure("list-ref", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procListRef.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 1) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procListRef.id)
-                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(procListRef.id)
-                        val list = vm.stack.index(sp, 0)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procListRef.id)
-                        }
+                        val k = (res.get(vm.stack.index(sp, 1)) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
+                        val list = vm.stack.index(sp, 0)
+                            .also {
+                                if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id)
+                            }.toPair()
                         try {
-                            val result = ScmPair.car(ScmPair.listTail(list, k))
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.listTail(list, k, res).car(res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.tooShortList(procListRef.id)
+                            throw KevesExceptions.tooShortList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procListRef.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: memq */
-    val procMemq: ScmProcedure by lazy {
-        object : ScmProcedure("memq", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procMemq by lazy {
+        res.addProcedure(object : ScmProcedure("memq", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procMemq.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procMemq.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also {
+                                if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedList(id)
+                            }
                         try {
-                            val result = ScmPair.memq(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.memq(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.expectedList(procMemq.id)
+                            throw KevesExceptions.expectedList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procMemq.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: memv */
-    val procMemv: ScmProcedure by lazy {
-        object : ScmProcedure("memv", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procMemv by lazy {
+        res.addProcedure(object : ScmProcedure("memv", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procMemv.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procMemv.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also {
+                                if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id)
+                            }
                         try {
-                            val result = ScmPair.memv(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.memv(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.expectedList(procMemv.id)
+                            throw KevesExceptions.expectedList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procMemv.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: member */
-    val procMember: ScmProcedure by lazy {
-        object : ScmProcedure("member", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procMember by lazy {
+        res.addProcedure(object : ScmProcedure("member", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procMember.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procMember.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
                         try {
-                            val result = ScmPair.member(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.member(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.expectedList(procMember.id)
+                            throw KevesExceptions.expectedList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procMember.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: assq */
-    val procAssq: ScmProcedure by lazy {
-        object : ScmProcedure("assq", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procAssq by lazy {
+        res.addProcedure(object : ScmProcedure("assq", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procAssq.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procAssq.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
                         try {
-                            val result = ScmPair.assq(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.assq(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.expectedList(procAssq.id)
+                            throw KevesExceptions.expectedList(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procAssq.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: assv */
-    val procAssv: ScmProcedure by lazy {
-        object : ScmProcedure("assv", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procAssv by lazy {
+        res.addProcedure(object : ScmProcedure("assv", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procAssv.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procAssv.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
                         try {
-                            val result = ScmPair.assv(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.assv(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procAssv.id)
+                            throw KevesExceptions.failed(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procAssv.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: assoc */
-    val procAssoc: ScmProcedure by lazy {
-        object : ScmProcedure("assoc", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procAssoc by lazy {
+        res.addProcedure(object : ScmProcedure("assoc", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(procAssoc.id)
+                    0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
-                        val list = vm.stack.index(sp, 1)?.let {
-                            it as? ScmPair ?: throw KevesExceptions.expectedList(procAssoc.id)
-                        }
+                        val list = vm.stack.index(sp, 1)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
                         try {
-                            val result = ScmPair.assoc(obj, list)
-                            return vm.scmProcReturn(result, n, this)
+                            val result = ScmPair.assoc(obj, list, res)
+                            return vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
-                            throw KevesExceptions.failed(procAssoc.id)
+                            throw KevesExceptions.failed(id)
                         }
                     }
-                    else -> throw KevesExceptions.expected2DatumGotMore(procAssoc.id)
+                    else -> throw KevesExceptions.expected2DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: list-copy */
-    val procListCopy: ScmProcedure by lazy {
-        object : ScmProcedure("list-copy", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procListCopy by lazy {
+        res.addProcedure(object : ScmProcedure("list-copy", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procListCopy.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmPair
-                            ?: throw KevesExceptions.expectedList(procListCopy.id)
-                        val result = ScmMutablePair.listCopy(obj)
-                        vm.scmProcReturn(result, n, this)
+                        val obj = vm.stack.index(vm.sp, 0)
+                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .toPair()
+                        val result = ScmMutablePair.listCopy(obj, vm.res).toObject()
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procListCopy.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 }

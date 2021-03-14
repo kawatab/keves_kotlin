@@ -21,43 +21,46 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
-    var car: ScmObject? = car
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.PtrPair
+import io.github.kawatab.keveskotlin.PtrPairNonNull
+
+open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmObject() {
+    var car: PtrObject = car
         protected set
 
-    var cdr: ScmObject? = cdr
+    var cdr: PtrObject = cdr
         protected set
 
-    override fun equalQ(other: ScmObject?): Boolean =
-        if (this === other) true else (other is ScmPair && equalQ(other, ArrayDeque()))
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
+        if (this === other) true else (other is ScmPair && equalQ(other, ArrayDeque(), res))
 
-    fun equalQ(other: ScmPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>): Boolean {
+    fun equalQ(other: ScmPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) -> (this == first && other == second) || (this == second && other == first) } >= 0) return true
         duplicated.addLast(this to other)
-        val car1 = this.car
-        val car2 = other.car
-        if (car1 === car2) return true
-        when (car1) {
+        if (this.car == other.car) return true
+        val car2 = other.car.toVal(res)
+        when (val ptr1 = this.car.toVal(res)) {
             null -> return false
-            is ScmBox -> if (car2 !is ScmBox || !car1.equalQ(car2, duplicated)) return false
-            is ScmPair -> if (car2 !is ScmPair || !car1.equalQ(car2, duplicated)) return false
-            is ScmVector -> if (car2 !is ScmVector || !car1.equalQ(car2, duplicated)) return false
-            else -> if (!car1.equalQ(car2)) return false
+            is ScmBox -> if (car2 !is ScmBox || !ptr1.equalQ(car2, duplicated, res)) return false
+            is ScmPair -> if (car2 !is ScmPair || !ptr1.equalQ(car2, duplicated, res)) return false
+            is ScmVector -> if (car2 !is ScmVector || !ptr1.equalQ(car2, duplicated, res)) return false
+            else -> if (!ptr1.equalQ(car2, res)) return false
         }
 
-        val cdr1 = this.cdr
-        val cdr2 = other.cdr
-        if (cdr1 === cdr2) return true
-        return when (cdr1) {
+        if (this.cdr == other.cdr) return true
+        val cdr2 = other.cdr.toVal(res)
+        return when (val cdr1 = this.cdr.toVal(res)) {
             null -> false
-            is ScmBox -> cdr2 is ScmBox && cdr1.equalQ(cdr2, duplicated)
-            is ScmPair -> cdr2 is ScmPair && cdr1.equalQ(cdr2, duplicated)
-            is ScmVector -> cdr2 is ScmVector && cdr1.equalQ(cdr2, duplicated)
-            else -> cdr1.equalQ(cdr2)
+            is ScmBox -> cdr2 is ScmBox && cdr1.equalQ(cdr2, duplicated, res)
+            is ScmPair -> cdr2 is ScmPair && cdr1.equalQ(cdr2, duplicated, res)
+            is ScmVector -> cdr2 is ScmVector && cdr1.equalQ(cdr2, duplicated, res)
+            else -> cdr1.equalQ(cdr2, res)
         }
     }
 
-    private fun searchCirculation(
+    private fun KevesResources.searchCirculation(
         rest: ScmPair?,
         allPair: ArrayDeque<ScmPair>,
         duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>
@@ -68,665 +71,782 @@ open class ScmPair(car: ScmObject?, cdr: ScmObject?) : ScmObject() {
                 allPair.addLast(rest)
                 val car = rest.car
                 val cdr = rest.cdr
-                searchCirculation(car as? ScmPair, allPair, duplicatedPair)
-                searchCirculation(cdr as? ScmPair, allPair, duplicatedPair)
+                searchCirculation(car.toVal(this) as? ScmPair, allPair, duplicatedPair)
+                searchCirculation(cdr.toVal(this) as? ScmPair, allPair, duplicatedPair)
             } else if (duplicatedPair.indexOfFirst { (pair, _) -> pair == rest } < 0) {
                 duplicatedPair.addLast(rest to false)
             }
         }
     }
 
-    private fun writePair(pair: ScmPair, duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, isCar: Boolean): String =
+    private fun writePair(
+        pair: ScmPair,
+        duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>,
+        isCar: Boolean,
+        res: KevesResources
+    ): String =
         duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair }
             .let {
                 when {
-                    it < 0 -> if (isCar) "(${pair.writeInner(duplicatedPair)})" else pair.writeInner(duplicatedPair)
+                    it < 0 -> if (isCar) "(${
+                        pair.writeInner(
+                            duplicatedPair,
+                            res
+                        )
+                    })" else pair.writeInner(duplicatedPair, res)
                     duplicatedPair[it].second -> if (isCar) "#$it#" else ". #$it#"
                     else -> {
                         duplicatedPair[it] = duplicatedPair[it].first to true
-                        "${if (isCar) "" else ". "}#$it=(${pair.writeInner(duplicatedPair)})"
+                        "${if (isCar) "" else ". "}#$it=(${pair.writeInner(duplicatedPair, res)})"
                     }
                 }
             }
 
-    private fun displayPair(pair: ScmPair, duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, isCar: Boolean): String =
+    private fun displayPair(
+        pair: ScmPair,
+        duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>,
+        isCar: Boolean,
+        res: KevesResources
+    ): String =
         duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair }
             .let {
                 when {
-                    it < 0 -> if (isCar) "(${pair.displayInner(duplicatedPair)})" else pair.displayInner(duplicatedPair)
+                    it < 0 -> if (isCar) "(${pair.displayInner(duplicatedPair, res)})" else pair.displayInner(
+                        duplicatedPair,
+                        res
+                    )
                     duplicatedPair[it].second -> if (isCar) "#$it#" else ". #$it#"
                     else -> {
                         duplicatedPair[it] = duplicatedPair[it].first to true
-                        "${if (isCar) "" else ". "}#$it=(${pair.displayInner(duplicatedPair)})"
+                        "${if (isCar) "" else ". "}#$it=(${pair.displayInner(duplicatedPair, res)})"
                     }
                 }
             }
 
 
-    override fun toStringForWrite(): String {
+    override fun toStringForWrite(res: KevesResources): String {
         val allPair = ArrayDeque<ScmPair>()
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
-        searchCirculation(this, allPair, duplicatedPair)
+        res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
-            if (car is ScmPair) writePair(car as ScmPair, duplicatedPair, true)
-            else getStringForWrite(car)
-        return when (cdr) {
-            null -> "($carStr)"
-            is ScmPair -> {
-                val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
-                    if (it < 0) {
-                        ""
-                    } else {
-                        duplicatedPair[it] = duplicatedPair[it].first to true
-                        "#$it="
+            car.toVal(res).let { car ->
+                if (car is ScmPair) writePair(car, duplicatedPair, true, res)
+                else getStringForWrite(car, res)
+            }
+        return cdr.toVal(res).let { cdr ->
+            when (cdr) {
+                null -> "($carStr)"
+                is ScmPair -> {
+                    val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
+                        if (it < 0) {
+                            ""
+                        } else {
+                            duplicatedPair[it] = duplicatedPair[it].first to true
+                            "#$it="
+                        }
                     }
+                    val cdrStr = writePair(cdr, duplicatedPair, false, res)
+                    "$prefix($carStr $cdrStr)"
                 }
-                val cdrStr = writePair(cdr as ScmPair, duplicatedPair, false)
-                "$prefix($carStr $cdrStr)"
+                else -> "($carStr . ${cdr.toStringForWrite(res)})"
             }
-            else -> "($carStr . ${cdr!!.toStringForWrite()})"
         }
     }
 
-    private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>): String {
+    private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            if (car is ScmPair) writePair((car as ScmPair), duplicatedPair, true)
-            else getStringForWrite(car)
-        return when (cdr) {
-            null -> carStr
-            is ScmPair -> {
-                val cdrStr = writePair((cdr as ScmPair), duplicatedPair, false)
-                "$carStr $cdrStr"
+            car.toVal(res).let { car ->
+                if (car is ScmPair) writePair(car, duplicatedPair, true, res)
+                else getStringForWrite(car, res)
             }
-            else -> "$carStr . ${cdr!!.toStringForWrite()}"
+        return cdr.toVal(res).let { cdr ->
+            when (cdr) {
+                null -> carStr
+                is ScmPair -> {
+                    val cdrStr = writePair(cdr, duplicatedPair, false, res)
+                    "$carStr $cdrStr"
+                }
+                else -> "$carStr . ${cdr.toStringForWrite(res)}"
+            }
         }
     }
 
-    override fun toStringForDisplay(): String {
+    override fun toStringForDisplay(res: KevesResources): String {
         val allPair = ArrayDeque<ScmPair>()
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
-        searchCirculation(this, allPair, duplicatedPair)
-        val carStr =
-            if (car is ScmPair) displayPair((car as ScmPair), duplicatedPair, true)
-            else getStringForDisplay(car)
-        return when (cdr) {
-            null -> "($carStr)"
-            is ScmPair -> {
-                val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
-                    if (it < 0) {
-                        ""
-                    } else {
-                        duplicatedPair[it] = duplicatedPair[it].first to true
-                        "#$it="
+        res.searchCirculation(this, allPair, duplicatedPair)
+        val carStr = car.toVal(res).let { car ->
+            if (car is ScmPair) displayPair(car, duplicatedPair, true, res)
+            else getStringForDisplay(car, res)
+        }
+        return cdr.toVal(res).let { cdr ->
+            when (cdr) {
+                null -> "($carStr)"
+                is ScmPair -> {
+                    val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
+                        if (it < 0) {
+                            ""
+                        } else {
+                            duplicatedPair[it] = duplicatedPair[it].first to true
+                            "#$it="
+                        }
                     }
+                    val cdrStr = displayPair(cdr, duplicatedPair, false, res)
+                    "$prefix($carStr $cdrStr)"
                 }
-                val cdrStr = displayPair((cdr as ScmPair), duplicatedPair, false)
-                "$prefix($carStr $cdrStr)"
+                else -> "($carStr . ${cdr.toStringForDisplay(res)})"
             }
-            else -> "($carStr . ${cdr!!.toStringForDisplay()})"
         }
     }
 
-    private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>): String {
-        val carStr =
-            if (car is ScmPair) displayPair((car as ScmPair), duplicatedPair, true)
-            else getStringForDisplay(car)
-        return when (cdr) {
-            null -> carStr
-            is ScmPair -> {
-                val cdrStr = displayPair((cdr as ScmPair), duplicatedPair, false)
-                "$carStr $cdrStr"
+    private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
+        val carStr = car.toVal(res).let { car ->
+            if (car is ScmPair) displayPair(car, duplicatedPair, true, res)
+            else getStringForDisplay(car, res)
+        }
+        return cdr.toVal(res).let { cdr ->
+            when (cdr) {
+                null -> carStr
+                is ScmPair -> {
+                    val cdrStr = displayPair(cdr, duplicatedPair, false, res)
+                    "$carStr $cdrStr"
+                }
+                else -> "$carStr . ${cdr.toStringForDisplay(res)}"
             }
-            else -> "$carStr . ${cdr!!.toStringForDisplay()}"
         }
     }
 
-    fun ref2and3(): Pair<ScmObject?, ScmObject?> {
-        val cdr = this.cdr as? ScmPair ?: throw IllegalArgumentException("cdr was not pair")
-        val cddr = cdr.cdr as? ScmPair ?: throw IllegalArgumentException("cddr was not pair")
+    fun ref2and3(res: KevesResources): Pair<PtrObject, PtrObject> {
+        val cdr = this.cdr.toVal(res) as? ScmPair ?: throw IllegalArgumentException("cdr was not pair")
+        val cddr = cdr.cdr.toVal(res) as? ScmPair ?: throw IllegalArgumentException("cddr was not pair")
         val obj1 = cdr.car
         val obj2 = cddr.car
         return obj1 to obj2
     }
 
     companion object {
-        fun length(list: ScmObject?): Int = length(list, 0, ArrayDeque())
+        fun make(car: PtrObject, cdr: PtrObject, res: KevesResources) = res.addPair(ScmPair(car, cdr))
 
-        private tailrec fun length(rest: ScmObject?, n: Int, tracedPair: ArrayDeque<ScmPair>): Int =
-            when (rest) {
-                null -> n
-                is ScmPair -> {
-                    if (tracedPair.indexOf(rest) > 0) throw IllegalArgumentException("cannot get the length of improper list")
-                    tracedPair.addLast(rest)
-                    length(rest = rest.cdr, n = n + 1, tracedPair = tracedPair)
-                }
-                else -> throw IllegalArgumentException("cannot get the length of improper list")
+        fun length(list: ScmObject?, res: KevesResources): Int = res.length(list, 0, ArrayDeque())
+
+        private tailrec fun KevesResources.length(
+            rest: ScmObject?,
+            n: Int,
+            tracedPair: ArrayDeque<ScmObject>
+        ): Int = when (rest) {
+            null -> n
+            is ScmPair -> {
+                if (tracedPair.indexOf(rest) > 0) throw IllegalArgumentException("cannot get the length of improper list")
+                tracedPair.addLast(rest)
+                length(rest = rest.cdr.toVal(this), n = n + 1, tracedPair = tracedPair)
             }
+            else -> throw IllegalArgumentException("cannot get the length of improper list")
+        }
 
         fun isPair(obj: ScmObject?): Boolean = obj is ScmPair
 
-        fun isProperList(obj: ScmObject?): Boolean =
+        fun isProperList(obj: ScmObject?, res: KevesResources): Boolean =
             when (obj) {
                 null -> true
-                is ScmPair -> isProperList(obj, ArrayDeque<ScmPair>().apply { addLast(obj) })
+                is ScmPair -> isProperList(obj, ArrayDeque<ScmPair>().apply { addLast(obj) }, res)
                 else -> false
             }
 
-        private tailrec fun isProperList(pair: ScmPair, tracedPair: ArrayDeque<ScmPair>): Boolean =
-            when (val cdr = pair.cdr) {
+        private tailrec fun isProperList(pair: ScmPair, tracedPair: ArrayDeque<ScmPair>, res: KevesResources): Boolean =
+            when (val cdr = pair.cdr.toVal(res)) {
                 null -> true
                 is ScmPair -> {
                     if (tracedPair.indexOf(cdr) >= 0) {
                         false
                     } else {
                         tracedPair.addLast(cdr)
-                        isProperList(cdr, tracedPair)
+                        isProperList(cdr, tracedPair, res)
                     }
                 }
                 else -> false
             }
 
-        fun toProperList(list: ScmObject?): Pair<ScmPair?, Int> = toProperList(list, null, 0)
+        fun toProperList(list: PtrObject, res: KevesResources): Pair<PtrPair, Int> =
+            res.toProperList(list, PtrPair(0), 0)
 
-        private tailrec fun toProperList(rest: ScmObject?, result: ScmPair?, n: Int): Pair<ScmPair?, Int> =
-            when (rest) {
-                null -> result?.let { reverse(it) } to n
-                is ScmPair -> toProperList(rest = rest.cdr, result = ScmPair(rest.car, result), n = n + 1)
-                else -> reverse(ScmPair(rest, result)) to -(n + 1)
+        private tailrec fun KevesResources.toProperList(
+            rest: PtrObject,
+            result: PtrPair,
+            n: Int
+        ): Pair<PtrPair, Int> =
+            when (val valRest = rest.toVal(this)) {
+                null -> (if (result.isNotNull()) reverse(result.toPairNonNull(), this) else PtrPair(0)) to n
+                is ScmPair -> toProperList(
+                    rest = valRest.cdr,
+                    result = make(valRest.car, result.toObject(), this),
+                    n = n + 1
+                )
+                else -> reverse(make(rest, result.toObject(), this).toPairNonNull(), this) to -(n + 1)
             }
 
-        fun reverse(list: ScmPair): ScmPair? =
-            reverse(list.cdr, ScmPair(list.car, null), ArrayDeque<ScmPair>().apply { addLast(list) })
+        fun reverse(list: PtrPairNonNull, res: KevesResources): PtrPair {
+            val valList = list.toVal(res)
+            return res.reverse(
+                valList.cdr,
+                make(valList.car, PtrObject(0), res),
+                ArrayDeque<PtrObject>().apply { addLast(list.toObject()) })
+        }
 
-        private tailrec fun reverse(rest: ScmObject?, result: ScmPair?, tracedPair: ArrayDeque<ScmPair>): ScmPair? =
-            when (rest) {
-                null -> result
-                is ScmPair -> {
-                    if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
-                    tracedPair.addLast(rest)
-                    reverse(rest.cdr, ScmMutablePair(rest.car, result), tracedPair)
-                }
-                else -> throw IllegalArgumentException("cannot reverse improper list")
+        private tailrec fun KevesResources.reverse(
+            rest: PtrObject,
+            result: PtrPair,
+            tracedPair: ArrayDeque<PtrObject>
+        ): PtrPair = when (val valRest = rest.toVal(this)) {
+            null -> result
+            is ScmPair -> {
+                if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
+                tracedPair.addLast(rest)
+                reverse(
+                    valRest.cdr,
+                    ScmMutablePair.make(valRest.car, result.toObject(), this).toPair(),
+                    tracedPair
+                )
             }
+            else -> throw IllegalArgumentException("cannot reverse improper list")
+        }
 
-        tailrec fun listTail(list: ScmPair?, k: Int): ScmPair? =
+        tailrec fun listTail(list: PtrPair, k: Int, res: KevesResources): PtrPair =
             if (k > 0) {
-                if (list == null) throw IllegalArgumentException("length not enough")
+                if (list.isNull()) throw IllegalArgumentException("length not enough")
                 else listTail(
-                    list.cdr?.let { it as? ScmPair ?: throw IllegalArgumentException("not proper list") },
-                    k - 1
+                    list.cdr(res)
+                        .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("not proper list") }
+                        .toPair(),
+                    k - 1,
+                    res
                 )
             } else {
                 list
             }
 
-        fun memq(obj: ScmObject?, list: ScmPair?): ScmObject = memq(obj, list, ArrayDeque())
+        fun memq(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject = memq(obj, list, ArrayDeque(), res)
 
-        private tailrec fun memq(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
+        private tailrec fun memq(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject = when (val valObj = list.toVal(res)) {
+            null -> res.constFalse
+            is ScmPair -> {
+                if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                tracedPair.addLast(list)
+                if (valObj.car == obj) list else memq(obj, valObj.cdr, tracedPair, res)
+            }
+            else -> throw IllegalArgumentException("not proper list")
+        }
+
+        fun memv(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject = memv(obj, list, ArrayDeque(), res)
+
+        private tailrec fun memv(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject = when (val valList = list.toVal(res)) {
+            null -> res.constFalse
+            is ScmPair -> {
+                if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                tracedPair.addLast(list)
+                if (eqvQ(valList.car.toVal(res), obj.toVal(res))) list else memv(obj, valList.cdr, tracedPair, res)
+            }
+            else -> throw IllegalArgumentException("not proper list")
+        }
+
+        fun member(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject =
+            member(obj, list, ArrayDeque(), res)
+
+        private tailrec fun member(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject = when (val valList = list.toVal(res)) {
+            null -> res.constFalse
+            is ScmPair -> {
+                if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                tracedPair.addLast(list)
+                if (equalQ(valList.car.toVal(res), obj.toVal(res), res)) list else member(
+                    obj,
+                    valList.cdr,
+                    tracedPair,
+                    res
+                )
+            }
+            else -> throw IllegalArgumentException("not proper list")
+        }
+
+        fun assq(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject = assq(obj, list, ArrayDeque(), res)
+
+        private tailrec fun assq(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject = when (val valList = list.toVal(res)) {
+            null -> res.constFalse
+            is ScmPair -> {
+                if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                tracedPair.addLast(list)
+                val car = valList.car
+                val valCar = car.toVal(res)
+                if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
+                if (valCar.car == obj) car else assq(obj, valList.cdr, tracedPair, res)
+            }
+            else -> throw IllegalArgumentException("not proper list")
+        }
+
+        fun assv(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject = assv(obj, list, ArrayDeque(), res)
+
+        private tailrec fun assv(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject =
+            when (val valList = list.toVal(res)) {
+                null -> res.constFalse
                 is ScmPair -> {
                     if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                     tracedPair.addLast(list)
-                    if (list.car === obj) list else memq(obj, list.cdr, tracedPair)
+                    val car = valList.car
+                    val valCar = car.toVal(res)
+                    if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
+                    if (eqvQ(valCar.car.toVal(res), obj.toVal(res))) car else assv(obj, valList.cdr, tracedPair, res)
                 }
                 else -> throw IllegalArgumentException("not proper list")
             }
 
-        fun memv(obj: ScmObject?, list: ScmPair?): ScmObject = memv(obj, list, ArrayDeque())
+        fun assoc(obj: PtrObject, list: PtrObject, res: KevesResources): PtrObject = assoc(obj, list, ArrayDeque(), res)
 
-        private tailrec fun memv(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
-                is ScmPair -> {
-                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
-                    tracedPair.addLast(list)
-                    if (eqvQ(list.car, obj)) list else memv(obj, list.cdr, tracedPair)
-                }
-                else -> throw IllegalArgumentException("not proper list")
+        private tailrec fun assoc(
+            obj: PtrObject,
+            list: PtrObject,
+            tracedPair: ArrayDeque<PtrObject>,
+            res: KevesResources
+        ): PtrObject = when (val valList = list.toVal(res)) {
+            null -> res.constFalse
+            is ScmPair -> {
+                if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
+                tracedPair.addLast(list)
+                val car = valList.car
+                val valCar = car.toVal(res)
+                if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
+                if (equalQ(valCar.car.toVal(res), obj.toVal(res), res)) car else assoc(
+                    obj,
+                    valList.cdr,
+                    tracedPair,
+                    res
+                )
             }
-
-        fun member(obj: ScmObject?, list: ScmPair?): ScmObject = member(obj, list, ArrayDeque())
-
-        private tailrec fun member(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
-                is ScmPair -> {
-                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
-                    tracedPair.addLast(list)
-                    if (equalQ(list.car, obj)) list else member(obj, list.cdr, tracedPair)
-                }
-                else -> throw IllegalArgumentException("not proper list")
-            }
-
-        fun assq(obj: ScmObject?, list: ScmPair?): ScmObject = assq(obj, list, ArrayDeque())
-
-        private tailrec fun assq(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
-                is ScmPair -> {
-                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
-                    tracedPair.addLast(list)
-                    val car = list.car
-                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
-                    if (car.car === obj) car else assq(obj, list.cdr, tracedPair)
-                }
-                else -> throw IllegalArgumentException("not proper list")
-            }
-
-        fun assv(obj: ScmObject?, list: ScmPair?): ScmObject = assv(obj, list, ArrayDeque())
-
-        private tailrec fun assv(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
-                is ScmPair -> {
-                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
-                    tracedPair.addLast(list)
-                    val car = list.car
-                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
-                    if (eqvQ(car.car, obj)) car else assv(obj, list.cdr, tracedPair)
-                }
-                else -> throw IllegalArgumentException("not proper list")
-            }
-
-        fun assoc(obj: ScmObject?, list: ScmPair?): ScmObject = assoc(obj, list, ArrayDeque())
-
-        private tailrec fun assoc(obj: ScmObject?, list: ScmObject?, tracedPair: ArrayDeque<ScmPair>): ScmObject =
-            when (list) {
-                null -> ScmConstant.FALSE
-                is ScmPair -> {
-                    if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
-                    tracedPair.addLast(list)
-                    val car = list.car
-                    if (car !is ScmPair) throw IllegalArgumentException("not association list")
-                    if (equalQ(car.car, obj)) car else assoc(obj, list.cdr, tracedPair)
-                }
-                else -> throw IllegalArgumentException("not proper list")
-            }
+            else -> throw IllegalArgumentException("not proper list")
+        }
 
         @Suppress("unused")
-        fun car(pair: ScmObject?): ScmObject? =
+        fun car(pair: ScmObject?): PtrObject =
             (pair as? ScmPair ?: throw IllegalArgumentException("'car' required pair, but got other")).car
 
         @Suppress("unused")
-        fun cdr(pair: ScmObject?): ScmObject? =
+        fun cdr(pair: ScmObject?): PtrObject =
             (pair as? ScmPair ?: throw IllegalArgumentException("'cdr' required pair, but got other")).cdr
 
         @Suppress("unused")
-        fun caar(pair: ScmObject?): ScmObject? =
+        fun caar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(pair))
+                car(car(pair).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadr(pair: ScmObject?): ScmObject? =
+        fun cadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(pair))
+                car(cdr(pair).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdar(pair: ScmObject?): ScmObject? =
+        fun cdar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(pair))
+                cdr(car(pair).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddr(pair: ScmObject?): ScmObject? =
+        fun cddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(pair))
+                cdr(cdr(pair).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaar(pair: ScmObject?): ScmObject? =
+        fun caaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(car(pair)))
+                car(caar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caadr(pair: ScmObject?): ScmObject? =
+        fun caadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(cdr(pair)))
+                car(cadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadar(pair: ScmObject?): ScmObject? =
+        fun cadar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(car(pair)))
+                car(cdar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caddr(pair: ScmObject?): ScmObject? =
+        fun caddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(cdr(pair)))
+                car(cddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaar(pair: ScmObject?): ScmObject? =
+        fun cdaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(car(pair)))
+                cdr(caar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdadr(pair: ScmObject?): ScmObject? =
+        fun cdadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(cdr(pair)))
+                cdr(cadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddar(pair: ScmObject?): ScmObject? =
+        fun cddar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(car(pair)))
+                cdr(cdar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdddr(pair: ScmObject?): ScmObject? =
+        fun cdddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(cdr(pair)))
+                cdr(cddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaaar(pair: ScmObject?): ScmObject? =
+        fun caaaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(car(car(pair))))
+                car(caaar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaadr(pair: ScmObject?): ScmObject? =
+        fun caaadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(car(cdr(pair))))
+                car(caadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caadar(pair: ScmObject?): ScmObject? =
+        fun caadar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(cdr(car(pair))))
+                car(cadar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaddr(pair: ScmObject?): ScmObject? =
+        fun caaddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(car(cdr(cdr(pair))))
+                car(caddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadaar(pair: ScmObject?): ScmObject? =
+        fun cadaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(car(car(pair))))
+                car(cdaar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadadr(pair: ScmObject?): ScmObject? =
+        fun cadadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(car(cdr(pair))))
+                car(cdadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caddar(pair: ScmObject?): ScmObject? =
+        fun caddar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(cdr(car(pair))))
+                car(cddar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadddr(pair: ScmObject?): ScmObject? =
+        fun cadddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                car(cdr(cdr(cdr(pair))))
+                car(cdddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaaar(pair: ScmObject?): ScmObject? =
+        fun cdaaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(car(car(pair))))
+                cdr(caaar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaadr(pair: ScmObject?): ScmObject? =
+        fun cdaadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(car(cdr(pair))))
+                cdr(caadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdadar(pair: ScmObject?): ScmObject? =
+        fun cdadar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(cdr(car(pair))))
+                cdr(cadar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaddr(pair: ScmObject?): ScmObject? =
+        fun cdaddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(car(cdr(cdr(pair))))
+                cdr(caddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddaar(pair: ScmObject?): ScmObject? =
+        fun cddaar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(car(car(pair))))
+                cdr(cdaar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddadr(pair: ScmObject?): ScmObject? =
+        fun cddadr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(car(cdr(pair))))
+                cdr(cdadr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdddar(pair: ScmObject?): ScmObject? =
+        fun cdddar(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(cdr(car(pair))))
+                cdr(cddar(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddddr(pair: ScmObject?): ScmObject? =
+        fun cddddr(pair: ScmObject?, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(cdr(cdr(pair))))
+                cdr(cdddr(pair, res).toVal(res))
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddddr' required pair, but got other")
             }
 
-        fun list(e: ScmObject?) = ScmPair(e, null)
-        fun list(e1: ScmObject?, e2: ScmObject?) = ScmPair(e1, list(e2))
-        fun list(e1: ScmObject?, e2: ScmObject?, e3: ScmObject?) = ScmPair(e1, list(e2, e3))
-        fun list(e1: ScmObject?, e2: ScmObject?, e3: ScmObject?, e4: ScmObject?) = ScmPair(e1, list(e2, e3, e4))
+        fun list(e: PtrObject, res: KevesResources) = make(e, PtrObject(0), res)
+        fun list(e1: PtrObject, e2: PtrObject, res: KevesResources) = make(e1, PtrObject(list(e2, res).ptr), res)
+        fun list(e1: PtrObject, e2: PtrObject, e3: PtrObject, res: KevesResources) =
+            make(e1, list(e2, e3, res).toObject(), res)
+
+        fun list(e1: PtrObject, e2: PtrObject, e3: PtrObject, e4: PtrObject, res: KevesResources) =
+            make(e1, list(e2, e3, e4, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5, e6))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, e6, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5, e6, e7))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, e6, e7, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5, e6, e7, e8))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, e6, e7, e8, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?,
-            e9: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5, e6, e7, e8, e9))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            e9: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, e6, e7, e8, e9, res).toObject(), res)
 
         @Suppress("unused")
         fun list(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?,
-            e9: ScmObject?,
-            e10: ScmObject?
-        ) = ScmPair(e1, list(e2, e3, e4, e5, e6, e7, e8, e9, e10))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            e9: PtrObject,
+            e10: PtrObject,
+            res: KevesResources
+        ) = make(e1, list(e2, e3, e4, e5, e6, e7, e8, e9, e10, res).toObject(), res)
 
         @Suppress("unused")
-        fun listStar(e: ScmObject?) = e
+        fun listStar(e: PtrObject) = e
 
         @Suppress("unused")
-        fun listStar(e1: ScmObject?, e2: ScmObject?) = ScmPair(e1, e2)
-        fun listStar(e1: ScmObject?, e2: ScmObject?, e3: ScmObject?) = ScmPair(e1, listStar(e2, e3))
+        fun listStar(e1: PtrObject, e2: PtrObject, res: KevesResources) = make(e1, e2, res)
+        fun listStar(e1: PtrObject, e2: PtrObject, e3: PtrObject, res: KevesResources) =
+            make(e1, listStar(e2, e3, res).toObject(), res)
 
         @Suppress("unused")
-        fun listStar(e1: ScmObject?, e2: ScmObject?, e3: ScmObject?, e4: ScmObject?) = ScmPair(e1, listStar(e2, e3, e4))
-
-        @Suppress("unused")
-        fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5))
+        fun listStar(e1: PtrObject, e2: PtrObject, e3: PtrObject, e4: PtrObject, res: KevesResources) =
+            make(e1, listStar(e2, e3, e4, res).toObject(), res)
 
         @Suppress("unused")
         fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5, e6))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, res).toObject(), res)
 
         @Suppress("unused")
         fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5, e6, e7))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, e6, res).toObject(), res)
 
         @Suppress("unused")
         fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5, e6, e7, e8))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, e6, e7, res).toObject(), res)
 
         @Suppress("unused")
         fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?,
-            e9: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5, e6, e7, e8, e9))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, e6, e7, e8, res).toObject(), res)
 
         @Suppress("unused")
         fun listStar(
-            e1: ScmObject?,
-            e2: ScmObject?,
-            e3: ScmObject?,
-            e4: ScmObject?,
-            e5: ScmObject?,
-            e6: ScmObject?,
-            e7: ScmObject?,
-            e8: ScmObject?,
-            e9: ScmObject?,
-            e10: ScmObject?
-        ) = ScmPair(e1, listStar(e2, e3, e4, e5, e6, e7, e8, e9, e10))
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            e9: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, e6, e7, e8, e9, res).toObject(), res)
+
+        @Suppress("unused")
+        fun listStar(
+            e1: PtrObject,
+            e2: PtrObject,
+            e3: PtrObject,
+            e4: PtrObject,
+            e5: PtrObject,
+            e6: PtrObject,
+            e7: PtrObject,
+            e8: PtrObject,
+            e9: PtrObject,
+            e10: PtrObject,
+            res: KevesResources
+        ) = make(e1, listStar(e2, e3, e4, e5, e6, e7, e8, e9, e10, res).toObject(), res)
     }
 }

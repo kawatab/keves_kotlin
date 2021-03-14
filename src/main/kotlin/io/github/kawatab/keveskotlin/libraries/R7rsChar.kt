@@ -22,521 +22,523 @@
 package io.github.kawatab.keveskotlin.libraries
 
 import io.github.kawatab.keveskotlin.KevesExceptions
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.objects.*
 
-object R7rsChar {
+class R7rsChar(private val res: KevesResources) {
     /** procedure: char? */
-    val procCharQ: ScmProcedure by lazy {
-        object : ScmProcedure("char?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharQ by lazy {
+        res.addProcedure(object : ScmProcedure("char?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj is ScmChar) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val ptr = vm.stack.index(vm.sp, 0)
+                        val result = if (res.get(ptr) is ScmChar) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char=? */
-    val procCharEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedChar(procCharEqualQ.id)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toUtf32()
+                            ?: throw KevesExceptions.expectedChar(id)
                         for (i in 1 until n) {
-                            val obj = (vm.stack.index(sp, i) as? ScmChar)?.toUtf32()
-                                ?: throw KevesExceptions.expectedChar(procCharEqualQ.id)
-                            if (first != obj) return vm.scmProcReturn(ScmConstant.FALSE, n, this)
+                            val obj = (res.get(vm.stack.index(sp, i)) as? ScmChar)?.toUtf32()
+                                ?: throw KevesExceptions.expectedChar(id)
+                            if (first != obj) return vm.scmProcReturn(res.constFalse, n)
                         }
-                        vm.scmProcReturn(ScmConstant.TRUE, n, this)
+                        vm.scmProcReturn(res.constTrue, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char<?' */
-    val procCharLessThanQ: ScmProcedure by lazy {
-        object : ScmProcedure("char<?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharLessThanQ by lazy {
+        res.addProcedure(object : ScmProcedure("char<?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharLessThanQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(procCharLessThanQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toUtf32()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last < obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(procCharLessThanQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toUtf32()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char<=?' */
-    val procCharLessThanEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char<=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharLessThanEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char<=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharLessThanEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(procCharLessThanEqualQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toUtf32()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last <= obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(procCharLessThanEqualQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toUtf32()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char>?' */
-    val procCharGraterThanQ: ScmProcedure by lazy {
-        object : ScmProcedure("char>?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharGraterThanQ by lazy {
+        res.addProcedure(object : ScmProcedure("char>?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharGraterThanQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(procCharGraterThanQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toUtf32()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last > obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(procCharGraterThanQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toUtf32()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char>=?' */
-    val procCharGraterThanEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char>=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharGraterThanEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char>=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharGraterThanEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(procCharGraterThanEqualQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toUtf32()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last >= obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(procCharGraterThanEqualQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toUtf32()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-ci=? */
-    val procCharCIEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-ci=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharCIEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-ci=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharCIEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedChar(procCharCIEqualQ.id)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toLowerCase()
+                            ?: throw KevesExceptions.expectedChar(id)
                         for (i in 1 until n) {
-                            val obj = (vm.stack.index(sp, i) as? ScmChar)?.toLowerCase()
-                                ?: throw KevesExceptions.expectedChar(procCharCIEqualQ.id)
-                            if (first != obj) return vm.scmProcReturn(ScmConstant.FALSE, n, this)
+                            val obj = (res.get(vm.stack.index(sp, i)) as? ScmChar)?.toLowerCase()
+                                ?: throw KevesExceptions.expectedChar(id)
+                            if (first != obj) return vm.scmProcReturn(res.constFalse, n)
                         }
-                        vm.scmProcReturn(ScmConstant.TRUE, n, this)
+                        vm.scmProcReturn(res.constTrue, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char-ci<?' */
-    val procCharCILessThanQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-ci<?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharCILessThanQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-ci<?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharCILessThanQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(procCharCILessThanQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toLowerCase()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last < obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(procCharCILessThanQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toLowerCase()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char-ci<=?' */
-    val procCharCILessThanEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-ci<=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharCILessThanEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-ci<=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharCILessThanEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(procCharCILessThanEqualQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toLowerCase()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last <= obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(procCharCILessThanEqualQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toLowerCase()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char-ci>?' */
-    val procCharCIGraterThanQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-ci>?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharCIGraterThanQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-ci>?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharCIGraterThanQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(procCharCIGraterThanQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toLowerCase()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last > obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(procCharCIGraterThanQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toLowerCase()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: 'char-ci>=?' */
-    val procCharCIGraterThanEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-ci>=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharCIGraterThanEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-ci>=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procCharCIGraterThanEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
                         tailrec fun loop(index: Int, last: Int): ScmObject =
                             if (index < n) {
-                                val obj = (vm.stack.index(sp, index) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(procCharCIGraterThanEqualQ.id)
+                                val obj = (res.get(vm.stack.index(sp, index)) as? ScmChar)?.toLowerCase()
+                                    ?: throw KevesExceptions.expectedNumber(id)
                                 if (last >= obj) loop(index = index + 1, last = obj)
                                 else ScmConstant.FALSE
                             } else {
                                 ScmConstant.TRUE
                             }
 
-                        val first = (vm.stack.index(sp, 0) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(procCharCIGraterThanEqualQ.id)
-                        val result = loop(1, first)
+                        val first = (res.get(vm.stack.index(sp, 0)) as? ScmChar)?.toLowerCase()
+                            ?: throw KevesExceptions.expectedNumber(id)
+                        val result = res.add(loop(1, first))
 
-                        vm.scmProcReturn(result, n, this)
+                        vm.scmProcReturn(result, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-alphabetic? */
-    val procCharAlphabeticQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-alphabetic?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharAlphabeticQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-alphabetic?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharAlphabeticQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isAlphabetic = (vm.stack.index(vm.sp, 0) as? ScmChar)?.isAlphabetic()
-                            ?: throw KevesExceptions.expectedChar(procCharAlphabeticQ.id)
-                        val result = if (isAlphabetic) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val isAlphabetic = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)?.isAlphabetic()
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = if (isAlphabetic) res.constTrue else res.constFalse //ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharAlphabeticQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-numeric? */
-    val procCharNumericQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-numeric?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharNumericQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-numeric?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharNumericQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isNumeric = (vm.stack.index(vm.sp, 0) as? ScmChar)?.isNumeric()
-                            ?: throw KevesExceptions.expectedChar(procCharNumericQ.id)
-                        val result = if (isNumeric) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val isNumeric = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)?.isNumeric()
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = if (isNumeric) res.constTrue else res.constFalse //ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharNumericQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-whitespace? */
-    val procCharWhitespaceQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-whitespace?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharWhitespaceQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-whitespace?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharWhitespaceQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isWhitespace = (vm.stack.index(vm.sp, 0) as? ScmChar)?.isWhitespace()
-                            ?: throw KevesExceptions.expectedChar(procCharWhitespaceQ.id)
-                        val result = if (isWhitespace) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val isWhitespace = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)?.isWhitespace()
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = if (isWhitespace) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharWhitespaceQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-upper-case? */
-    val procCharUpperCaseQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-upper-case?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharUpperCaseQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-upper-case?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharUpperCaseQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isUpperCase = (vm.stack.index(vm.sp, 0) as? ScmChar)?.isUpperCase()
-                            ?: throw KevesExceptions.expectedChar(procCharLowerCaseQ.id)
-                        val result = if (isUpperCase) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val isUpperCase = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)?.isUpperCase()
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = if (isUpperCase) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharUpperCaseQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-lower-case? */
-    val procCharLowerCaseQ: ScmProcedure by lazy {
-        object : ScmProcedure("char-lower-case?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharLowerCaseQ by lazy {
+        res.addProcedure(object : ScmProcedure("char-lower-case?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharLowerCaseQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isLowerCase = (vm.stack.index(vm.sp, 0) as? ScmChar)?.isLowerCase()
-                            ?: throw KevesExceptions.expectedChar(procCharLowerCaseQ.id)
-                        val result = if (isLowerCase) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val isLowerCase = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)?.isLowerCase()
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = if (isLowerCase) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharLowerCaseQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: digit-value */
-    val procDigitValue: ScmProcedure by lazy {
-        object : ScmProcedure("digit-value", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procDigitValue by lazy {
+        res.addProcedure(object : ScmProcedure("digit-value", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procDigitValue.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(procDigitValue.id)
+                        val char = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)
+                            ?: throw KevesExceptions.expectedChar(id)
                         val value = char.digitToInt()
-                        val result = if (value >= 0) ScmInt(value) else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val result = if (value >= 0) ScmInt.make(value, vm.res) else res.constFalse
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procDigitValue.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char->integer */
-    val procCharToInteger: ScmProcedure by lazy {
-        object : ScmProcedure("char->integer", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharToInteger by lazy {
+        res.addProcedure(object : ScmProcedure("char->integer", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharToInteger.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(procCharToInteger.id)
-                        val result = ScmInt(char.toUtf32())
-                        vm.scmProcReturn(result, n, this)
+                        val char = (res.get(vm.stack.index(vm.sp, 0)) as? ScmChar)
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = ScmInt.make(char.toUtf32(), vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharToInteger.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: integer->char */
-    val procIntegerToChar: ScmProcedure by lazy {
-        object : ScmProcedure("integer->char", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procIntegerToChar by lazy {
+        res.addProcedure(object : ScmProcedure("integer->char", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procIntegerToChar.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val value = (vm.stack.index(vm.sp, 0) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(procIntegerToChar.id)
-                        val result = ScmChar(value)
-                        vm.scmProcReturn(result, n, this)
+                        val value = (res.get(vm.stack.index(vm.sp, 0)) as? ScmInt)?.value
+                            ?: throw KevesExceptions.expectedInt(id)
+                        val result = ScmChar.make(value, vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procIntegerToChar.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-upcase */
-    val procCharUpcase: ScmProcedure by lazy {
-        object : ScmProcedure("char-upcase", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharUpcase by lazy {
+        res.addProcedure(object : ScmProcedure("char-upcase", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharUpcase.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(procCharUpcase.id)
-                        val result = ScmChar(char.toUpperCase())
-                        vm.scmProcReturn(result, n, this)
+                        val char = res.get(vm.stack.index(vm.sp, 0)) as? ScmChar
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = ScmChar.make(char.toUpperCase(), vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharUpcase.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-downcase */
-    val procCharDowncase: ScmProcedure by lazy {
-        object : ScmProcedure("char-downcase", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharDowncase by lazy {
+        res.addProcedure(object : ScmProcedure("char-downcase", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharDowncase.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(procCharDowncase.id)
-                        val result = ScmChar(char.toLowerCase())
-                        vm.scmProcReturn(result, n, this)
+                        val char = res.get(vm.stack.index(vm.sp, 0)) as? ScmChar
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = ScmChar.make(char.toLowerCase(), vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharDowncase.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: char-foldcase */
-    val procCharFoldcase: ScmProcedure by lazy {
-        object : ScmProcedure("char-foldcase", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procCharFoldcase by lazy {
+        res.addProcedure(object : ScmProcedure("char-foldcase", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGotMore(procCharFoldcase.id)
+                    0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(procCharFoldcase.id)
-                        val result = ScmChar(char.toFoldCase())
-                        vm.scmProcReturn(result, n, this)
+                        val char = res.get(vm.stack.index(vm.sp, 0)) as? ScmChar
+                            ?: throw KevesExceptions.expectedChar(id)
+                        val result = ScmChar.make(char.toFoldCase(), vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procCharFoldcase.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 }

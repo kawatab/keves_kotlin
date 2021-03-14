@@ -22,48 +22,50 @@
 package io.github.kawatab.keveskotlin.libraries
 
 import io.github.kawatab.keveskotlin.KevesExceptions
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.objects.*
 
-object R7rsString {
+class R7rsString(private val res: KevesResources) {
     /** procedure: string? */
-    val procStringQ: ScmProcedure by lazy {
-        object : ScmProcedure("string?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procStringQ by lazy {
+        res.addProcedure(object : ScmProcedure("string?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procStringQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj is ScmString) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val result = if (obj is ScmString) res.constTrue else res.constFalse
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procStringQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: string=? */
-    val procStringEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("string=?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procStringEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("string=?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procStringEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        val first = vm.stack.index(sp, 0) as? ScmString
-                            ?: throw KevesExceptions.expectedString(procStringEqualQ.id)
+                        val first = vm.stack.index(sp, 0).toVal(res) as? ScmString
+                            ?: throw KevesExceptions.expectedString(id)
                         for (i in 1 until n) {
-                            val obj = vm.stack.index(sp, i) as? ScmString
-                                ?: throw KevesExceptions.expectedString(procStringEqualQ.id)
-                            if (!first.equalQ(obj)) return vm.scmProcReturn(ScmConstant.FALSE, n, this)
+                            val obj = vm.stack.index(sp, i).toVal(res) as? ScmString
+                                ?: throw KevesExceptions.expectedString(id)
+                            if (!first.equalQ(obj, res)) return vm.scmProcReturn(res.constFalse, n)
                         }
-                        vm.scmProcReturn(ScmConstant.TRUE, n, this)
+                        vm.scmProcReturn(res.constTrue, n)
                     }
                 }
             }
-        }
+        })
     }
 }

@@ -21,17 +21,22 @@
 
 package io.github.kawatab.keveskotlin
 
-import io.github.kawatab.keveskotlin.objects.ScmObject
 import io.github.kawatab.keveskotlin.objects.ScmPair
 import io.github.kawatab.keveskotlin.objects.ScmVector
 
-class KevesStack {
-    private val array = MutableList<ScmObject?>(1000) { null }
+class KevesStack(private val res: KevesResources) {
+    private val array = IntArray(1000) { 0 }
 
+    fun push(x: PtrObject, s: Int): Int {
+        array[s] = x.ptr
+        return s + 1
+    }
+    /*
     fun push(x: ScmObject?, s: Int): Int {
         array[s] = x
         return s + 1
     }
+     */
 
     /**
      * Takes a stack pointer and an index, and return the object found at the specified
@@ -39,7 +44,8 @@ class KevesStack {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 75
      */
-    fun index(n: Int, i: Int): ScmObject? = array[n - i - 1]
+    // fun index(n: Int, i: Int): ScmObject? = array[n - i - 1]
+    fun index(n: Int, i: Int) = PtrObject(array[n - i - 1])
 
     /**
      * Takes a stack pointer, an index, and an object, and places the object at the specified
@@ -47,8 +53,13 @@ class KevesStack {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 75
      */
+    /*
     fun indexSetE(s: Int, i: Int, v: ScmObject?) {
         array[s - i - 1] = v
+    }
+     */
+    fun indexSetE(s: Int, i: Int, pointer: PtrObject) {
+        array[s - i - 1] = pointer.ptr
     }
 
     /**
@@ -57,13 +68,24 @@ class KevesStack {
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 83
      */
     fun saveStack(s: Int): ScmVector =
-        ScmVector(s).also { v ->
+        /*
+        ScmVector.make(s).also { v ->
             tailrec fun copy(i: Int) {
                 if (i == s) return
                 v.set(i, array[i])
-                return copy(i + 1)
+                return copy(i = i + 1)
             }
-            copy(i = 0)
+            copy(0)
+        }
+         */
+        // res.get(ScmVector.make(array.copyOfRange(0, s), res)) as ScmVector
+        (res.get(ScmVector.make(s, res)) as ScmVector).also { v ->
+            tailrec fun copy(i: Int) {
+                if (i == s) return
+                v.set(i, PtrObject(array[i]))
+                return copy(i = i + 1)
+            }
+            copy(0)
         }
 
     /**
@@ -75,22 +97,24 @@ class KevesStack {
         v.size.also { s ->
             tailrec fun copy(i: Int) {
                 if (i == s) return
-                array[i] = v.at(i)
-                return copy(i + 1)
+                array[i] = v.at(i).ptr
+                return copy(i = i + 1)
             }
-            copy(i = 0)
+            copy(0)
         }
 
-    /** Creates a vector from stack for closure */
-    fun makeScmVector(s: Int, n: Int): ScmVector = ScmVector(array.subList(s - n, s).toTypedArray())
+    /** Creates an array from stack for closure */
+    // fun makeArray(s: Int, n: Int): Array<ScmObject?> = array.copyOfRange(s - n, s)
+    fun makeArray(s: Int, n: Int): IntArray = array.copyOfRange(s - n, s)
 
     /** Shrinks arguments for lambda that accepts variable length of arguments */
     fun shrinkArgs(sp: Int, n: Int, shift: Int) {
         val start = sp - n
-        tailrec fun loop1(i: Int, result: ScmPair?): ScmPair? =
+        // tailrec fun loop1(i: Int, result: ScmPair?): ScmPair? =
+        tailrec fun loop1(i: Int, result: PtrObject): PtrObject =
             if (i < 0) result
-            else loop1(i - 1, ScmPair(array[start + shift - i], result))
-        array[start] = loop1(shift, null)
+            else loop1(i - 1, ScmPair.make(PtrObject(array[start + shift - i]), result, res).toObject())
+        array[start] = loop1(shift, PtrObject(0)).ptr
         for (i in start + 1 until sp - shift) {
             array[i] = array[i + shift]
         }
@@ -102,6 +126,7 @@ class KevesStack {
         for (i in sp downTo start) {
             array[i + 1] = array[i]
         }
-        array[start] = null
+        // array[start] = null
+        array[start] = 0
     }
 }

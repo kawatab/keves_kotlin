@@ -22,88 +22,90 @@
 package io.github.kawatab.keveskotlin.libraries
 
 import io.github.kawatab.keveskotlin.KevesExceptions
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.objects.*
 
-object R7rsSymbol {
+class R7rsSymbol(private val res: KevesResources) {
     /** procedure: symbol? */
-    val procSymbolQ: ScmProcedure by lazy {
-        object : ScmProcedure("symbol?", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procSymbolQ by lazy {
+        res.addProcedure(object : ScmProcedure("symbol?", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procSymbolQ.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj is ScmSymbol) ScmConstant.TRUE else ScmConstant.FALSE
-                        vm.scmProcReturn(result, n, this)
+                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val result = if (obj is ScmSymbol) res.constTrue else res.constFalse
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procSymbolQ.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: symbol=? */
-    val procSymbolEqualQ: ScmProcedure by lazy {
-        object : ScmProcedure("symbol=", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procSymbolEqualQ by lazy {
+        res.addProcedure(object : ScmProcedure("symbol=", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(procSymbolEqualQ.id)
+                    0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        val first = vm.stack.index(sp, 0) as? ScmSymbol
-                            ?: throw KevesExceptions.expectedSymbol(procSymbolEqualQ.id)
+                        val first = res.get(vm.stack.index(sp, 0)) as? ScmSymbol
+                            ?: throw KevesExceptions.expectedSymbol(id)
                         for (i in 1 until n) {
-                            val obj = vm.stack.index(sp, i) as? ScmSymbol
-                                ?: throw KevesExceptions.expectedSymbol(procSymbolEqualQ.id)
-                            if (first !== obj) return vm.scmProcReturn(ScmConstant.FALSE, n, this)
+                            val obj = res.get(vm.stack.index(sp, i)) as? ScmSymbol
+                                ?: throw KevesExceptions.expectedSymbol(id)
+                            if (first !== obj) return vm.scmProcReturn(res.constFalse, n)
                         }
-                        vm.scmProcReturn(ScmConstant.TRUE, n, this)
+                        vm.scmProcReturn(res.constTrue, n)
                     }
                 }
             }
-        }
+        })
     }
 
     /** procedure: symbol->string */
-    val procSymbolToString: ScmProcedure by lazy {
-        object : ScmProcedure("symbol->string", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procSymbolToString by lazy {
+        res.addProcedure(object : ScmProcedure("symbol->string", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procSymbolToString.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmSymbol
-                            ?: throw KevesExceptions.expectedSymbol(procSymbolToString.id)
+                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmSymbol
+                            ?: throw KevesExceptions.expectedSymbol(id)
 
-                        val result = ScmString(obj.rawString)
-                        vm.scmProcReturn(result, n, this)
+                        val result = ScmString.make(obj.rawString, vm.res)
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procSymbolToString.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 
     /** procedure: string->symbol */
-    val procStringToSymbol: ScmProcedure by lazy {
-        object : ScmProcedure("string->symbol", null) {
-            override fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) {}
+    val procStringToSymbol by lazy {
+        res.addProcedure(object : ScmProcedure("string->symbol", null) {
+            override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
-                    0 -> throw KevesExceptions.expected1DatumGot0(procStringToSymbol.id)
+                    0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0) as? ScmString
-                            ?: throw KevesExceptions.expectedSymbol(procStringToSymbol.id)
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmString
+                            ?: throw KevesExceptions.expectedSymbol(id)
 
-                        val result = ScmSymbol.get(obj.toStringForDisplay())
-                        vm.scmProcReturn(result, n, this)
+                        val result = ScmSymbol.get(obj.toStringForDisplay(res), vm.res).toObject()
+                        vm.scmProcReturn(result, n)
                     }
-                    else -> throw KevesExceptions.expected1DatumGotMore(procStringToSymbol.id)
+                    else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
-        }
+        })
     }
 }

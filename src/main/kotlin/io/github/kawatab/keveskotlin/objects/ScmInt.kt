@@ -21,10 +21,42 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmInt(val value: Int) : ScmObject() {
-    override fun toStringForWrite(): String = value.toString()
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
+
+class ScmInt private constructor(val value: Int) : ScmObject() {
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+    override fun toString(): String = value.toString()
     override fun eqvQ(other: ScmObject?): Boolean = other is ScmInt && this.value == other.value
-    override fun equalQ(other: ScmObject?): Boolean = eqvQ(other)
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean = eqvQ(other)
+
+
+    override fun add(other: ScmObject, res: KevesResources): PtrObject =
+        when (other) {
+            is ScmInt -> make(this.value + other.value, res)
+            is ScmFloat -> ScmFloat.make(this.value + other.value, res)
+            is ScmDouble -> ScmDouble.make(this.value + other.value, res)
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    override fun subtract(other: ScmObject, res: KevesResources): PtrObject =
+        when (other) {
+            is ScmInt -> make(this.value - other.value, res)
+            is ScmFloat -> ScmFloat.make(this.value - other.value, res)
+            is ScmDouble -> ScmDouble.make(this.value - other.value, res)
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    override fun isLessThan(other: ScmObject): Boolean =
+        when (other) {
+            is ScmInt -> this.value < other.value
+            is ScmFloat -> this.value < other.value
+            is ScmDouble -> this.value < other.value
+            else -> throw IllegalArgumentException("not number")
+        }
+
+    companion object {
+        fun make(value: Int, res: KevesResources) = ScmInt(value).let { res.add(it) }
+    }
 }

@@ -21,10 +21,12 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrSymbol
 import java.util.*
 
 class ScmSymbol private constructor(private val symbol: String) : ScmObject() {
-    override fun toStringForWrite(): String =
+    override fun toStringForWrite(res: KevesResources): String =
         if (symbol.run {
                 indexOf(' ') >= 0 ||
                         indexOf('\t') >= 0 ||
@@ -40,18 +42,27 @@ class ScmSymbol private constructor(private val symbol: String) : ScmObject() {
             symbol
         }
 
-    override fun toStringForDisplay(): String = toStringForWrite()
+    override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
 
     val rawString get() = symbol
 
     companion object {
-        private var symbolList = mutableMapOf("" to ScmSymbol(""))
-        fun get(symbol: String): ScmSymbol =
-            symbolList.getOrPut(symbol, { ScmSymbol(symbol).also { symbolList[symbol] = it } })
+        fun get(symbol: String, res: KevesResources): PtrSymbol =
+            res.symbolList.getOrPut(
+                symbol,
+                {
+                    val obj = ScmSymbol(symbol)
+                    val ptr = res.addSymbol(obj)
+                    res.symbolList[symbol] = ptr
+                    ptr
+                })
 
-        fun generate(): ScmSymbol =
-            "symbol${UUID.randomUUID()}".let { uuid ->
-                ScmSymbol(uuid).also { symbolList[uuid] = it }
-            }
+        fun generate(res: KevesResources): PtrSymbol {
+            val uuid = "symbol${UUID.randomUUID()}"
+            val obj = ScmSymbol(uuid)
+            val ptr = res.addSymbol(obj)
+            res.symbolList[uuid] = ptr
+            return ptr
+        }
     }
 }

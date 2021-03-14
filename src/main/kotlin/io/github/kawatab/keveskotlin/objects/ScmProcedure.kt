@@ -21,13 +21,16 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.KevesVM
+import io.github.kawatab.keveskotlin.PtrObject
 
 abstract class ScmProcedure(val id: String, val syntax: ScmSyntax?) : ScmObject() {
-    override fun toStringForWrite(): String = "#<procedure $id>"
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+    override fun toString(): String = "#<procedure $id>"
 
-    abstract fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) // : ScmObject?
+    // abstract fun directProc(acc: ScmObject?, sp: Int, vm: KevesVM) // : ScmObject?
+    abstract fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) // : ScmObject?
     abstract fun normalProc(n: Int, vm: KevesVM) // : ScmObject?
 }

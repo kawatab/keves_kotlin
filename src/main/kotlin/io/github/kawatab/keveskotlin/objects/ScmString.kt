@@ -21,13 +21,16 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
+
 class ScmString(private val string: String) : ScmObject() {
-    override fun toStringForWrite(): String = "\"${toStringForDisplay()}\""
-    override fun toStringForDisplay(): String = string
-    override fun equalQ(other: ScmObject?): Boolean =
+    override fun toStringForWrite(res: KevesResources): String = "\"${toStringForDisplay(res)}\""
+    override fun toStringForDisplay(res: KevesResources): String = string
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
         this === other || (other is ScmString && this.string == other.string)
 
     companion object {
-        fun append(str1: ScmString, str2: ScmString): ScmString = ScmString(str1.string + str2.string)
+        fun make(string: String, res: KevesResources) = ScmString(string).let { res.add(it) }
+        fun append(str1: ScmString, str2: ScmString, res: KevesResources) = make(str1.string + str2.string, res)
     }
 }

@@ -21,16 +21,26 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
+
 class ScmConstant private constructor() : ScmObject() {
-    override fun toStringForWrite(): String =
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    /*
         when (this) {
             TRUE -> "#t"
             FALSE -> "#f"
             else -> "#<undef>"
         }
+     */
 
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+
+    override fun toString(): String =
+        when (this) {
+            TRUE -> "#t"
+            FALSE -> "#f"
+            else -> "#<undef>"
+        }
 
     companion object {
         val UNDEF = ScmConstant()

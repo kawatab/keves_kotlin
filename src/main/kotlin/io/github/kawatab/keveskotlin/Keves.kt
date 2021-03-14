@@ -24,95 +24,120 @@ package io.github.kawatab.keveskotlin
 import io.github.kawatab.keveskotlin.objects.*
 
 class Keves {
-    companion object {
-        fun getStringForDisplay(atom: ScmObject?): String = atom?.toStringForDisplay() ?: "()"
-        fun getStringForWrite(atom: ScmObject?): String = atom?.toStringForWrite() ?: "()"
-    }
+    var res = KevesResources()
+
+    fun getStringForDisplay(atom: ScmObject?): String = atom?.toStringForDisplay(res) ?: "()"
+    fun getStringForWrite(atom: ScmObject?): String = atom?.toStringForWrite(res) ?: "()"
 
     fun load(text: String) {
-        val parser = KevesParser(text)
+        res = KevesResources()
+        val parser = KevesParser(text, res)
         val result = parser.parse()
         parser.errorList.let { errorList ->
             if (errorList.isEmpty()) {
-                println(ScmObject.getStringForWrite(result))
+                println(ScmObject.getStringForWrite(result.toVal(res), res))
             } else {
-                displayError(parser.errorList)
+                displayError(parser.errorList, res)
             }
         }
     }
 
-    fun parse(text: String): Pair<ScmObject?, List<ScmError>> {
-        val parser = KevesParser(text)
-        val result = parser.parse()
+    fun parse(text: String): Pair<PtrObject, List<PtrError>> {
+        res = KevesResources()
+        val parser = KevesParser(text, res)
+        val result: PtrObject = parser.parse().toObject()
         return result to parser.errorList
     }
 
-    private fun displayError(errorList: List<ScmError>) {
-        errorList.forEach { error -> println(error.toStringForDisplay()) }
+    private fun displayError(errorList: List<PtrError>, res: KevesResources) {
+        errorList.forEach { error -> println(error.toVal(res).toStringForDisplay(res)) }
     }
 
     fun compile(sExp: String) {
-        val parser = KevesParser(sExp)
-        val compiler = KevesCompiler()
-        val code: ScmPair? = parser.parse()
+        res = KevesResources()
+        val parser = KevesParser(sExp, res)
+        val compiler = KevesCompiler(res)
+        val code: PtrPair = parser.parse()
         println(
             ScmObject.getStringForDisplay(
                 compiler.compile(
-                    compiler.transform(code).also { println(ScmObject.getStringForDisplay(it)) },
-                    null,
-                    null,
-                    ScmPair.list(ScmInstruction.HALT)
-                )
+                    compiler.transform(code.toObject())
+                        .also { println(ScmObject.getStringForDisplay(it.toVal(res), res)) },
+                    PtrPair(0),
+                    PtrPair(0),
+                    res.constHalt.toInstruction(),
+                ).toVal(res),
+                res
             )
         )
     }
 
-    fun evaluate2(sExp: String): ScmObject? {
-        val parser = KevesParser(sExp)
+    fun evaluate2(sExp: String): PtrObject {
+        res = KevesResources()
+        val parser = KevesParser(sExp, res)
 
         val compiler = try {
-            KevesCompiler()
+            KevesCompiler(res)
         } catch (e: IllegalArgumentException) {
-            return ScmError("compiler", e.message ?: "")
+            return ScmError.make("compiler", e.message ?: "", res).toObject()
         }
-        val vm = KevesVM()
-        return parser.parse()?.let { parsed ->
-            try {
-                compiler.compile(compiler.transform(parsed), null, null, ScmPair.list(ScmInstruction.HALT))
-            } catch (e: IllegalArgumentException) {
-                return ScmError("compiler", e.message ?: "")
-            }?.let { compiled ->
+        val vm = KevesVM(res)
+        return parser.parse().let { parsed ->
+            if (parsed.isNull()) PtrObject(0)
+            else {
                 try {
-                    vm.evaluate(compiled)
+                    compiler.compile(
+                        compiler.transform(parsed.toObject()),
+                        PtrPair(0),
+                        PtrPair(0),
+                        res.constHalt.toInstruction()
+                    )
                 } catch (e: IllegalArgumentException) {
-                    return ScmError("vm", e.message ?: "")
+                    println("compile error")
+                    return ScmError.make("compiler", e.message ?: "", res).toObject()
+                }.let { compiled ->
+                    println("compiled: ${compiled.toVal(res).toStringForWrite(res)}")
+                    try {
+                        vm.evaluate(compiled).also { println("result: ${it.toVal(res)?.toStringForWrite(res)}") }
+                    } catch (e: IllegalArgumentException) {
+                        return ScmError.make("vm", e.message ?: "", res).toObject()
+                    }
                 }
             }
         }
     }
 
     fun evaluate(sExp: String) {
-        val parser = KevesParser(sExp)
-        val compiler = KevesCompiler()
-        val vm = KevesVM()
+        res = KevesResources()
+        val parser = KevesParser(sExp, res)
+        val compiler = KevesCompiler(res)
+        val vm = KevesVM(res)
         println(
             ScmObject.getStringForDisplay(
-                parser.parse()?.let { parsed ->
-                    try {
-                        compiler.compile(compiler.transform(parsed), null, null, ScmPair.list(ScmInstruction.HALT))
-                            ?.let { compiled ->
+                parser.parse().let { parsed ->
+                    if (parsed.isNull()) PtrObject(0).toVal(res)
+                    else {
+                        try {
+                            compiler.compile(
+                                compiler.transform(parsed.toObject()),
+                                PtrPair(0),
+                                PtrPair(0),
+                                res.constHalt.toInstruction()
+                            ).let { compiled ->
                                 try {
-                                    vm.evaluate(compiled)
+                                    vm.evaluate(compiled).toVal(res)
                                 } catch (e: IllegalArgumentException) {
-                                    val error = ScmError("vm", e.message ?: "")
-                                    return println(error.toStringForDisplay())
+                                    val error = ScmError.make("vm", e.message ?: "", res)
+                                    return println(error.toVal(res).toStringForDisplay(res))
                                 }
                             }
-                    } catch (e: IllegalArgumentException) {
-                        val error = ScmError("compiler", e.message ?: "")
-                        return println(error.toStringForDisplay())
+                        } catch (e: IllegalArgumentException) {
+                            val error = ScmError.make("compiler", e.message ?: "", res)
+                            return println(error.toVal(res).toStringForDisplay(res))
+                        }
                     }
-                }
+                },
+                res
             )
         )
     }

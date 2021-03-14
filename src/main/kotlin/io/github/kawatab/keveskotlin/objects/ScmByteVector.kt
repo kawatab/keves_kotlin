@@ -21,23 +21,29 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmByteVector(private var array: ByteArray) : ScmObject() {
+import io.github.kawatab.keveskotlin.KevesResources
+
+class ScmByteVector private constructor(private var array: ByteArray) : ScmObject() {
     fun set(i: Int, byte: Byte) {
         array[i] = byte
     }
 
     fun at(i: Int): Byte = array[i]
 
-    override fun toStringForWrite(): String = "#u8(${array.joinToString(" ")})"
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+    override fun toStringForWrite(res: KevesResources): String = "#u8(${array.joinToString(" ")})"
+    override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
+    override fun toString(): String = "#u8(${array.joinToString(" ")})"
 
-    override fun equalQ(other: ScmObject?): Boolean {
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean {
         if (this === other) return true
         if (other !is ScmByteVector || this.array.size != other.array.size) return false
         for (i in this.array.indices) {
             if (this.array[i] != other.array[i]) return false
         }
         return true
+    }
+
+    companion object {
+        fun make(array: ByteArray, res: KevesResources) = res.addByteVector(ScmByteVector(array))
     }
 }

@@ -21,14 +21,14 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-import io.github.kawatab.keveskotlin.KevesCompiler
+import io.github.kawatab.keveskotlin.*
 
 abstract class ScmSyntax(private val id: String) : ScmObject() {
-    override fun toStringForWrite(): String = "#<syntax $id>"
-    override fun toStringForDisplay(): String = toStringForWrite()
-    override fun toString(): String = toStringForWrite()
+    override fun toStringForWrite(res: KevesResources): String = toString()
+    override fun toStringForDisplay(res: KevesResources): String = toString()
+    override fun toString(): String = "#<syntax $id>"
 
-    abstract fun compile(x: ScmPair, e: ScmPair?, s: ScmPair?, next: ScmPair?, compiler: KevesCompiler): ScmPair?
-    abstract fun findSets(x: ScmPair, v: ScmPair?, compiler: KevesCompiler): ScmPair?
-    abstract fun findFree(x: ScmPair, b: ScmPair?, compiler: KevesCompiler): ScmPair?
+    abstract fun compile(x: PtrPairNonNull, e: PtrPair, s: PtrPair, next: PtrInstruction, compiler: KevesCompiler): PtrInstruction
+    abstract fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair
+    abstract fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair
 }

@@ -21,10 +21,12 @@
 
 package io.github.kawatab.keveskotlin.objects
 
+import io.github.kawatab.keveskotlin.KevesResources
+
 class ScmChar private constructor(private val charArray: CharArray) : ScmObject() {
-    constructor(value: Char) : this(charArrayOf(value))
-    constructor(high: Char, low: Char) : this(charArrayOf(high, low))
-    constructor(value: Int) : this(
+    private constructor(value: Char) : this(charArrayOf(value))
+    private constructor(high: Char, low: Char) : this(charArrayOf(high, low))
+    private constructor(value: Int) : this(
         if (value < 0x10000) charArrayOf(value.toChar())
         else charArrayOf(
             ((value - 0x10000) / 0x400 + Char.MIN_HIGH_SURROGATE.toInt()).toChar(),
@@ -34,9 +36,9 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
 
     // val char: Char get() = charArray[0]
 
-    override fun toStringForWrite(): String = "#\\${toStringForDisplay()}"
+    override fun toStringForWrite(res: KevesResources): String = "#\\${toStringForDisplay(res)}"
 
-    override fun toStringForDisplay(): String =
+    override fun toStringForDisplay(res: KevesResources): String =
         when (charArray[0]) {
             '\u0007' -> "alarm"
             '\u0008' -> "backspace"
@@ -52,7 +54,7 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
 
     override fun toString(): String = String(charArray)
     override fun eqvQ(other: ScmObject?): Boolean = other is ScmChar && this.toUtf32() == other.toUtf32()
-    override fun equalQ(other: ScmObject?): Boolean = eqvQ(other)
+    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean = eqvQ(other)
 
     fun toUtf32(): Int =
         if (charArray.size == 1) charArray[0].toInt()
@@ -138,4 +140,10 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
             in 0x1FBF0..0x1FBF9 -> toUtf32() - 0x1FBF0 // SEGMENTED DIGIT
             else -> -1
         }
+
+    companion object {
+        fun make(value: Char, res: KevesResources) = ScmChar(value).let { res.add(it) }
+        fun make(high: Char, low: Char, res: KevesResources) = ScmChar(high, low).let { res.add(it) }
+        fun make(value: Int, res: KevesResources) = ScmChar(value).let { res.add(it) }
+    }
 }

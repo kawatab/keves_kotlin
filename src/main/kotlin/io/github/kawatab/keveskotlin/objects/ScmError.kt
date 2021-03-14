@@ -21,7 +21,13 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-class ScmError(private val who: String, private val message: String) : ScmObject() {
-    override fun toStringForWrite(): String = "*** ERROR: $message\n who: $who"
-    override fun toStringForDisplay(): String = toStringForWrite()
+import io.github.kawatab.keveskotlin.KevesResources
+
+class ScmError private constructor(private val who: String, private val message: String) : ScmObject() {
+    override fun toStringForWrite(res: KevesResources): String = "*** ERROR: $message\n who: $who"
+    override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
+
+    companion object {
+        fun make(who: String, message: String, res: KevesResources) = ScmError(who, message).let { res.add(it) }.toError()
+    }
 }
