@@ -22,6 +22,7 @@
 package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrBox
 import io.github.kawatab.keveskotlin.PtrObject
 
 // class ScmBox private constructor(var value: ScmObject?) : ScmObject() {
@@ -29,24 +30,24 @@ class ScmBox private constructor(var obj: PtrObject) : ScmObject() {
     override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(obj.toVal(res), res)}>"
     override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(obj.toVal(res), res)}>"
     override fun toString(): String = "#<box $obj>"
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
-        if (this === other) true else (other is ScmBox && equalQ(other, ArrayDeque(), res))
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        if (this === other.toVal(res)) true else (other.isBox(res) && equalQ(other.toBox(), ArrayDeque(), res))
 
-    fun equalQ(other: ScmBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
-        if (duplicated.indexOfFirst { (first, second) -> (this == first && other == second) || (this == second && other == first) } >= 0) return true
-        duplicated.addLast(this to other)
-        val ptrObj1 = this.obj
-        val ptrObj2 = other.obj
-        if (ptrObj1 == ptrObj2) return true
-        if (!res.isScmObject(ptrObj1) || !res.isScmObject(ptrObj2)) return false
-        val obj1 = ptrObj1.toVal(res)
-        val obj2 = ptrObj2.toVal(res)
-        return when (obj1) {
-            null -> obj2 == null
-            is ScmBox -> obj2 is ScmBox && obj1.equalQ(obj2, duplicated, res)
-            is ScmPair -> obj2 is ScmPair && obj1.equalQ(obj2, duplicated, res)
-            is ScmVector -> obj2 is ScmVector && obj1.equalQ(obj2, duplicated, res)
-            else -> obj1.equalQ(obj2, res)
+    fun equalQ(other: PtrBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
+        if (duplicated.indexOfFirst { (first, second) ->
+                (this == first && other.toVal(res) == second) || (this == second && other.toVal(res) == first)
+            } >= 0) return true
+        duplicated.addLast(this to other.toVal(res))
+        val obj1 = this.obj
+        val obj2 = other.toVal(res).obj
+        if (obj1 == obj2) return true
+        if (!res.isScmObject(obj1) || !res.isScmObject(obj2)) return false
+        return when {
+            obj1.isNull() -> obj2.isNull()
+            obj1.isBox(res) -> obj2.isBox(res) && obj1.asBox(res).equalQ(obj2.toBox(), duplicated, res)
+            obj1.isPair(res) -> obj2.isPair(res) && obj1.asPair(res).equalQ(obj2.toPair(), duplicated, res)
+            obj1.isVector(res) -> obj2.isVector(res) && obj1.asVector(res).equalQ(obj2.toVector(), duplicated, res)
+            else -> obj1.toVal(res)!!.equalQ(obj2, res)
         }
     }
 

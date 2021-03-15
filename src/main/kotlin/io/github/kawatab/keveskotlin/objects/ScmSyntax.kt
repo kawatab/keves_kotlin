@@ -28,7 +28,7 @@ abstract class ScmSyntax(private val id: String) : ScmObject() {
     override fun toStringForDisplay(res: KevesResources): String = toString()
     override fun toString(): String = "#<syntax $id>"
 
-    abstract fun compile(x: PtrPairNonNull, e: PtrPair, s: PtrPair, next: PtrInstruction, compiler: KevesCompiler): PtrInstruction
-    abstract fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair
-    abstract fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair
+    abstract fun compile(x: PtrPair, e: PtrPairOrNull, s: PtrPairOrNull, next: PtrInstruction, compiler: KevesCompiler): PtrInstruction
+    abstract fun findSets(x: PtrPair, v: PtrPairOrNull, compiler: KevesCompiler): PtrPairOrNull
+    abstract fun findFree(x: PtrPair, b: PtrPairOrNull, compiler: KevesCompiler): PtrPairOrNull
 }

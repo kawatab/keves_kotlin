@@ -33,8 +33,8 @@ class R7rsString(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
-                        val result = if (obj is ScmString) res.constTrue else res.constFalse
+                        val obj = vm.stack.index(vm.sp, 0)
+                        val result = if (obj.isString(res)) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -55,7 +55,7 @@ class R7rsString(private val res: KevesResources) {
                             val sp = vm.sp
                             val first = vm.stack.index(sp, 0).asString(res)
                             for (i in 1 until n) {
-                                val obj = vm.stack.index(sp, i).asString(res)
+                                val obj = vm.stack.index(sp, i)
                                 if (!first.equalQ(obj, res)) return vm.scmProcReturn(res.constFalse, n)
                             }
                         } catch (e: TypeCastException) {

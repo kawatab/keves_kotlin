@@ -57,14 +57,14 @@ class Keves {
         res = KevesResources()
         val parser = KevesParser(sExp, res)
         val compiler = KevesCompiler(res)
-        val code: PtrPair = parser.parse()
+        val code: PtrPairOrNull = parser.parse()
         println(
             ScmObject.getStringForDisplay(
                 compiler.compile(
                     compiler.transform(code.toObject())
                         .also { println(ScmObject.getStringForDisplay(it.toVal(res), res)) },
-                    PtrPair(0),
-                    PtrPair(0),
+                    PtrPairOrNull(0),
+                    PtrPairOrNull(0),
                     res.constHalt.toInstruction(),
                 ).toVal(res),
                 res
@@ -88,8 +88,8 @@ class Keves {
                 try {
                     compiler.compile(
                         compiler.transform(parsed.toObject()),
-                        PtrPair(0),
-                        PtrPair(0),
+                        PtrPairOrNull(0),
+                        PtrPairOrNull(0),
                         res.constHalt.toInstruction()
                     )
                 } catch (e: IllegalArgumentException) {
@@ -120,8 +120,8 @@ class Keves {
                         try {
                             compiler.compile(
                                 compiler.transform(parsed.toObject()),
-                                PtrPair(0),
-                                PtrPair(0),
+                                PtrPairOrNull(0),
+                                PtrPairOrNull(0),
                                 res.constHalt.toInstruction()
                             ).let { compiled ->
                                 try {

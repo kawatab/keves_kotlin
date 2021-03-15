@@ -35,7 +35,7 @@ class R7rsList(private val res: KevesResources) {
                     1 -> {
                         val ptr = vm.stack.index(vm.sp, 0)
                         val result =
-                            if (ScmPair.isPair(ptr.toVal(res))) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                            if (ptr.isPair(res)) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -117,7 +117,7 @@ class R7rsList(private val res: KevesResources) {
                         val pair = vm.stack.index(sp, 0)
                             .also { if (it.isNotMutablePair(res)) throw KevesExceptions.expectedMutablePair(id) }
                             .toMutablePair()
-                        pair.toVal(res)!!.assignCar(value)
+                        pair.toVal(res).assignCar(value)
                         vm.scmProcReturn(res.constUndef, n)
                     }
                     else -> throw KevesExceptions.expected2DatumGotMore(id)
@@ -138,7 +138,7 @@ class R7rsList(private val res: KevesResources) {
                         val value = vm.stack.index(sp, 1)
                         val pair = vm.stack.index(sp, 0).toMutablePair()
                             .also { if (it.toObject().isNull()) throw KevesExceptions.expectedMutablePair(id) }
-                        pair.toVal(res)!!.assignCdr(value)
+                        pair.toVal(res).assignCdr(value)
                         vm.scmProcReturn(res.constUndef, n)
                     }
                     else -> throw KevesExceptions.expected2DatumGotMore(id)
@@ -762,7 +762,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
+                        val obj = vm.stack.index(vm.sp, 0)
                         val result = if (ScmPair.isProperList(
                                 obj,
                                 res
@@ -816,7 +816,7 @@ class R7rsList(private val res: KevesResources) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val sp = vm.sp
-                tailrec fun loop(index: Int, result: PtrPair): PtrPair =
+                tailrec fun loop(index: Int, result: PtrPairOrNull): PtrPairOrNull =
                     if (index < 0) {
                         result
                     } else {
@@ -824,7 +824,7 @@ class R7rsList(private val res: KevesResources) {
                         loop(index - 1, ScmMutablePair.make(obj, result.toObject(), vm.res).toPair())
                     }
 
-                val list = loop(index = n - 1, result = PtrPair(0))
+                val list = loop(index = n - 1, result = PtrPairOrNull(0))
                 vm.scmProcReturn(list.toObject(), n)
             }
         })
@@ -840,7 +840,7 @@ class R7rsList(private val res: KevesResources) {
                     1 -> {
                         val list = vm.stack.index(vm.sp, 0)
                         try {
-                            val length = ScmInt.make(ScmPair.length(list.toVal(res), res), vm.res).toObject()
+                            val length = ScmInt.make(ScmPair.length(list, res), vm.res).toObject()
                             vm.scmProcReturn(length, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedProperList(id)
@@ -871,7 +871,7 @@ class R7rsList(private val res: KevesResources) {
                                             id
                                         )
                                     }
-                                    .toPair()
+                                    .toPairOrNull()
                                 loop(
                                     index - 1,
                                     ScmMutablePair.append(list, result, vm.res)
@@ -899,9 +899,9 @@ class R7rsList(private val res: KevesResources) {
                         val reversed: PtrObject = vm.stack.index(vm.sp, 0).let { obj ->
                             when {
                                 obj.isNull() -> PtrObject(0)
-                                obj.toVal(res) !is ScmPair -> throw KevesExceptions.expectedList(id)
+                                obj.isNotPair(res) -> throw KevesExceptions.expectedList(id)
                                 else -> try {
-                                    ScmMutablePair.reverse(obj.toPair(), vm.res).toObject()
+                                    ScmMutablePair.reverse(obj.toPairOrNull(), vm.res).toObject()
                                 } catch (e: IllegalArgumentException) {
                                     throw KevesExceptions.expectedProperList(id)
                                 }
@@ -931,8 +931,8 @@ class R7rsList(private val res: KevesResources) {
                         }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
-                            .toPair()
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
+                            .toPairOrNull()
 
                         try {
                             val result: PtrObject = ScmPair.listTail(list, k, res).toObject()
@@ -964,8 +964,8 @@ class R7rsList(private val res: KevesResources) {
                         }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
-                            .toPair()
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
+                            .toPairOrNull()
                         val listTail = try {
                             ScmPair.listTail(list, k, res)
                         } catch (e: IllegalArgumentException) {
@@ -1001,8 +1001,8 @@ class R7rsList(private val res: KevesResources) {
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
                             .also {
-                                if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id)
-                            }.toPair()
+                                if (it.isNotPair(res)) throw KevesExceptions.expectedList(id)
+                            }.toPairOrNull()
                         try {
                             val result = ScmPair.listTail(list, k, res).car(res)
                             return vm.scmProcReturn(result, n)
@@ -1055,7 +1055,7 @@ class R7rsList(private val res: KevesResources) {
                         val obj = vm.stack.index(sp, 0)
                         val list = vm.stack.index(sp, 1)
                             .also {
-                                if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id)
+                                if (it.isNotPair(res)) throw KevesExceptions.expectedList(id)
                             }
                         try {
                             val result = ScmPair.memv(obj, list, res)
@@ -1081,7 +1081,7 @@ class R7rsList(private val res: KevesResources) {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
                         val list = vm.stack.index(sp, 1)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
                         try {
                             val result = ScmPair.member(obj, list, res)
                             return vm.scmProcReturn(result, n)
@@ -1106,7 +1106,7 @@ class R7rsList(private val res: KevesResources) {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
                         val list = vm.stack.index(sp, 1)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
                         try {
                             val result = ScmPair.assq(obj, list, res)
                             return vm.scmProcReturn(result, n)
@@ -1131,7 +1131,7 @@ class R7rsList(private val res: KevesResources) {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
                         val list = vm.stack.index(sp, 1)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
                         try {
                             val result = ScmPair.assv(obj, list, res)
                             return vm.scmProcReturn(result, n)
@@ -1156,7 +1156,7 @@ class R7rsList(private val res: KevesResources) {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 0)
                         val list = vm.stack.index(sp, 1)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
                         try {
                             val result = ScmPair.assoc(obj, list, res)
                             return vm.scmProcReturn(result, n)
@@ -1179,8 +1179,8 @@ class R7rsList(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         val obj = vm.stack.index(vm.sp, 0)
-                            .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
-                            .toPair()
+                            .also { if (it.isNotPair(res)) throw KevesExceptions.expectedList(id) }
+                            .toPairOrNull()
                         val result = ScmMutablePair.listCopy(obj, vm.res).toObject()
                         vm.scmProcReturn(result, n)
                     }

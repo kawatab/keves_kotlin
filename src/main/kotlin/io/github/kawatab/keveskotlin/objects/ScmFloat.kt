@@ -28,30 +28,30 @@ class ScmFloat private constructor(val value: Float) : ScmObject() {
     override fun toStringForWrite(res: KevesResources): String = toString()
     override fun toStringForDisplay(res: KevesResources): String = toString()
     override fun toString(): String = value.toString()
-    override fun eqvQ(other: ScmObject?): Boolean = other is ScmFloat && this.value == other.value
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean = eqvQ(other)
+    override fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isFloat(res) && this.value == other.asFloat(res).value
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
 
-    override fun add(other: ScmObject, res: KevesResources): PtrObject =
-        when (other) {
-            is ScmInt -> make(this.value + other.value, res).toObject()
-            is ScmFloat -> make(this.value + other.value, res).toObject()
-            is ScmDouble -> ScmDouble.make(this.value + other.value, res).toObject()
+    override fun add(other: PtrObject, res: KevesResources): PtrObject =
+        when {
+            other.isInt(res) -> make(this.value + other.asInt(res).value, res).toObject()
+            other.isFloat(res) -> make(this.value + other.asFloat(res).value, res).toObject()
+            other.isDouble(res) -> ScmDouble.make(this.value + other.asDouble(res).value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
-    override fun subtract(other: ScmObject, res: KevesResources): PtrObject =
-        when (other) {
-            is ScmInt -> make(this.value - other.value, res).toObject()
-            is ScmFloat -> make(this.value - other.value, res).toObject()
-            is ScmDouble -> ScmDouble.make(this.value - other.value, res).toObject()
+    override fun subtract(other: PtrObject, res: KevesResources): PtrObject =
+        when {
+            other.isInt(res) -> make(this.value - other.asInt(res).value, res).toObject()
+            other.isFloat(res) -> make(this.value - other.asFloat(res).value, res).toObject()
+            other.isDouble(res) -> ScmDouble.make(this.value - other.asDouble(res).value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
-    override fun isLessThan(other: ScmObject): Boolean =
-        when (other) {
-            is ScmInt -> this.value < other.value
-            is ScmFloat -> this.value < other.value
-            is ScmDouble -> this.value < other.value
+    override fun isLessThan(other: PtrObject, res: KevesResources): Boolean =
+        when {
+            other.isInt(res) -> this.value < other.asInt(res).value
+            other.isFloat(res) -> this.value < other.asFloat(res).value
+            other.isDouble(res) -> this.value < other.asDouble(res).value
             else -> throw IllegalArgumentException("not number")
         }
 

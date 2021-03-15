@@ -35,17 +35,20 @@ class KevesCompiler(private val res: KevesResources) {
     }
 
     private fun transformDefine(x: PtrObject): PtrObject {
-        val valX = x.toVal(res)
-        return if (valX is ScmPair) {
-            val car = valX.car
-            when (car.toVal(res)) {
-                is ScmPair -> ScmPair.make(transformDefine(car), transformDefine(valX.cdr), res).toObject()
-                is ScmSymbol -> {
+        return if (x.isPair(res)) {
+            val car = x.toPairOrNull().car(res)
+            when {
+                car.isPair(res) -> ScmPair.make(transformDefine(car), transformDefine(x.toPairOrNull().cdr(res)), res)
+                    .toObject()
+                car.isSymbol(res) -> {
                     when (car) {
                         ScmSymbol.get("begin", res).toObject() -> {
-                            val (definition, body) = findDefinition(sequence = valX.cdr, definition = PtrPair(0))
+                            val (definition, body) = findDefinition(
+                                sequence = x.toPairOrNull().cdr(res),
+                                definition = PtrPairOrNull(0)
+                            )
                             if (definition.isNull()) {
-                                ScmPair.make(car, transformDefine(x = valX.cdr), res).toObject()
+                                ScmPair.make(car, transformDefine(x = x.toPairOrNull().cdr(res)), res).toObject()
                             } else {
                                 ScmPair.list(
                                     car,
@@ -59,44 +62,45 @@ class KevesCompiler(private val res: KevesResources) {
                                 ).toObject()
                             }
                         }
-                        else -> ScmPair.make(car, transformDefine(x = valX.cdr), res).toObject()
+                        else -> ScmPair.make(car, transformDefine(x = x.toPairOrNull().cdr(res)), res).toObject()
                     }
                 }
-                else -> ScmPair.make(car, transform(valX.cdr), res).toObject()
+                else -> ScmPair.make(car, transform(x.toPairOrNull().cdr(res)), res).toObject()
             }
         } else {
             x
         }
     }
 
-    private tailrec fun findDefinition(sequence: PtrObject, definition: PtrPair): Pair<PtrPair, PtrObject> {
-        val valSequence = sequence.toVal(res)
-        if (valSequence is ScmPair) {
-            val obj = valSequence.car
-            val valObj = obj.toVal(res)
-            if (valObj is ScmPair) {
-                val car = valObj.car
+    private tailrec fun findDefinition(sequence: PtrObject, definition: PtrPairOrNull): Pair<PtrPairOrNull, PtrObject> {
+        if (sequence.isPair(res)) {
+            val obj = sequence.toPairOrNull().car(res)
+            if (obj.isPair(res)) {
+                val car = obj.toPair().car(res)
                 if (car == ScmSymbol.get("define", res).toObject())
                     return findDefinition(
-                        sequence = valSequence.cdr,
-                        definition = ScmPair.make(findLambda(valObj.cdr).toObject(), definition.toObject(), res)
+                        sequence = sequence.toPairOrNull().cdr(res),
+                        definition = ScmPair.make(
+                            findLambda(obj.toPair().cdr(res)).toObject(),
+                            definition.toObject(),
+                            res
+                        )
                     )
             }
         }
-        return definition to (findNextDefinition(sequence, PtrPair(0))
+        return definition to (findNextDefinition(sequence, PtrPairOrNull(0))
             .let { if (it.isNull()) sequence else it.toObject() })
     }
 
-    private fun findLambda(definition: PtrObject): PtrPairNonNull {
-        val valDefinition = definition.toVal(res)
-        if (valDefinition !is ScmPair) throw IllegalArgumentException("define is malformed")
-        val car = valDefinition.car
-        val cdr = valDefinition.cdr
-        return when (val valCar = car.toVal(res)) {
-            is ScmSymbol -> definition.toPairNonNull()
-            is ScmPair -> {
-                val variable = valCar.car
-                val formals = valCar.cdr
+    private fun findLambda(definition: PtrObject): PtrPair {
+        if (definition.isNotPair(res)) throw IllegalArgumentException("define is malformed")
+        val car = definition.toPair().car(res)
+        val cdr = definition.toPair().cdr(res)
+        return when {
+            car.isSymbol(res) -> definition.toPair()
+            car.isPair(res) -> {
+                val variable = car.toPair().car(res)
+                val formals = car.toPair().cdr(res)
                 if (variable.isNotNull() && variable.isNotSymbol(res)) throw IllegalArgumentException("found no identifier in definition")
                 ScmPair.list(
                     variable,
@@ -108,47 +112,46 @@ class KevesCompiler(private val res: KevesResources) {
         }
     }
 
-    private tailrec fun findNextDefinition(sequence: PtrObject, notDefinition: PtrPair): PtrPair {
-        tailrec fun loop(rest: PtrPair, result: PtrPair): PtrPair =
+    private tailrec fun findNextDefinition(sequence: PtrObject, notDefinition: PtrPairOrNull): PtrPairOrNull {
+        tailrec fun loop(rest: PtrPairOrNull, result: PtrPairOrNull): PtrPairOrNull =
             if (rest.isNull()) result
             else {
                 loop(
-                    rest = rest.cdr(res).let { if (it.isPair(res)) it.toPair() else PtrPair(0) },
+                    rest = rest.cdr(res).let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) },
                     result = ScmPair.make(rest.car(res), result.toObject(), res)
                 )
             }
 
         val valSequence = sequence.toVal(res)
-        if (valSequence is ScmPair) {
-            val obj = valSequence.car
-            val valObj = obj.toVal(res)
-            if (valObj is ScmPair) {
-                val car = valObj.car
+        if (sequence.isPair(res)) {
+            val obj = sequence.toPair().car(res)
+            if (obj.isPair(res)) {
+                val car = obj.toPair().car(res)
                 if (car != ScmSymbol.get("define", res).toObject())
                     return findNextDefinition(
-                        sequence = valSequence.cdr,
-                        notDefinition = ScmPair.make(valSequence.car, notDefinition.toObject(), res)
+                        sequence = sequence.toPair().cdr(res),
+                        notDefinition = ScmPair.make(sequence.toPair().car(res), notDefinition.toObject(), res)
                     )
             }
         }
 
         return valSequence?.let {
             loop(notDefinition, ScmPair.make(ScmSymbol.get("begin", res).toObject(), sequence, res))
-        } ?: PtrPair(0)
+        } ?: PtrPairOrNull(0)
     }
 
     private fun transformWithMacro(x: PtrObject): PtrObject =
-        when (val valX = x.toVal(res)) {
-            is ScmPair -> {
-                val car = valX.car
-                when (car.toVal(res)) {
-                    is ScmPair -> ScmPair.make(transformWithMacro(car), transformWithMacro(valX.cdr), res).toObject()
-                    is ScmSymbol -> {
-                        val obj: ScmObject? = findBind(car.toSymbol())?.second?.toVal(res)
-                        if (obj is ScmMacro) transformWithMacro(x = obj.transform(x.toPairNonNull(), this))
-                        else ScmPair.make(car, transformWithMacro(x = valX.cdr), res).toObject()
+        when {
+            x.isPair(res) -> {
+                val car = x.toPair().car(res)
+                when {
+                    car.isPair(res) -> ScmPair.make(transformWithMacro(car), transformWithMacro(x.toPair().cdr(res)), res).toObject()
+                    car.isSymbol(res) -> {
+                        val obj: PtrObject = findBind(car.toSymbol())?.second ?: PtrObject(0)
+                        if (obj.isMacro(res)) transformWithMacro(x = obj.asMacro(res).transform(x.toPair(), this))
+                        else ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
                     }
-                    else -> ScmPair.make(car, transformWithMacro(x = valX.cdr), res).toObject()
+                    else -> ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
                 }
             }
             else -> {
@@ -161,13 +164,13 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 110
      */
-    fun compile(x: PtrObject, e: PtrPair, s: PtrPair, next: PtrInstruction): PtrInstruction =
-        when (val valX = x.toVal(res)) {
-            is ScmSymbol -> {
+    fun compile(x: PtrObject, e: PtrPairOrNull, s: PtrPairOrNull, next: PtrInstruction): PtrInstruction =
+        when {
+            x.isSymbol(res) -> {
                 val bind = findBind(x.toSymbol())
                 val obj: PtrObject = bind?.let { (_, obj) ->
-                    when (obj.toVal(res)) {
-                        is ScmSyntax, is ScmProcedure -> obj
+                    when {
+                        obj.isSyntax(res) || obj.isProcedure(res) -> obj
                         else -> PtrObject(0)
                     }
                 } ?: PtrObject(0)
@@ -181,22 +184,22 @@ class KevesCompiler(private val res: KevesResources) {
                     )
                 }
             }
-            is ScmPair -> {
-                val bind = valX.car.let {
+            x.isPair(res) -> {
+                val bind = x.toPair().car(res).let {
                     if (it.isSymbol(res)) findBind(it.toSymbol()) else null
                 }
-                val obj: ScmObject? = bind?.second?.toVal(res)
+                val obj: PtrObject = bind?.second ?: PtrObject(0)
                 when {
-                    obj is ScmSyntax -> {
-                        obj.compile(x.toPairNonNull(), e, s, next, this)
+                    obj.isSyntax(res) -> {
+                        obj.asSyntax(res).compile(x.toPair(), e, s, next, this)
                     }
-                    (obj is ScmProcedure) && obj.syntax != null -> {
-                        obj.syntax.compile(x.toPairNonNull(), e, s, next, this)
+                    obj.isProcedure(res) && obj.asProcedure(res).syntax != null -> {
+                        obj.asProcedure(res).syntax!!.compile(x.toPair(), e, s, next, this)
                     }
                     else -> {
                         val ptrInstApply = ScmInstruction.Apply.make(0, res)
                         val instApply = ptrInstApply.toVal(res)
-                        fun loop(args: PtrPair, c: PtrInstruction, n: Int): PtrInstruction =
+                        fun loop(args: PtrPairOrNull, c: PtrInstruction, n: Int): PtrInstruction =
                             if (args.isNull()) {
                                 instApply.n = n
                                 if (tailQ(next, res)) c
@@ -208,24 +211,24 @@ class KevesCompiler(private val res: KevesResources) {
                                             throw IllegalArgumentException(
                                                 KevesExceptions.badSyntax(x.toVal(res)!!.toStringForWrite(res))
                                             )
-                                    }.toPair(),
+                                    }.toPairOrNull(),
                                     compile(args.car(res), e, s, ScmInstruction.Argument.make(c, res)),
                                     n + 1
                                 )
                             }
 
                         loop(
-                            valX.cdr.also {
+                            x.toPair().cdr(res).also {
                                 if (it.isNeitherNullNorPair(res))
-                                    throw IllegalArgumentException(KevesExceptions.badSyntax(valX.toStringForWrite(res)))
-                            }.toPair(),
+                                    throw IllegalArgumentException(KevesExceptions.badSyntax(x.asPair(res).toStringForWrite(res)))
+                            }.toPairOrNull(),
                             compile(
-                                valX.car,
+                                x.toPair().car(res),
                                 e,
                                 s,
                                 if (tailQ(next, res)) {
                                     ScmInstruction.Shift.make(
-                                        ScmPair.length(valX.cdr.asPairOrNull(res), res),
+                                        ScmPair.length(x.toPair().cdr(res), res),
                                         next.asInstructionReturn(res).n,
                                         ptrInstApply.toInstruction(),
                                         res
@@ -250,39 +253,39 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 101
      */
-    fun findSets(x: PtrObject, v: PtrPair): PtrPair =
-        when (val valX = x.toVal(res)) {
-            is ScmSymbol ->
-                PtrPair(0)
-            is ScmPair -> {
-                val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
-                val second = bind?.second?.toVal(res)
+    fun findSets(x: PtrObject, v: PtrPairOrNull): PtrPairOrNull =
+        when {
+            x.isSymbol(res) ->
+                PtrPairOrNull(0)
+            x.isPair(res) -> {
+                val bind = x.toPair().car(res).let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+                val second = bind?.second ?: PtrObject(0)
                 when {
-                    second is ScmSyntax ->
-                        second.findSets(x.toPairNonNull(), v, this)
-                    second is ScmProcedure && second.syntax != null ->
-                        second.syntax.findSets(x.toPairNonNull(), v, this)
+                    second.isSyntax(res) ->
+                        second.asSyntax(res).findSets(x.toPair(), v, this)
+                    second.isProcedure(res) && second.asProcedure(res).syntax != null ->
+                        second.asProcedure(res).syntax!!.findSets(x.toPair(), v, this)
                     else -> {
-                        fun next(x: PtrPair): PtrPair =
-                            if (x.isNull()) PtrPair(0)
+                        fun next(x: PtrPairOrNull): PtrPairOrNull =
+                            if (x.isNull()) PtrPairOrNull(0)
                             else {
                                 val cdrX = try {
                                     x.cdr(res)
                                         .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair") }
-                                        .toPair()
+                                        .toPairOrNull()
                                 } catch (e: IllegalArgumentException) {
                                     throw IllegalArgumentException("'next' got improper list")
                                 }
                                 setUnion(findSets(x.car(res), v), next(cdrX))
                             }
                         next(
-                            if (bind == null) x.toPair()
-                            else valX.cdr.let { if (it.isPair(res)) it.toPair() else PtrPair(0) }
+                            if (bind == null) x.toPairOrNull()
+                            else x.toPair().cdr(res).let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) }
                         )
                     }
                 }
             }
-            else -> PtrPair(0)
+            else -> PtrPairOrNull(0)
         }
 
     /**
@@ -290,40 +293,41 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 104
      */
-    fun findFree(x: PtrObject, b: PtrPair): PtrPair =
-        when (val valX = x.toVal(res)) {
-            is ScmSymbol -> {
+    fun findFree(x: PtrObject, b: PtrPairOrNull): PtrPairOrNull =
+        when {
+            x.isSymbol(res) -> {
                 when {
-                    findBind(x.toSymbol()) != null -> PtrPair(0)
-                    setMemberQ(x.toSymbol(), b) -> PtrPair(0)
+                    findBind(x.toSymbol()) != null -> PtrPairOrNull(0)
+                    setMemberQ(x.toSymbol(), b) -> PtrPairOrNull(0)
                     else -> ScmPair.list(x, res)
                 }
             }
-            is ScmPair -> {
-                val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
-                val second = bind?.second?.toVal(res)
+            x.isPair(res) -> {
+                val bind = x.toPair().car(res).let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+                val second = bind?.second ?: PtrObject(0)
                 when {
-                    second is ScmSyntax ->
-                        second.findFree(x.toPairNonNull(), b, this)
-                    second is ScmProcedure && second.syntax != null ->
-                        second.syntax.findFree(x.toPairNonNull(), b, this)
+                    second.isSyntax(res) ->
+                        second.asSyntax(res).findFree(x.toPair(), b, this)
+                    second.isProcedure(res) && second.asProcedure(res).syntax != null ->
+                        second.asProcedure(res).syntax!!.findFree(x.toPair(), b, this)
                     else -> {
-                        fun next(x: PtrPair): PtrPair =
-                            if (x.isNull()) PtrPair(0)
+                        fun next(x: PtrPairOrNull): PtrPairOrNull =
+                            if (x.isNull()) PtrPairOrNull(0)
                             else {
                                 val cdrX = x.cdr(res).also {
                                     if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair")
-                                }.toPair()
+                                }.toPairOrNull()
                                 setUnion(findFree(x.car(res), b), next(cdrX))
                             }
                         next(
-                            x = if (bind == null) x.toPair()
-                            else x.toPair().cdr(res).let { if (it.isPair(res)) it.toPair() else PtrPair(0) }
+                            x = if (bind == null) x.toPairOrNull()
+                            else x.toPairOrNull().cdr(res)
+                                .let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) }
                         )
                     }
                 }
             }
-            else -> PtrPair(0)
+            else -> PtrPairOrNull(0)
         }
 
     /**
@@ -331,7 +335,7 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 95
      */
-    private fun compileRefer(x: PtrSymbol, e: PtrPair, next: PtrInstruction): PtrInstruction =
+    private fun compileRefer(x: PtrSymbol, e: PtrPairOrNull, next: PtrInstruction): PtrInstruction =
         try {
             compileLookup(
                 x,
@@ -354,7 +358,7 @@ class KevesCompiler(private val res: KevesResources) {
      */
     fun compileLookup(
         x: PtrSymbol,
-        e: PtrPair,
+        e: PtrPairOrNull,
         returnLocal: (Int) -> PtrInstruction,
         returnFree: (Int) -> PtrInstruction
     ): PtrInstruction {
@@ -377,12 +381,12 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 95
      */
-    tailrec fun collectFree(vars: PtrPair, e: PtrPair, next: PtrInstruction): PtrInstruction =
+    tailrec fun collectFree(vars: PtrPairOrNull, e: PtrPairOrNull, next: PtrInstruction): PtrInstruction =
         if (vars.isNull()) next
         else collectFree(
             vars = vars.cdr(res)
                 .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'collect-free' got none pair as vars") }
-                .toPair(),
+                .toPairOrNull(),
             e = e,
             next = compileRefer(
                 vars.car(res)
@@ -398,18 +402,18 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 102
      */
-    fun makeBoxes(sets: PtrPair, vars: PtrObject, next: PtrInstruction): PtrInstruction {
+    fun makeBoxes(sets: PtrPairOrNull, vars: PtrObject, next: PtrInstruction): PtrInstruction {
         fun f(vars: PtrObject, n: Int): PtrInstruction =
-            when (val valVars = vars.toVal(res)) {
-                null -> next
-                is ScmPair -> {
-                    val carVars = valVars.car
+            when {
+                vars.isNull() -> next
+                vars.isPair(res) -> {
+                    val carVars = vars.toPair().car(res)
                         .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'make-box' got non symbol as vars") }
                         .toSymbol()
-                    if (setMemberQ(carVars, sets)) ScmInstruction.Box.make(n, f(valVars.cdr, n + 1), res)
-                    else f(valVars.cdr, n + 1)
+                    if (setMemberQ(carVars, sets)) ScmInstruction.Box.make(n, f(vars.toPair().cdr(res), n + 1), res)
+                    else f(vars.toPair().cdr(res), n + 1)
                 }
-                is ScmSymbol -> {
+                vars.isSymbol(res) -> {
                     if (setMemberQ(vars.toSymbol(), sets)) ScmInstruction.BoxRest.make(n, next, res)
                     else next
                 }
@@ -424,14 +428,14 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    tailrec fun setMemberQ(x: PtrSymbol, s: PtrPair): Boolean =
+    tailrec fun setMemberQ(x: PtrSymbol, s: PtrPairOrNull): Boolean =
         when {
             s.isNull() -> false
             s.car(res) == x.toObject() -> true
             else -> {
                 val cdrS = s.cdr(res)
                     .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-member?' got non pair") }
-                    .toPair()
+                    .toPairOrNull()
                 setMemberQ(x = x, s = cdrS)
             }
         }
@@ -441,7 +445,7 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    private fun setCons(x: PtrSymbol, s: PtrPair): PtrPair =
+    private fun setCons(x: PtrSymbol, s: PtrPairOrNull): PtrPairOrNull =
         if (setMemberQ(x, s)) s else ScmPair.make(x.toObject(), s.toObject(), res)
 
     /**
@@ -449,7 +453,7 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    tailrec fun setUnion(s1: PtrPair, s2: PtrPair): PtrPair =
+    tailrec fun setUnion(s1: PtrPairOrNull, s2: PtrPairOrNull): PtrPairOrNull =
         if (s1.isNull()) {
             s2
         } else {
@@ -458,7 +462,7 @@ class KevesCompiler(private val res: KevesResources) {
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
                 .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-union' got non pair") }
-                .toPair()
+                .toPairOrNull()
             setUnion(s1 = cdrS1, s2 = setCons(carS1, s2))
         }
 
@@ -467,16 +471,16 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    fun setMinus(s1: PtrPair, s2: PtrPair): PtrPair =
+    fun setMinus(s1: PtrPairOrNull, s2: PtrPairOrNull): PtrPairOrNull =
         if (s1.isNull()) {
-            PtrPair(0)
+            PtrPairOrNull(0)
         } else {
             val carS1 = s1.car(res)
                 .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-minus' got non symbol as identifier") }
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
                 .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-minus' got non pair") }
-                .toPair()
+                .toPairOrNull()
             if (setMemberQ(carS1, s2)) setMinus(s1 = cdrS1, s2 = s2)
             else ScmPair.make(carS1.toObject(), setMinus(s1 = cdrS1, s2 = s2).toObject(), res)
         }
@@ -486,16 +490,16 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 93
      */
-    fun setIntersect(s1: PtrPair, s2: PtrPair): PtrPair =
+    fun setIntersect(s1: PtrPairOrNull, s2: PtrPairOrNull): PtrPairOrNull =
         if (s1.isNull()) {
-            PtrPair(0)
+            PtrPairOrNull(0)
         } else {
             val carS1 = s1.car(res)
                 .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-intersect' got non symbol as identifier") }
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
                 .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-intersect' got non pair") }
-                .toPair()
+                .toPairOrNull()
             if (setMemberQ(carS1, s2)) ScmPair.make(carS1.toObject(), setIntersect(s1 = cdrS1, s2 = s2).toObject(), res)
             else setIntersect(s1 = cdrS1, s2 = s2)
         }
@@ -505,8 +509,7 @@ class KevesCompiler(private val res: KevesResources) {
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 59
      */
-// fun tailQ(next: ScmPair?): Boolean = next != null && next.car is ScmInstruction.Return // === ScmInstruction.RETURN
-    fun tailQ(next: PtrInstruction, res: KevesResources): Boolean = next.toVal(res) is ScmInstruction.Return
+    fun tailQ(next: PtrInstruction, res: KevesResources): Boolean = next.isInstructionReturn(res)
 
 /*
 companion object {
@@ -524,29 +527,33 @@ companion object {
 }
  */
 
-    fun splitBinds(binds: PtrPair): Pair<PtrPair, PtrPair> {
-        tailrec fun loop(binds: PtrPair, variables: PtrPair, values: PtrPair): Pair<PtrPair, PtrPair> =
+    fun splitBinds(binds: PtrPairOrNull): Pair<PtrPairOrNull, PtrPairOrNull> {
+        tailrec fun loop(
+            binds: PtrPairOrNull,
+            variables: PtrPairOrNull,
+            values: PtrPairOrNull
+        ): Pair<PtrPairOrNull, PtrPairOrNull> =
             if (binds.isNull()) {
                 variables to values
             } else {
                 val pair = binds.car(res)
                     .also { if (it.isNotPair(res)) throw IllegalArgumentException("syntax error") }
-                    .toPairNonNull()
+                    .toPair()
                 val variable = pair.car(res)
                     .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("syntax error") }
                 val value = ScmPair.cadr(pair.toObject(), res)
                 val cdr = binds.cdr(res)
                     .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("Syntax error") }
-                    .toPair()
+                    .toPairOrNull()
                 loop(
                     cdr,
                     ScmPair.make(variable, variables.toObject(), res),
                     ScmPair.make(value, values.toObject(), res)
                 )
             }
-        return loop(binds, PtrPair(0), PtrPair(0)).let { (variables, values) ->
-            (if (variables.isNotNull()) ScmPair.reverse(variables.toPairNonNull(), res) else PtrPair(0)) to
-                    (if (values.isNotNull()) ScmPair.reverse(values.toPairNonNull(), res) else PtrPair(0))
+        return loop(binds, PtrPairOrNull(0), PtrPairOrNull(0)).let { (variables, values) ->
+            (if (variables.isNotNull()) ScmPair.reverse(variables.toPairNonNull(), res) else PtrPairOrNull(0)) to
+                    (if (values.isNotNull()) ScmPair.reverse(values.toPairNonNull(), res) else PtrPairOrNull(0))
         }
     }
 }

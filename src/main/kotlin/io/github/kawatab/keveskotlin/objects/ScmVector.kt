@@ -23,6 +23,8 @@ package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.PtrPairOrNull
+import io.github.kawatab.keveskotlin.PtrVector
 
 /*
 class ScmVector private constructor(private val array: Array<ScmObject?>) : ScmObject() {
@@ -43,26 +45,24 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
 
     override fun toString(): String = "#()"
 
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
-        if (this === other) true else (other is ScmVector && equalQ(other, ArrayDeque(), res))
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        if (this === other.toVal(res)) true else (other.isVector(res) && equalQ(other.toVector(), ArrayDeque(), res))
 
-    fun equalQ(other: ScmVector, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
-        if (duplicated.indexOfFirst { (first, second) -> (this == first && other == second) || (this == second && other == first) } >= 0) return true
-        duplicated.addLast(this to other)
-        if (this.array.size != other.array.size) return false
+    fun equalQ(other: PtrVector, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
+        if (duplicated.indexOfFirst { (first, second) -> (this == first && other.toVal(res) == second) || (this == second && other.toVal(res) == first) } >= 0) return true
+        duplicated.addLast(this to other.toVal(res))
+        if (this.array.size != other.toVal(res).array.size) return false
         for (i in this.array.indices) {
-            val ptr1 = this.at(i)
-            val ptr2 = other.at(i)
-            if (ptr1 == ptr2) return true
-            if (!res.isScmObject(ptr1) || !res.isScmObject(ptr2)) return false
-            val obj1 = ptr1.toVal(res)
-            val obj2 = ptr2.toVal(res)
-            when (obj1) {
-                null -> obj1 == obj2
-                is ScmBox -> if (obj2 !is ScmBox || !obj1.equalQ(obj2, duplicated, res)) return false
-                is ScmPair -> if (obj2 !is ScmPair || !obj1.equalQ(obj2, duplicated, res)) return false
-                is ScmVector -> if (obj2 !is ScmVector || !obj1.equalQ(obj2, duplicated, res)) return false
-                else -> if (!obj1.equalQ(obj2, res)) return false
+            val obj1 = this.at(i)
+            val obj2 = other.toVal(res).at(i)
+            if (obj1 == obj2) return true
+            if (!res.isScmObject(obj1) || !res.isScmObject(obj2)) return false
+            when {
+                obj1.isNull() -> obj2.isNull()
+                obj1.isBox(res) -> if (obj2.isBox(res) || !obj1.asBox(res).equalQ(obj2.toBox(), duplicated, res)) return false
+                obj1.isPair(res) -> if (obj2.isPair(res) || !obj1.asPair(res).equalQ(obj2.toPair(), duplicated, res)) return false
+                obj1.isVector(res) -> if (obj2.isVector(res) || !obj1.asVector(res).equalQ(obj2.toVector(), duplicated, res)) return false
+                else -> if (!obj1.toVal(res)!!.equalQ(obj2, res)) return false
             }
         }
         return true
@@ -80,14 +80,14 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
 
         fun make(size: Int, fill: PtrObject, res: KevesResources) = ScmVector(size, fill).let { res.addVector(it) }
 
-        fun ScmPair?.toVector(res: KevesResources) =
-            make(ScmPair.length(this, res), res).also { vector ->
+        fun PtrPairOrNull.toVector(res: KevesResources) =
+            make(ScmPair.length(this.toObject(), res), res).also { vector ->
                 tailrec fun loop(rest: ScmPair?, i: Int) {
                     if (rest == null) return
                     vector.toVal(res).set(i, rest.car)
                     loop(rest.cdr.asPairOrNull(res), i + 1)
                 }
-                loop(rest = this, i = 0)
+                loop(rest = this.toVal(res), i = 0)
             }
     }
 }

@@ -34,8 +34,8 @@ class R7rsSymbol(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
-                        val result = if (obj is ScmSymbol) res.constTrue else res.constFalse
+                        val obj = vm.stack.index(vm.sp, 0)
+                        val result = if (obj.isSymbol(res)) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)

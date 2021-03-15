@@ -23,8 +23,8 @@ package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.PtrPairOrNull
 import io.github.kawatab.keveskotlin.PtrPair
-import io.github.kawatab.keveskotlin.PtrPairNonNull
 
 open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmObject() {
     var car: PtrObject = car
@@ -33,30 +33,40 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
     var cdr: PtrObject = cdr
         protected set
 
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
-        if (this === other) true else (other is ScmPair && equalQ(other, ArrayDeque(), res))
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        if (this === other.toVal(res)) true else (other.isPair(res) && equalQ(other.toPair(), ArrayDeque(), res))
 
-    fun equalQ(other: ScmPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
-        if (duplicated.indexOfFirst { (first, second) -> (this == first && other == second) || (this == second && other == first) } >= 0) return true
-        duplicated.addLast(this to other)
-        if (this.car == other.car) return true
-        val car2 = other.car.toVal(res)
-        when (val ptr1 = this.car.toVal(res)) {
-            null -> return false
-            is ScmBox -> if (car2 !is ScmBox || !ptr1.equalQ(car2, duplicated, res)) return false
-            is ScmPair -> if (car2 !is ScmPair || !ptr1.equalQ(car2, duplicated, res)) return false
-            is ScmVector -> if (car2 !is ScmVector || !ptr1.equalQ(car2, duplicated, res)) return false
-            else -> if (!ptr1.equalQ(car2, res)) return false
+    fun equalQ(other: PtrPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
+        if (duplicated.indexOfFirst { (first, second) ->
+                (this == first && other.toVal(res) == second) || (this == second && other.toVal(res) == first)
+            } >= 0) return true
+        duplicated.addLast(this to other.toVal(res))
+        if (this.car == other.car(res)) return true
+        val car1 = this.car
+        val car2 = other.car(res)
+        when {
+            car1.isNull() -> return false
+            car1.isBox(res) -> if (car2.isNotBox(res) || !car1.asBox(res)
+                    .equalQ(car2.toBox(), duplicated, res)
+            ) return false
+            car1.isPair(res) -> if (car2.isNotPair(res) || !car1.asPair(res)
+                    .equalQ(car2.toPair(), duplicated, res)
+            ) return false
+            car1.isVector(res) -> if (car2.isNotVector(res) || !car1.asVector(res)
+                    .equalQ(car2.toVector(), duplicated, res)
+            ) return false
+            else -> if (!car1.toVal(res)!!.equalQ(car2, res)) return false
         }
 
-        if (this.cdr == other.cdr) return true
-        val cdr2 = other.cdr.toVal(res)
-        return when (val cdr1 = this.cdr.toVal(res)) {
-            null -> false
-            is ScmBox -> cdr2 is ScmBox && cdr1.equalQ(cdr2, duplicated, res)
-            is ScmPair -> cdr2 is ScmPair && cdr1.equalQ(cdr2, duplicated, res)
-            is ScmVector -> cdr2 is ScmVector && cdr1.equalQ(cdr2, duplicated, res)
-            else -> cdr1.equalQ(cdr2, res)
+        if (this.cdr == other.cdr(res)) return true
+        val cdr1 = this.cdr
+        val cdr2 = other.cdr(res)
+        return when {
+            car1.isNull() -> false
+            car1.isBox(res) -> cdr2.isBox(res) && cdr1.asBox(res).equalQ(cdr2.toBox(), duplicated, res)
+            car1.isPair(res) -> cdr2.isPair(res) && cdr1.asPair(res).equalQ(cdr2.toPair(), duplicated, res)
+            car1.isVector(res) -> cdr2.isVector(res) && cdr1.asVector(res).equalQ(cdr2.toVector(), duplicated, res)
+            else -> cdr1.toVal(res)!!.equalQ(cdr2, res)
         }
     }
 
@@ -129,45 +139,39 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
-            car.toVal(res).let { car ->
-                if (car is ScmPair) writePair(car, duplicatedPair, true, res)
-                else getStringForWrite(car, res)
+            let {
+                if (car.isPair(res)) writePair(car.asPair(res), duplicatedPair, true, res)
+                else getStringForWrite(car.toVal(res), res)
             }
-        return cdr.toVal(res).let { cdr ->
-            when (cdr) {
-                null -> "($carStr)"
-                is ScmPair -> {
-                    val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
-                        if (it < 0) {
-                            ""
-                        } else {
-                            duplicatedPair[it] = duplicatedPair[it].first to true
-                            "#$it="
-                        }
+        return when {
+            cdr.isNull() -> "($carStr)"
+            cdr.isPair(res) -> {
+                val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
+                    if (it < 0) {
+                        ""
+                    } else {
+                        duplicatedPair[it] = duplicatedPair[it].first to true
+                        "#$it="
                     }
-                    val cdrStr = writePair(cdr, duplicatedPair, false, res)
-                    "$prefix($carStr $cdrStr)"
                 }
-                else -> "($carStr . ${cdr.toStringForWrite(res)})"
+                val cdrStr = writePair(cdr.asPair(res), duplicatedPair, false, res)
+                "$prefix($carStr $cdrStr)"
             }
+            else -> "($carStr . ${cdr.toVal(res)!!.toStringForWrite(res)})"
         }
     }
 
     private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            car.toVal(res).let { car ->
-                if (car is ScmPair) writePair(car, duplicatedPair, true, res)
-                else getStringForWrite(car, res)
+            if (car.isPair(res)) writePair(car.asPair(res), duplicatedPair, true, res)
+            else getStringForWrite(car.toVal(res), res)
+        return when {
+            cdr.isNull() -> carStr
+            cdr.isPair(res) -> {
+                val cdrStr = writePair(cdr.asPair(res), duplicatedPair, false, res)
+                "$carStr $cdrStr"
             }
-        return cdr.toVal(res).let { cdr ->
-            when (cdr) {
-                null -> carStr
-                is ScmPair -> {
-                    val cdrStr = writePair(cdr, duplicatedPair, false, res)
-                    "$carStr $cdrStr"
-                }
-                else -> "$carStr . ${cdr.toStringForWrite(res)}"
-            }
+            else -> "$carStr . ${cdr.toVal(res)!!.toStringForWrite(res)}"
         }
     }
 
@@ -175,140 +179,140 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val allPair = ArrayDeque<ScmPair>()
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
         res.searchCirculation(this, allPair, duplicatedPair)
-        val carStr = car.toVal(res).let { car ->
-            if (car is ScmPair) displayPair(car, duplicatedPair, true, res)
-            else getStringForDisplay(car, res)
-        }
-        return cdr.toVal(res).let { cdr ->
-            when (cdr) {
-                null -> "($carStr)"
-                is ScmPair -> {
-                    val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
-                        if (it < 0) {
-                            ""
-                        } else {
-                            duplicatedPair[it] = duplicatedPair[it].first to true
-                            "#$it="
-                        }
+        val carStr =
+            if (car.isPair(res)) displayPair(car.asPair(res), duplicatedPair, true, res)
+            else getStringForDisplay(car.toVal(res), res)
+        return when {
+            cdr.isNull() -> "($carStr)"
+            cdr.isPair(res) -> {
+                val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
+                    if (it < 0) {
+                        ""
+                    } else {
+                        duplicatedPair[it] = duplicatedPair[it].first to true
+                        "#$it="
                     }
-                    val cdrStr = displayPair(cdr, duplicatedPair, false, res)
-                    "$prefix($carStr $cdrStr)"
                 }
-                else -> "($carStr . ${cdr.toStringForDisplay(res)})"
+                val cdrStr = displayPair(cdr.asPair(res), duplicatedPair, false, res)
+                "$prefix($carStr $cdrStr)"
             }
+            else -> "($carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)})"
         }
     }
 
     private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
-        val carStr = car.toVal(res).let { car ->
-            if (car is ScmPair) displayPair(car, duplicatedPair, true, res)
-            else getStringForDisplay(car, res)
-        }
-        return cdr.toVal(res).let { cdr ->
-            when (cdr) {
-                null -> carStr
-                is ScmPair -> {
-                    val cdrStr = displayPair(cdr, duplicatedPair, false, res)
-                    "$carStr $cdrStr"
-                }
-                else -> "$carStr . ${cdr.toStringForDisplay(res)}"
+        val carStr =
+            if (car.isPair(res)) displayPair(car.asPair(res), duplicatedPair, true, res)
+            else getStringForDisplay(car.toVal(res), res)
+        return when {
+            cdr.isNull() -> carStr
+            cdr.isPair(res) -> {
+                val cdrStr = displayPair(cdr.asPair(res), duplicatedPair, false, res)
+                "$carStr $cdrStr"
             }
+            else -> "$carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)}"
         }
     }
 
     companion object {
         fun make(car: PtrObject, cdr: PtrObject, res: KevesResources) = res.addPair(ScmPair(car, cdr))
 
-        fun length(list: ScmObject?, res: KevesResources): Int = res.length(list, 0, ArrayDeque())
+        fun length(list: PtrObject, res: KevesResources): Int = res.length(list, 0, ArrayDeque())
 
         private tailrec fun KevesResources.length(
-            rest: ScmObject?,
+            rest: PtrObject,
             n: Int,
             tracedPair: ArrayDeque<ScmObject>
-        ): Int = when (rest) {
-            null -> n
-            is ScmPair -> {
-                if (tracedPair.indexOf(rest) > 0) throw IllegalArgumentException("cannot get the length of improper list")
-                tracedPair.addLast(rest)
-                length(rest = rest.cdr.toVal(this), n = n + 1, tracedPair = tracedPair)
+        ): Int = when {
+            rest.isNull() -> n
+            rest.isPair(this) -> {
+                if (tracedPair.indexOf(rest.toVal(this)) > 0) throw IllegalArgumentException("cannot get the length of improper list")
+                tracedPair.addLast(rest.toVal(this)!!)
+                length(rest = rest.toPairOrNull().cdr(this), n = n + 1, tracedPair = tracedPair)
             }
             else -> throw IllegalArgumentException("cannot get the length of improper list")
         }
 
-        fun isPair(obj: ScmObject?): Boolean = obj is ScmPair
-
-        fun isProperList(obj: ScmObject?, res: KevesResources): Boolean =
-            when (obj) {
-                null -> true
-                is ScmPair -> isProperList(obj, ArrayDeque<ScmPair>().apply { addLast(obj) }, res)
+        fun isProperList(obj: PtrObject, res: KevesResources): Boolean =
+            when {
+                obj.isNull() -> true
+                obj.isPair(res) -> isProperList(
+                    obj.toPair(),
+                    ArrayDeque<ScmPair>().apply { addLast(obj.asPair(res)) },
+                    res
+                )
                 else -> false
             }
 
-        private tailrec fun isProperList(pair: ScmPair, tracedPair: ArrayDeque<ScmPair>, res: KevesResources): Boolean =
-            when (val cdr = pair.cdr.toVal(res)) {
-                null -> true
-                is ScmPair -> {
-                    if (tracedPair.indexOf(cdr) >= 0) {
+        private tailrec fun isProperList(pair: PtrPair, tracedPair: ArrayDeque<ScmPair>, res: KevesResources): Boolean {
+            val cdr = pair.cdr(res)
+            return when {
+                cdr.isNull() -> true
+                cdr.isPair(res) -> {
+                    if (tracedPair.indexOf(cdr.asPair(res)) >= 0) {
                         false
                     } else {
-                        tracedPair.addLast(cdr)
-                        isProperList(cdr, tracedPair, res)
+                        tracedPair.addLast(cdr.asPair(res))
+                        isProperList(cdr.toPair(), tracedPair, res)
                     }
                 }
                 else -> false
             }
+        }
 
-        fun toProperList(list: PtrObject, res: KevesResources): Pair<PtrPair, Int> =
-            res.toProperList(list, PtrPair(0), 0)
+        fun toProperList(list: PtrObject, res: KevesResources): Pair<PtrPairOrNull, Int> =
+            res.toProperList(list, PtrPairOrNull(0), 0)
 
         private tailrec fun KevesResources.toProperList(
             rest: PtrObject,
-            result: PtrPair,
+            result: PtrPairOrNull,
             n: Int
-        ): Pair<PtrPair, Int> =
-            when (val valRest = rest.toVal(this)) {
-                null -> (if (result.isNotNull()) reverse(result.toPairNonNull(), this) else PtrPair(0)) to n
-                is ScmPair -> toProperList(
-                    rest = valRest.cdr,
-                    result = make(valRest.car, result.toObject(), this),
+        ): Pair<PtrPairOrNull, Int> =
+            when {
+                rest.isNull() -> (if (result.isNotNull()) reverse(
+                    result.toPairNonNull(),
+                    this
+                ) else PtrPairOrNull(0)) to n
+                rest.isPair(this) -> toProperList(
+                    rest = rest.toPair().cdr(this),
+                    result = make(rest.toPair().car(this), result.toObject(), this),
                     n = n + 1
                 )
                 else -> reverse(make(rest, result.toObject(), this).toPairNonNull(), this) to -(n + 1)
             }
 
-        fun reverse(list: PtrPairNonNull, res: KevesResources): PtrPair {
-            val valList = list.toVal(res)
+        fun reverse(list: PtrPair, res: KevesResources): PtrPairOrNull {
             return res.reverse(
-                valList.cdr,
-                make(valList.car, PtrObject(0), res),
+                list.cdr(res),
+                make(list.car(res), PtrObject(0), res),
                 ArrayDeque<PtrObject>().apply { addLast(list.toObject()) })
         }
 
         private tailrec fun KevesResources.reverse(
             rest: PtrObject,
-            result: PtrPair,
+            result: PtrPairOrNull,
             tracedPair: ArrayDeque<PtrObject>
-        ): PtrPair = when (val valRest = rest.toVal(this)) {
-            null -> result
-            is ScmPair -> {
+        ): PtrPairOrNull = when {
+            rest.isNull() -> result
+            rest.isPair(this) -> {
                 if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
                 tracedPair.addLast(rest)
                 reverse(
-                    valRest.cdr,
-                    ScmMutablePair.make(valRest.car, result.toObject(), this).toPair(),
+                    rest.toPair().cdr(this),
+                    ScmMutablePair.make(rest.toPair().car(this), result.toObject(), this).toPair(),
                     tracedPair
                 )
             }
             else -> throw IllegalArgumentException("cannot reverse improper list")
         }
 
-        tailrec fun listTail(list: PtrPair, k: Int, res: KevesResources): PtrPair =
+        tailrec fun listTail(list: PtrPairOrNull, k: Int, res: KevesResources): PtrPairOrNull =
             if (k > 0) {
                 if (list.isNull()) throw IllegalArgumentException("length not enough")
                 else listTail(
                     list.cdr(res)
                         .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("not proper list") }
-                        .toPair(),
+                        .toPairOrNull(),
                     k - 1,
                     res
                 )
@@ -323,12 +327,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             list: PtrObject,
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
-        ): PtrObject = when (val valObj = list.toVal(res)) {
-            null -> res.constFalse
-            is ScmPair -> {
+        ): PtrObject = when {
+            list.isNull() -> res.constFalse
+            list.isPair(res) -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
-                if (valObj.car == obj) list else memq(obj, valObj.cdr, tracedPair, res)
+                if (list.toPair().car(res) == obj) list else memq(obj, list.toPair().cdr(res), tracedPair, res)
             }
             else -> throw IllegalArgumentException("not proper list")
         }
@@ -340,12 +344,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             list: PtrObject,
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
-        ): PtrObject = when (val valList = list.toVal(res)) {
-            null -> res.constFalse
-            is ScmPair -> {
+        ): PtrObject = when {
+            list.isNull() -> res.constFalse
+            list.isPair(res) -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
-                if (eqvQ(valList.car.toVal(res), obj.toVal(res))) list else memv(obj, valList.cdr, tracedPair, res)
+                if (eqvQ(list.toPair().car(res), obj, res)) list else memv(obj, list.toPair().cdr(res), tracedPair, res)
             }
             else -> throw IllegalArgumentException("not proper list")
         }
@@ -358,14 +362,14 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             list: PtrObject,
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
-        ): PtrObject = when (val valList = list.toVal(res)) {
-            null -> res.constFalse
-            is ScmPair -> {
+        ): PtrObject = when {
+            list.isNull() -> res.constFalse
+            list.isPair(res) -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
-                if (equalQ(valList.car.toVal(res), obj.toVal(res), res)) list else member(
+                if (equalQ(list.toPair().car(res), obj, res)) list else member(
                     obj,
-                    valList.cdr,
+                    list.toPair().cdr(res),
                     tracedPair,
                     res
                 )
@@ -380,15 +384,14 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             list: PtrObject,
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
-        ): PtrObject = when (val valList = list.toVal(res)) {
-            null -> res.constFalse
-            is ScmPair -> {
+        ): PtrObject = when {
+            list.isNull() -> res.constFalse
+            list.isPair(res) -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
-                val car = valList.car
-                val valCar = car.toVal(res)
-                if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
-                if (valCar.car == obj) car else assq(obj, valList.cdr, tracedPair, res)
+                val car = list.toPair().car(res)
+                if (car.isNotPair(res)) throw IllegalArgumentException("not association list")
+                if (car.toPair().car(res) == obj) car else assq(obj, list.toPair().cdr(res), tracedPair, res)
             }
             else -> throw IllegalArgumentException("not proper list")
         }
@@ -401,15 +404,20 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
         ): PtrObject =
-            when (val valList = list.toVal(res)) {
-                null -> res.constFalse
-                is ScmPair -> {
+            when {
+                list.isNull() -> res.constFalse
+                list.isPair(res) -> {
                     if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                     tracedPair.addLast(list)
-                    val car = valList.car
+                    val car = list.toPair().car(res)
                     val valCar = car.toVal(res)
-                    if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
-                    if (eqvQ(valCar.car.toVal(res), obj.toVal(res))) car else assv(obj, valList.cdr, tracedPair, res)
+                    if (car.isNotPair(res)) throw IllegalArgumentException("not association list")
+                    if (eqvQ(car.toPair().car(res), obj, res)) car else assv(
+                        obj,
+                        list.toPair().cdr(res),
+                        tracedPair,
+                        res
+                    )
                 }
                 else -> throw IllegalArgumentException("not proper list")
             }
@@ -421,20 +429,17 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             list: PtrObject,
             tracedPair: ArrayDeque<PtrObject>,
             res: KevesResources
-        ): PtrObject = when (val valList = list.toVal(res)) {
-            null -> res.constFalse
-            is ScmPair -> {
+        ): PtrObject = when {
+            list.isNull() -> res.constFalse
+            list.isPair(res) -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
-                val car = valList.car
-                val valCar = car.toVal(res)
-                if (valCar !is ScmPair) throw IllegalArgumentException("not association list")
-                if (equalQ(valCar.car.toVal(res), obj.toVal(res), res)) car else assoc(
-                    obj,
-                    valList.cdr,
-                    tracedPair,
-                    res
-                )
+                val car = list.toPair().car(res)
+                when {
+                    car.isNotPair(res) -> throw IllegalArgumentException("not association list")
+                    equalQ(car.toPair().car(res), obj, res) -> car
+                    else -> assoc(obj, list.toPair().cdr(res), tracedPair, res)
+                }
             }
             else -> throw IllegalArgumentException("not proper list")
         }

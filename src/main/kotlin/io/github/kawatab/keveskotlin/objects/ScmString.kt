@@ -22,12 +22,13 @@
 package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
 
 class ScmString(private val string: String) : ScmObject() {
     override fun toStringForWrite(res: KevesResources): String = "\"${toStringForDisplay(res)}\""
     override fun toStringForDisplay(res: KevesResources): String = string
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
-        this === other || (other is ScmString && this.string == other.string)
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        this === other.toVal(res) || (other.isString(res) && this.string == other.asString(res).string)
 
     companion object {
         fun make(string: String, res: KevesResources) = ScmString(string).let { res.addString(it) }

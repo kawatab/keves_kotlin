@@ -20,8 +20,7 @@
  */
 
 import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.PtrObject
-import io.github.kawatab.keveskotlin.PtrPairNonNull
+import io.github.kawatab.keveskotlin.PtrPair
 import io.github.kawatab.keveskotlin.libraries.R7rs
 import io.github.kawatab.keveskotlin.objects.*
 import org.junit.Before
@@ -42,7 +41,7 @@ class CompilerTest {
     @Test
     fun testPatternMatchQuote() {
         val patternMatchQuote =
-            compiler.javaClass.getDeclaredMethod("patternMatchQuote", PtrPairNonNull::class.java)
+            compiler.javaClass.getDeclaredMethod("patternMatchQuote", PtrPair::class.java)
         patternMatchQuote.isAccessible = true
 
         val int123 = ScmInt.make(123, res).toObject()
@@ -73,7 +72,7 @@ class CompilerTest {
         val wrongX = ScmPair.make(ScmSymbol.get("lambda", res).toObject(), vars.toObject(), res)
         val match1 = patternMatchLambda.invoke(compiler, wrongX.toVal(res)) as? Pair<*, *>
         assertEquals(match1?.first, vars.car(res))
-        assertEquals(match1?.second, vars.cdr(res).toPairNonNull())
+        assertEquals(match1?.second, vars.cdr(res).toPair())
 
 
         val goodX = ScmPair.listStar(ScmSymbol.get("lambda", res).toObject(), vars.toObject(), body.toObject(), res)
@@ -121,7 +120,7 @@ class CompilerTest {
     @Test
     fun testPatternMatchSetE() {
         val patternMatchSetE =
-            compiler.javaClass.getDeclaredMethod("patternMatchSetE", PtrPairNonNull::class.java)
+            compiler.javaClass.getDeclaredMethod("patternMatchSetE", PtrPair::class.java)
         patternMatchSetE.isAccessible = true
 
         val variable = ScmSymbol.get("abc", res)
@@ -142,7 +141,7 @@ class CompilerTest {
     @Test
     fun testPatternMatchCallCC() {
         val patternMatchCallCC =
-            compiler.javaClass.getDeclaredMethod("patternMatchCallCC", PtrPairNonNull::class.java)
+            compiler.javaClass.getDeclaredMethod("patternMatchCallCC", PtrPair::class.java)
         patternMatchCallCC.isAccessible = true
 
         val x = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res).toObject(), ScmInt.make(456, res).toObject(), res)

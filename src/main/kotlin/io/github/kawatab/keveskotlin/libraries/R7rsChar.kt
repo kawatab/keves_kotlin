@@ -34,7 +34,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val ptr = vm.stack.index(vm.sp, 0)
-                        val result = if (ptr.toVal(res) is ScmChar) res.constTrue else res.constFalse
+                        val result = if (ptr.isChar(res)) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)

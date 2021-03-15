@@ -22,6 +22,7 @@
 package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
 
 class ScmChar private constructor(private val charArray: CharArray) : ScmObject() {
     private constructor(value: Char) : this(charArrayOf(value))
@@ -53,8 +54,8 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
         }
 
     override fun toString(): String = String(charArray)
-    override fun eqvQ(other: ScmObject?): Boolean = other is ScmChar && this.toUtf32() == other.toUtf32()
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean = eqvQ(other)
+    override fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isChar(res) && this.toUtf32() == other.asChar(res).toUtf32()
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
 
     fun toUtf32(): Int =
         if (charArray.size == 1) charArray[0].toInt()

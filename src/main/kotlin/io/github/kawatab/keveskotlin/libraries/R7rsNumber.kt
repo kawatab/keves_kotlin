@@ -33,9 +33,10 @@ class R7rsNumber(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
+                        val obj = vm.stack.index(vm.sp, 0)
                         val result =
-                            when (vm.stack.index(vm.sp, 0).toVal(res)) {
-                                is ScmInt, is ScmFloat, is ScmDouble -> res.constTrue
+                            when {
+                                obj.isInt(res) || obj.isFloat(res) || obj.isDouble(res) -> res.constTrue
                                 else -> res.constFalse
                             }
                         vm.scmProcReturn(result, n)
@@ -57,18 +58,20 @@ class R7rsNumber(private val res: KevesResources) {
                         vm.scmProcReturn(ScmInt.make(0, vm.res).toObject(), n)
                     }
                     1 -> {
-                        val ptr = vm.stack.index(sp, 0)
-                        when (ptr.toVal(res)) {
-                            is ScmInt, is ScmFloat, is ScmDouble -> vm.scmProcReturn(ptr, n)
+                        val obj = vm.stack.index(sp, 0)
+                        when {
+                            obj.isInt(res) || obj.isFloat(res) || obj.isDouble(res) -> vm.scmProcReturn(obj, n)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
                     2 -> {
-                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
-                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj1 =
+                            vm.stack.index(sp, 0).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
+                        val obj2 =
+                            vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         vm.scmProcReturn(
                             try {
-                                obj1.add(obj2, vm.res)
+                                obj1.toVal(res)!!.add(obj2, vm.res)
                             } catch (e: IllegalArgumentException) {
                                 throw KevesExceptions.expectedNumber(id)
                             },
@@ -78,10 +81,11 @@ class R7rsNumber(private val res: KevesResources) {
                     else -> {
                         tailrec fun doubleLoop(index: Int, sum: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> doubleLoop(index + 1, sum + obj.value)
-                                    is ScmFloat -> doubleLoop(index + 1, sum + obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> doubleLoop(index + 1, sum + obj.asInt(res).value)
+                                    obj.isFloat(res) -> doubleLoop(index + 1, sum + obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, sum + obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -90,10 +94,11 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun floatLoop(index: Int, sum: Float): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> floatLoop(index + 1, sum + obj.value)
-                                    is ScmFloat -> floatLoop(index + 1, sum + obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> floatLoop(index + 1, sum + obj.asInt(res).value)
+                                    obj.isFloat(res) -> floatLoop(index + 1, sum + obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, sum + obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -102,10 +107,11 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun loop(index: Int, sum: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> loop(index + 1, sum + obj.value)
-                                    is ScmFloat -> floatLoop(index + 1, sum + obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, sum + obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> loop(index + 1, sum + obj.asInt(res).value)
+                                    obj.isFloat(res) -> floatLoop(index + 1, sum + obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, sum + obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -128,19 +134,22 @@ class R7rsNumber(private val res: KevesResources) {
                 val difference: PtrObject = when (n) {
                     0 -> throw KevesExceptions.expected1OrMoreDatumGot0(id)
                     1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
-                            is ScmInt -> ScmInt.make(-obj.value, vm.res).toObject() // opposite
-                            is ScmFloat -> ScmFloat.make(-obj.value, vm.res).toObject() // opposite
-                            is ScmDouble -> ScmDouble.make(-obj.value, vm.res).toObject() // opposite
+                        val obj = vm.stack.index(vm.sp, 0)
+                        when {
+                            obj.isInt(res) -> ScmInt.make(-obj.asInt(res).value, vm.res).toObject() // opposite
+                            obj.isFloat(res) -> ScmFloat.make(-obj.asFloat(res).value, vm.res).toObject() // opposite
+                            obj.isDouble(res) -> ScmDouble.make(-obj.asDouble(res).value, vm.res).toObject() // opposite
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
                     2 -> {
                         val sp = vm.sp
-                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
-                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj1 =
+                            vm.stack.index(sp, 0).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
+                        val obj2 =
+                            vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         try {
-                            obj1.subtract(obj2, vm.res)
+                            obj1.toVal(res)!!.subtract(obj2, vm.res)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedNumber(id)
                         }
@@ -149,10 +158,11 @@ class R7rsNumber(private val res: KevesResources) {
                         val sp = vm.sp
                         tailrec fun doubleLoop(index: Int, difference: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> doubleLoop(index + 1, difference - obj.value)
-                                    is ScmFloat -> doubleLoop(index + 1, difference - obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> doubleLoop(index + 1, difference - obj.asInt(res).value)
+                                    obj.isFloat(res) -> doubleLoop(index + 1, difference - obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, difference - obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -161,10 +171,11 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun floatLoop(index: Int, difference: Float): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> floatLoop(index + 1, difference - obj.value)
-                                    is ScmFloat -> floatLoop(index + 1, difference - obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> floatLoop(index + 1, difference - obj.asInt(res).value)
+                                    obj.isFloat(res) -> floatLoop(index + 1, difference - obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, difference - obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -173,20 +184,22 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun intLoop(index: Int, difference: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> intLoop(index + 1, difference - obj.value)
-                                    is ScmFloat -> floatLoop(index + 1, difference - obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, difference - obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> intLoop(index + 1, difference - obj.asInt(res).value)
+                                    obj.isFloat(res) -> floatLoop(index + 1, difference - obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, difference - obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
                                 ScmInt.make(difference, vm.res).toObject()
                             }
 
-                        when (val first = vm.stack.index(sp, 0).toVal(res)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmFloat -> floatLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
+                        val first = vm.stack.index(sp, 0)
+                        when {
+                            first.isInt(res) -> intLoop(1, first.asInt(res).value)
+                            first.isFloat(res) -> floatLoop(1, first.asFloat(res).value)
+                            first.isDouble(res) -> doubleLoop(1, first.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
@@ -205,12 +218,13 @@ class R7rsNumber(private val res: KevesResources) {
                 val i = vm.sp
                 tailrec fun doubleLoop(index: Int, product: Double): PtrObject =
                     if (index < n) {
+                        val obj = vm.stack.index(i, index)
                         doubleLoop(
                             index = index + 1,
-                            product = when (val obj = vm.stack.index(i, index).toVal(res)) {
-                                is ScmInt -> product * obj.value
-                                is ScmFloat -> product * obj.value
-                                is ScmDouble -> product * obj.value
+                            product = when {
+                                obj.isInt(res) -> product * obj.asInt(res).value
+                                obj.isFloat(res) -> product * obj.asInt(res).value
+                                obj.isDouble(res) -> product * obj.asInt(res).value
                                 else -> throw KevesExceptions.expectedNumber(id)
                             }
                         )
@@ -220,10 +234,11 @@ class R7rsNumber(private val res: KevesResources) {
 
                 tailrec fun floatLoop(index: Int, product: Float): PtrObject =
                     if (index < n) {
-                        when (val obj = vm.stack.index(i, index).toVal(res)) {
-                            is ScmInt -> floatLoop(index = index + 1, product = product * obj.value)
-                            is ScmFloat -> floatLoop(index = index + 1, product = product * obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, product * obj.value)
+                        val obj = vm.stack.index(i, index)
+                        when {
+                            obj.isInt(res) -> floatLoop(index = index + 1, product = product * obj.asInt(res).value)
+                            obj.isFloat(res) -> floatLoop(index = index + 1, product = product * obj.asFloat(res).value)
+                            obj.isDouble(res) -> doubleLoop(index + 1, product * obj.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     } else {
@@ -232,10 +247,11 @@ class R7rsNumber(private val res: KevesResources) {
 
                 tailrec fun intLoop(index: Int, product: Int): PtrObject =
                     if (index < n) {
-                        when (val obj = vm.stack.index(i, index).toVal(res)) {
-                            is ScmInt -> intLoop(index = index + 1, product = product * obj.value)
-                            is ScmFloat -> floatLoop(index + 1, product * obj.value)
-                            is ScmDouble -> doubleLoop(index + 1, product * obj.value)
+                        val obj = vm.stack.index(i, index)
+                        when {
+                            obj.isInt(res) -> intLoop(index = index + 1, product = product * obj.asInt(res).value)
+                            obj.isFloat(res) -> floatLoop(index + 1, product * obj.asFloat(res).value)
+                            obj.isDouble(res) -> doubleLoop(index + 1, product * obj.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     } else {
@@ -256,14 +272,16 @@ class R7rsNumber(private val res: KevesResources) {
                 val quotient: PtrObject = when (n) {
                     0 -> throw KevesExceptions.expected1OrMoreDatumGot0(id)
                     1 -> {
-                        when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
-                            is ScmInt -> when (obj.value) { // reciprocal
+                        val obj = vm.stack.index(vm.sp, 0)
+                        when {
+                            obj.isInt(res) -> when (obj.asInt(res).value) { // reciprocal
                                 0 -> throw KevesExceptions.expectedNonZero(id)
-                                -1, 1 -> ScmInt.make(obj.value, res).toObject() // TODO("remove ScmInt.make")
-                                else -> ScmDouble.make(1.0 / obj.value.toDouble(), vm.res).toObject()
+                                -1, 1 -> ScmInt.make(obj.asInt(res).value, res).toObject() // TODO("remove ScmInt.make")
+                                else -> ScmDouble.make(1.0 / obj.asInt(res).value.toDouble(), vm.res).toObject()
                             }
 
-                            is ScmDouble -> ScmDouble.make(1.0 / obj.value, vm.res).toObject() // reciprocal
+                            obj.isDouble(res) -> ScmDouble.make(1.0 / obj.asDouble(res).value, vm.res)
+                                .toObject() // reciprocal
 
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
@@ -272,10 +290,20 @@ class R7rsNumber(private val res: KevesResources) {
                         val sp = vm.sp
                         tailrec fun doubleLoop(index: Int, quotient: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
-                                    is ScmFloat -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
-                                    is ScmDouble -> doubleLoop(index = index + 1, quotient = quotient / obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> doubleLoop(
+                                        index = index + 1,
+                                        quotient = quotient / obj.asInt(res).value
+                                    )
+                                    obj.isFloat(res) -> doubleLoop(
+                                        index = index + 1,
+                                        quotient = quotient / obj.asFloat(res).value
+                                    )
+                                    obj.isDouble(res) -> doubleLoop(
+                                        index = index + 1,
+                                        quotient = quotient / obj.asDouble(res).value
+                                    )
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -284,10 +312,17 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun floatLoop(index: Int, quotient: Float): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> floatLoop(index = index + 1, quotient = quotient / obj.value)
-                                    is ScmFloat -> floatLoop(index = index + 1, quotient = quotient / obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, quotient / obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> floatLoop(
+                                        index = index + 1,
+                                        quotient = quotient / obj.asInt(res).value
+                                    )
+                                    obj.isFloat(res) -> floatLoop(
+                                        index = index + 1,
+                                        quotient = quotient / obj.asFloat(res).value
+                                    )
+                                    obj.isDouble(res) -> doubleLoop(index + 1, quotient / obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
@@ -296,30 +331,32 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun intLoop(index: Int, quotient: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt -> {
-                                        if (obj.value == 0) {
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) -> {
+                                        if (obj.asInt(res).value == 0) {
                                             throw KevesExceptions.expectedNonZero(id)
                                         }
-                                        val remainder = quotient % obj.value
+                                        val remainder = quotient % obj.asInt(res).value
                                         if (remainder == 0) {
-                                            intLoop(index = index + 1, quotient = quotient / obj.value)
+                                            intLoop(index = index + 1, quotient = quotient / obj.asInt(res).value)
                                         } else {
-                                            doubleLoop(index + 1, quotient.toDouble() / obj.value.toDouble())
+                                            doubleLoop(index + 1, quotient.toDouble() / obj.asInt(res).value.toDouble())
                                         }
                                     }
-                                    is ScmFloat -> floatLoop(index + 1, quotient / obj.value)
-                                    is ScmDouble -> doubleLoop(index + 1, quotient / obj.value)
+                                    obj.isFloat(res) -> floatLoop(index + 1, quotient / obj.asFloat(res).value)
+                                    obj.isDouble(res) -> doubleLoop(index + 1, quotient / obj.asDouble(res).value)
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
                                 ScmInt.make(quotient, vm.res).toObject()
                             }
 
-                        when (val first = vm.stack.index(sp, 0).toVal(res)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmFloat -> floatLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
+                        val first = vm.stack.index(sp, 0)
+                        when {
+                            first.isInt(res) -> intLoop(1, first.asInt(res).value)
+                            first.isFloat(res) -> floatLoop(1, first.asFloat(res).value)
+                            first.isDouble(res) -> doubleLoop(1, first.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
@@ -340,13 +377,17 @@ class R7rsNumber(private val res: KevesResources) {
                         val sp = vm.sp
                         tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last == obj.value.toDouble())
-                                            doubleLoop(index = index + 1, last = obj.value.toDouble())
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last == obj.asInt(res).value.toDouble())
+                                            doubleLoop(index = index + 1, last = obj.asInt(res).value.toDouble())
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last == obj.value) doubleLoop(index = index + 1, last = obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last == obj.asDouble(res).value) doubleLoop(
+                                            index = index + 1,
+                                            last = obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -356,12 +397,16 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last == obj.value) intLoop(index + 1, obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last == obj.asInt(res).value) intLoop(index + 1, obj.asInt(res).value)
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last.toDouble() == obj.value) doubleLoop(index + 1, obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last.toDouble() == obj.asDouble(res).value) doubleLoop(
+                                            index + 1,
+                                            obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -369,9 +414,10 @@ class R7rsNumber(private val res: KevesResources) {
                                 res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
+                        val first = vm.stack.index(sp, 0)
+                        val result = when {
+                            first.isInt(res) -> intLoop(1, first.asInt(res).value)
+                            first.isDouble(res) -> doubleLoop(1, first.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
 
@@ -391,10 +437,12 @@ class R7rsNumber(private val res: KevesResources) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val obj1 = vm.stack.index(sp, 0).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
-                        val obj2 = vm.stack.index(sp, 1).toVal(res) ?: throw KevesExceptions.expectedNumber(id)
+                        val obj1 =
+                            vm.stack.index(sp, 0).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
+                        val obj2 =
+                            vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         val result = try {
-                            if (obj1.isLessThan(obj2)) res.constTrue else res.constFalse
+                            if (obj1.toVal(res)!!.isLessThan(obj2, res)) res.constTrue else res.constFalse
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedNumber(id)
                         }
@@ -404,15 +452,19 @@ class R7rsNumber(private val res: KevesResources) {
                         val sp = vm.sp
                         tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last < obj.value.toDouble()) doubleLoop(
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last < obj.asInt(res).value.toDouble()) doubleLoop(
                                             index = index + 1,
-                                            last = obj.value.toDouble()
+                                            last = obj.asInt(res).value.toDouble()
                                         )
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last < obj.value) doubleLoop(index = index + 1, last = obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last < obj.asDouble(res).value) doubleLoop(
+                                            index = index + 1,
+                                            last = obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -422,12 +474,19 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last < obj.value) intLoop(index = index + 1, last = obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last < obj.asInt(res).value) intLoop(
+                                            index = index + 1,
+                                            last = obj.asInt(res).value
+                                        )
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last.toDouble() < obj.value) doubleLoop(index + 1, obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last.toDouble() < obj.asDouble(res).value) doubleLoop(
+                                            index + 1,
+                                            obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -435,9 +494,10 @@ class R7rsNumber(private val res: KevesResources) {
                                 res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
+                        val first = vm.stack.index(sp, 0)
+                        val result = when {
+                            first.isInt(res) -> intLoop(1, first.asInt(res).value)
+                            first.isDouble(res) -> doubleLoop(1, first.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
 
@@ -459,13 +519,17 @@ class R7rsNumber(private val res: KevesResources) {
                         val sp = vm.sp
                         tailrec fun doubleLoop(index: Int, last: Double): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last > obj.value.toDouble())
-                                            doubleLoop(index = index + 1, last = obj.value.toDouble())
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last > obj.asInt(res).value.toDouble())
+                                            doubleLoop(index = index + 1, last = obj.asInt(res).value.toDouble())
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last > obj.value) doubleLoop(index = index + 1, last = obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last > obj.asDouble(res).value) doubleLoop(
+                                            index = index + 1,
+                                            last = obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -475,12 +539,19 @@ class R7rsNumber(private val res: KevesResources) {
 
                         tailrec fun intLoop(index: Int, last: Int): PtrObject =
                             if (index < n) {
-                                when (val obj = vm.stack.index(sp, index).toVal(res)) {
-                                    is ScmInt ->
-                                        if (last > obj.value) intLoop(index = index + 1, last = obj.value)
+                                val obj = vm.stack.index(sp, index)
+                                when {
+                                    obj.isInt(res) ->
+                                        if (last > obj.asInt(res).value) intLoop(
+                                            index = index + 1,
+                                            last = obj.asInt(res).value
+                                        )
                                         else res.constFalse
-                                    is ScmDouble ->
-                                        if (last.toDouble() > obj.value) doubleLoop(index + 1, obj.value)
+                                    obj.isDouble(res) ->
+                                        if (last.toDouble() > obj.asDouble(res).value) doubleLoop(
+                                            index + 1,
+                                            obj.asDouble(res).value
+                                        )
                                         else res.constFalse
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
@@ -488,9 +559,10 @@ class R7rsNumber(private val res: KevesResources) {
                                 res.constTrue
                             }
 
-                        val result = when (val first = vm.stack.index(sp, 0).toVal(res)) {
-                            is ScmInt -> intLoop(1, first.value)
-                            is ScmDouble -> doubleLoop(1, first.value)
+                        val first = vm.stack.index(sp, 0)
+                        val result = when {
+                            first.isInt(res) -> intLoop(1, first.asInt(res).value)
+                            first.isDouble(res) -> doubleLoop(1, first.asDouble(res).value)
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
 
@@ -509,10 +581,11 @@ class R7rsNumber(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val result = when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
-                            is ScmInt -> if (obj.value == 0) res.constTrue else res.constFalse
-                            is ScmFloat -> if (obj.value == 0f) res.constTrue else res.constFalse
-                            is ScmDouble -> if (obj.value == 0.0) res.constTrue else res.constFalse
+                        val obj = vm.stack.index(vm.sp, 0)
+                        val result = when {
+                            obj.isInt(res) -> if (obj.asInt(res).value == 0) res.constTrue else res.constFalse
+                            obj.isFloat(res) -> if (obj.asFloat(res).value == 0f) res.constTrue else res.constFalse
+                            obj.isDouble(res) -> if (obj.asDouble(res).value == 0.0) res.constTrue else res.constFalse
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                         vm.scmProcReturn(result, n)

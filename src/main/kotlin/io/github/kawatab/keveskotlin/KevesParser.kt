@@ -90,7 +90,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
     private val regexCrossHatch =
         """#([\s";()\[\]|].*|)""".toRegex(setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
 
-    fun parse(): PtrPair {
+    fun parse(): PtrPairOrNull {
         errorList.clear()
         return parseTopLevel()
     }
@@ -111,7 +111,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
         }
     }
 
-    private fun parseTopLevel(): PtrPair {
+    private fun parseTopLevel(): PtrPairOrNull {
         var i = 0
         val stack = ArrayDeque<PtrObject>()
         while (i < text.length) {
@@ -121,7 +121,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
             } ?: break
         }
 
-        var result = PtrPair(0)
+        var result = PtrPairOrNull(0)
         while (stack.isNotEmpty()) {
             result = ScmPair.make(stack.removeLast(), result.toObject(), res)
         }
@@ -450,7 +450,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         )
                     }
                     result.let { (value, index) ->
-                        val datum = value.asPairOrNull(res).toVector(res).toObject()
+                        val datum = value.toPairOrNull().toVector(res).toObject()
                         if (startChar.isEmpty()) return datum to index
                         stack.addLast(datum)
                         i = index

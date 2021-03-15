@@ -27,17 +27,17 @@ import io.github.kawatab.keveskotlin.PtrObject
 abstract class ScmObject {
     abstract fun toStringForWrite(res: KevesResources): String
     abstract fun toStringForDisplay(res: KevesResources): String
-    open fun eqvQ(other: ScmObject?): Boolean = this === other
-    open fun equalQ(other: ScmObject?, res: KevesResources): Boolean = this === other
+    open fun eqvQ(other: PtrObject, res: KevesResources): Boolean = this === other.toVal(res)
+    open fun equalQ(other: PtrObject, res: KevesResources): Boolean = this === other.toVal(res)
 
-    open fun add(other: ScmObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
-    open fun subtract(other: ScmObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
-    open fun isLessThan(other: ScmObject): Boolean = throw IllegalArgumentException("not number")
+    open fun add(other: PtrObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
+    open fun subtract(other: PtrObject, res: KevesResources): PtrObject = throw IllegalArgumentException("not number")
+    open fun isLessThan(other: PtrObject, res: KevesResources): Boolean = throw IllegalArgumentException("not number")
 
     companion object {
         fun getStringForWrite(obj: ScmObject?, res: KevesResources): String = obj?.toStringForWrite(res) ?: "()"
         fun getStringForDisplay(obj: ScmObject?, res: KevesResources): String = obj?.toStringForDisplay(res) ?: "()"
-        fun eqvQ(obj1: ScmObject?, obj2: ScmObject?): Boolean = obj1?.eqvQ(obj2) ?: (obj2 == null)
-        fun equalQ(obj1: ScmObject?, obj2: ScmObject?, res: KevesResources): Boolean = obj1?.equalQ(obj2, res) ?: (obj2 == null)
+        fun eqvQ(obj1: PtrObject, obj2: PtrObject, res: KevesResources): Boolean = obj1.toVal(res)?.eqvQ(obj2, res) ?: obj2.isNull()
+        fun equalQ(obj1: PtrObject, obj2: PtrObject, res: KevesResources): Boolean = obj1.toVal(res)?.equalQ(obj2, res) ?: obj2.isNull()
     }
 }

@@ -333,7 +333,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
                 throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
             }
             val s2 = vm.stack.index(sp1, 2).also {
-                if (it.toVal(vm.res) !is ScmClosure) throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
+                if (it.isNotClosure(vm.res)) throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
             }.toClosure()
             // acc = acc
             vm.x = s0

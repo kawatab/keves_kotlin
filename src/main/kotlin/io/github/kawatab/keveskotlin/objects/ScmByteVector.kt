@@ -22,6 +22,7 @@
 package io.github.kawatab.keveskotlin.objects
 
 import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
 
 class ScmByteVector private constructor(private var array: ByteArray) : ScmObject() {
     fun set(i: Int, byte: Byte) {
@@ -34,11 +35,11 @@ class ScmByteVector private constructor(private var array: ByteArray) : ScmObjec
     override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
     override fun toString(): String = "#u8(${array.joinToString(" ")})"
 
-    override fun equalQ(other: ScmObject?, res: KevesResources): Boolean {
-        if (this === other) return true
-        if (other !is ScmByteVector || this.array.size != other.array.size) return false
+    override fun equalQ(other: PtrObject, res: KevesResources): Boolean {
+        if (this === other.toVal(res)) return true
+        if (other.isNotByteVector(res) || this.array.size != other.asByteVector(res).array.size) return false
         for (i in this.array.indices) {
-            if (this.array[i] != other.array[i]) return false
+            if (this.array[i] != other.asByteVector(res).array[i]) return false
         }
         return true
     }

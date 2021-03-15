@@ -28,5 +28,5 @@ abstract class ScmMacro protected constructor(private val id: String) : ScmObjec
     override fun toStringForDisplay(res: KevesResources): String = toString()
     override fun toString(): String = "#<macro $id>"
 
-    abstract fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject
+    abstract fun transform(x: PtrPair, compiler: KevesCompiler): PtrObject
 }
