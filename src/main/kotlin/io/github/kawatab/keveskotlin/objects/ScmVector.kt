@@ -36,10 +36,10 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
     val size get() = array.size
 
     override fun toStringForWrite(res: KevesResources): String =
-        "#(${array.joinToString(" ") { getStringForWrite(res.get(PtrObject(it)), res) }})"
+        "#(${array.joinToString(" ") { getStringForWrite(PtrObject(it).toVal(res), res) }})"
 
     override fun toStringForDisplay(res: KevesResources): String =
-        "#(${array.joinToString(" ") { getStringForDisplay(res.get(PtrObject(it)), res) }})"
+        "#(${array.joinToString(" ") { getStringForDisplay(PtrObject(it).toVal(res), res) }})"
 
     override fun toString(): String = "#()"
 
@@ -55,8 +55,8 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
             val ptr2 = other.at(i)
             if (ptr1 == ptr2) return true
             if (!res.isScmObject(ptr1) || !res.isScmObject(ptr2)) return false
-            val obj1 = res.get(ptr1)
-            val obj2 = res.get(ptr2)
+            val obj1 = ptr1.toVal(res)
+            val obj2 = ptr2.toVal(res)
             when (obj1) {
                 null -> obj1 == obj2
                 is ScmBox -> if (obj2 !is ScmBox || !obj1.equalQ(obj2, duplicated, res)) return false
@@ -86,7 +86,7 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
             make(ScmPair.length(this, res), res).also { vector ->
                 tailrec fun loop(rest: ScmPair?, i: Int) {
                     if (rest == null) return
-                    (res.get(vector) as ScmVector).set(i, rest.car) // ?: PtrObject(0))
+                    (vector.toVal(res) as ScmVector).set(i, rest.car) // ?: PtrObject(0))
                     loop(rest.cdr.toVal(res) as? ScmPair, i + 1)
                 }
                 loop(rest = this, i = 0)

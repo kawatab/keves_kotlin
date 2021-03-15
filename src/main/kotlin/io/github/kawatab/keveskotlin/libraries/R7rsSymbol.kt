@@ -36,7 +36,7 @@ class R7rsSymbol(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
                         val result = if (obj is ScmSymbol) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
@@ -55,10 +55,10 @@ class R7rsSymbol(private val res: KevesResources) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
                         val sp = vm.sp
-                        val first = res.get(vm.stack.index(sp, 0)) as? ScmSymbol
+                        val first = vm.stack.index(sp, 0).toVal(res) as? ScmSymbol
                             ?: throw KevesExceptions.expectedSymbol(id)
                         for (i in 1 until n) {
-                            val obj = res.get(vm.stack.index(sp, i)) as? ScmSymbol
+                            val obj = vm.stack.index(sp, i).toVal(res) as? ScmSymbol
                                 ?: throw KevesExceptions.expectedSymbol(id)
                             if (first !== obj) return vm.scmProcReturn(res.constFalse, n)
                         }
@@ -77,7 +77,7 @@ class R7rsSymbol(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmSymbol
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmSymbol
                             ?: throw KevesExceptions.expectedSymbol(id)
 
                         val result = ScmString.make(obj.rawString, vm.res)

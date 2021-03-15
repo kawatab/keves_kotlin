@@ -26,8 +26,8 @@ import io.github.kawatab.keveskotlin.PtrObject
 
 // class ScmBox private constructor(var value: ScmObject?) : ScmObject() {
 class ScmBox private constructor(var ptr: PtrObject) : ScmObject() {
-    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(res.get(ptr), res)}>"
-    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(res.get(ptr), res)}>"
+    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(ptr.toVal(res), res)}>"
+    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(ptr.toVal(res), res)}>"
     override fun toString(): String = "#<box $ptr>"
     override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
         if (this === other) true else (other is ScmBox && equalQ(other, ArrayDeque(), res))

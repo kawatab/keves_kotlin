@@ -36,7 +36,7 @@ class R7rsString(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
                         val result = if (obj is ScmString) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }

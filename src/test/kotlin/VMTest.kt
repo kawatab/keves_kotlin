@@ -49,10 +49,10 @@ class VMTest {
         indexSetE.isAccessible = true
          */
 
-        val stringABC = res.get(ScmString.make("abc", res)) as ScmString
-        val stringDEF = res.get(ScmString.make("def", res)) as ScmString
-        val int123 = res.get(ScmInt.make(123, res)) as ScmInt
-        val double4p56 = res.get(ScmDouble.make(4.56, res)) as ScmDouble
+        val stringABC = ScmString.make("abc", res).toVal(res) as ScmString
+        val stringDEF = ScmString.make("def", res).toVal(res) as ScmString
+        val int123 = ScmInt.make(123, res).toVal(res) as ScmInt
+        val double4p56 = ScmDouble.make(4.56, res).toVal(res) as ScmDouble
 
         val tests = listOf(
             listOf(1, 0, stringABC, stringDEF),
@@ -72,7 +72,7 @@ class VMTest {
         }
 
         tests.forEach { (_, refer, v) ->
-            assertEquals(v.first, res.get(stack.index(refer.first, refer.second)))
+            assertEquals(v.first, stack.index(refer.first, refer.second).toVal(res))
             assertNotEquals(v.second, stack.index(refer.first, refer.second))
         }
     }

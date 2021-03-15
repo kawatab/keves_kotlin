@@ -35,7 +35,7 @@ class R7rsList(private val res: KevesResources) {
                     1 -> {
                         val ptr = vm.stack.index(vm.sp, 0)
                         val result =
-                            if (ScmPair.isPair(res.get(ptr))) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                            if (ScmPair.isPair(ptr.toVal(res))) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -72,7 +72,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val pair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val pair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         vm.scmProcReturn(pair.car, n)
                     }
@@ -90,7 +90,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val pair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val pair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         vm.scmProcReturn(pair.cdr, n)
                     }
@@ -151,7 +151,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caar(obj, res)
@@ -174,7 +174,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cadr(obj, res)
@@ -197,7 +197,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdar(obj, res)
@@ -220,7 +220,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cddr(obj, res)
@@ -243,7 +243,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caaar(obj, res)
@@ -266,7 +266,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caadr(obj, res)
@@ -289,7 +289,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cadar(obj, res)
@@ -312,7 +312,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caddr(obj, res)
@@ -335,7 +335,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdaar(obj, res)
@@ -358,7 +358,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdadr(obj, res)
@@ -381,7 +381,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cddar(obj, res)
@@ -404,7 +404,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdddr(obj, res)
@@ -427,7 +427,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caaaar(obj, res)
@@ -450,7 +450,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caaadr(obj, res)
@@ -473,7 +473,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caadar(obj, res)
@@ -496,7 +496,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caaddr(obj, res)
@@ -519,7 +519,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cadaar(obj, res)
@@ -542,7 +542,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cadadr(obj, res)
@@ -565,7 +565,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.caddar(obj, res)
@@ -588,7 +588,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cadddr(obj, res)
@@ -611,7 +611,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdaaar(obj, res)
@@ -634,7 +634,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdaadr(obj, res)
@@ -657,7 +657,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdadar(obj, res)
@@ -680,7 +680,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdaddr(obj, res)
@@ -703,7 +703,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cddaar(obj, res)
@@ -726,7 +726,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cddadr(obj, res)
@@ -749,7 +749,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cdddar(obj, res)
@@ -772,7 +772,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj: ScmPair = res.get(vm.stack.index(vm.sp, 0)) as? ScmPair
+                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
                             ?: throw KevesExceptions.expectedPair(id)
                         val result = try {
                             ScmPair.cddddr(obj, res)
@@ -814,7 +814,7 @@ class R7rsList(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
-                        val obj = res.get(vm.stack.index(vm.sp, 0))
+                        val obj = vm.stack.index(vm.sp, 0).toVal(res)
                         val result = if (ScmPair.isProperList(
                                 obj,
                                 res
@@ -1026,7 +1026,7 @@ class R7rsList(private val res: KevesResources) {
                     0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val k = (res.get(vm.stack.index(sp, 1)) as? ScmInt)?.value
+                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
                             ?: throw KevesExceptions.expectedInt(id)
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)

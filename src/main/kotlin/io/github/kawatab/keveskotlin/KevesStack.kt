@@ -79,7 +79,7 @@ class KevesStack(private val res: KevesResources) {
         }
          */
         // res.get(ScmVector.make(array.copyOfRange(0, s), res)) as ScmVector
-        (res.get(ScmVector.make(s, res)) as ScmVector).also { v ->
+        (ScmVector.make(s, res).toVal(res) as ScmVector).also { v ->
             tailrec fun copy(i: Int) {
                 if (i == s) return
                 v.set(i, PtrObject(array[i]))

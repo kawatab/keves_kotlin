@@ -810,7 +810,7 @@ class R7rs(private val res: KevesResources) {
     /** procedure: call/cc, call-with-current-continuation */
     private val procCallWithCC = res.addProcedure(object : ScmProcedure(
         "call/cc",
-        res.get(res.addSyntax(object : ScmSyntax(id = "call/cc") {
+        res.addSyntax(object : ScmSyntax(id = "call/cc") {
             override fun compile(
                 x: PtrPairNonNull,
                 e: PtrPair,
@@ -852,7 +852,7 @@ class R7rs(private val res: KevesResources) {
                 val exp = patternMatchCallCC(x)
                 return compiler.findFree(exp.toObject(), b)
             }
-        })) as ScmSyntax
+        }).toVal(res) as ScmSyntax
     ) {
         override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
         override fun normalProc(n: Int, vm: KevesVM) {}
@@ -872,7 +872,7 @@ class R7rs(private val res: KevesResources) {
     private val procDisplay: PtrObject by lazy {
         res.addProcedure(object : ScmProcedure(
             "display",
-            res.get(res.addSyntax(object : ScmSyntax("display") {
+            res.addSyntax(object : ScmSyntax("display") {
                 override fun compile(
                     x: PtrPairNonNull,
                     e: PtrPair,
@@ -914,7 +914,7 @@ class R7rs(private val res: KevesResources) {
                     val exp = patternMatchCallCC(x)
                     return compiler.findFree(exp.toObject(), b)
                 }
-            })) as ScmSyntax
+            }).toVal(res) as ScmSyntax
         ) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {
                 print(getStringForDisplay(acc.toVal(res), res))
@@ -950,14 +950,14 @@ class R7rs(private val res: KevesResources) {
                 val result = when (n) {
                     0 -> throw IllegalArgumentException("$id expected two or more object, but got nothing")
                     1 -> {
-                        val k = (res.get(vm.stack.index(vm.sp, 0)) as? ScmInt)?.value
+                        val k = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmInt)?.value
                             ?: throw IllegalArgumentException("$id expected int but got other")
                         if (k < 0) throw IllegalArgumentException("$id doesn't accept negative number")
                         ScmVector.make(k, vm.res)
                     }
                     2 -> {
                         val sp = vm.sp
-                        val k = (res.get(vm.stack.index(sp, 0)) as? ScmInt)?.value
+                        val k = (vm.stack.index(sp, 0).toVal(res) as? ScmInt)?.value
                             ?: throw IllegalArgumentException("$id expected int but got other")
                         if (k < 0) throw IllegalArgumentException("$id doesn't accept negative number")
                         val fill = vm.stack.index(sp, 1)
@@ -1005,8 +1005,8 @@ class R7rs(private val res: KevesResources) {
                         val ptr1 = vm.stack.index(sp, 1)
                         val ptr2 = vm.stack.index(sp, 0)
                         val result = if (eqvQ(
-                                res.get(ptr1),
-                                res.get(ptr2)
+                                ptr1.toVal(res),
+                                ptr2.toVal(res)
                             )
                         ) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
                         vm.scmProcReturn(result, n)
@@ -1030,8 +1030,8 @@ class R7rs(private val res: KevesResources) {
                         val ptr1 = vm.stack.index(sp, 1)
                         val ptr2 = vm.stack.index(sp, 0)
                         val result = if (equalQ(
-                                res.get(ptr1),
-                                res.get(ptr2),
+                                ptr1.toVal(res),
+                                ptr2.toVal(res),
                                 res
                             )
                         ) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
