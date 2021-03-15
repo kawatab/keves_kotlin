@@ -21,15 +21,12 @@
 
 package io.github.kawatab.keveskotlin.libraries
 
-import io.github.kawatab.keveskotlin.KevesExceptions
-import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.KevesVM
-import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.*
 import io.github.kawatab.keveskotlin.objects.*
 
 class R7rsChar(private val res: KevesResources) {
     /** procedure: char? */
-    val procCharQ by lazy {
+    val procCharQ: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure("char?", null) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
@@ -37,7 +34,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val ptr = vm.stack.index(vm.sp, 0)
-                        val result = if (ptr.toVal(res) is ScmChar) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        val result = if (ptr.toVal(res) is ScmChar) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -53,17 +50,18 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        for (i in 1 until n) {
-                            val obj = (vm.stack.index(sp, i).toVal(res) as? ScmChar)?.toUtf32()
-                                ?: throw KevesExceptions.expectedChar(id)
-                            if (first != obj) return vm.scmProcReturn(res.constFalse, n)
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            val first = vm.stack.index(sp, 0).asChar(res).toUtf32()
+                            for (i in 1 until n) {
+                                val obj = vm.stack.index(sp, i).asChar(res).toUtf32()
+                                if (first != obj) return vm.scmProcReturn(res.constFalse, n)
+                            }
+                            vm.scmProcReturn(res.constTrue, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
                         }
-                        vm.scmProcReturn(res.constTrue, n)
-                    }
                 }
             }
         })
@@ -76,24 +74,25 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last < obj) loop(index = index + 1, last = obj)
-                                else ScmConstant.FALSE
-                            } else {
-                                ScmConstant.TRUE
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toUtf32()
+                                    if (last < obj) loop(index = index + 1, last = obj)
+                                    else res.constFalse
+                                } else {
+                                    res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = res.add(loop(1, first))
+                            val first = vm.stack.index(sp, 0).asChar(res).toUtf32()
+                            val result = loop(1, first)
 
-                        vm.scmProcReturn(result, n)
-                    }
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -106,24 +105,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last <= obj) loop(index = index + 1, last = obj)
-                                else ScmConstant.FALSE
-                            } else {
-                                ScmConstant.TRUE
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toUtf32()
+                                    if (last <= obj) loop(index = index + 1, last = obj)
+                                    else res.constFalse
+                                } else {
+                                    res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = res.add(loop(1, first))
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toUtf32()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -136,24 +135,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last > obj) loop(index = index + 1, last = obj)
-                                else ScmConstant.FALSE
-                            } else {
-                                ScmConstant.TRUE
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toUtf32()
+                                    if (last > obj) loop(index = index + 1, last = obj)
+                                    else res.constFalse
+                                } else {
+                                    res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = res.add(loop(1, first))
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toUtf32()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -166,24 +165,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): ScmObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toUtf32()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last >= obj) loop(index = index + 1, last = obj)
-                                else ScmConstant.FALSE
-                            } else {
-                                ScmConstant.TRUE
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toUtf32()
+                                    if (last >= obj) loop(index = index + 1, last = obj)
+                                    else res.constFalse
+                                } else {
+                                    res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toUtf32()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = res.add(loop(1, first))
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toUtf32()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -196,17 +195,18 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        for (i in 1 until n) {
-                            val obj = (vm.stack.index(sp, i).toVal(res) as? ScmChar)?.toLowerCase()
-                                ?: throw KevesExceptions.expectedChar(id)
-                            if (first != obj) return vm.scmProcReturn(res.constFalse, n)
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            val first = vm.stack.index(sp, 0).asChar(res).toLowerCase()
+                            for (i in 1 until n) {
+                                val obj = vm.stack.index(sp, i).asChar(res).toLowerCase()
+                                if (first != obj) return vm.scmProcReturn(res.constFalse, n)
+                            }
+                            vm.scmProcReturn(res.constTrue, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
                         }
-                        vm.scmProcReturn(res.constTrue, n)
-                    }
                 }
             }
         })
@@ -219,24 +219,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): PtrObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last < obj) loop(index = index + 1, last = obj)
-                                else vm.res.constFalse
-                            } else {
-                                vm.res.constTrue
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toLowerCase()
+                                    if (last < obj) loop(index = index + 1, last = obj)
+                                    else vm.res.constFalse
+                                } else {
+                                    vm.res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = loop(1, first)
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toLowerCase()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -249,24 +249,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): PtrObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last <= obj) loop(index = index + 1, last = obj)
-                                else vm.res.constFalse
-                            } else {
-                                vm.res.constTrue
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toLowerCase()
+                                    if (last <= obj) loop(index = index + 1, last = obj)
+                                    else vm.res.constFalse
+                                } else {
+                                    vm.res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = loop(1, first)
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toLowerCase()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -279,24 +279,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): PtrObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last > obj) loop(index = index + 1, last = obj)
-                                else vm.res.constFalse
-                            } else {
-                                vm.res.constTrue
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toLowerCase()
+                                    if (last > obj) loop(index = index + 1, last = obj)
+                                    else vm.res.constFalse
+                                } else {
+                                    vm.res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = loop(1, first)
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toLowerCase()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -309,24 +309,24 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
-                    else -> {
-                        val sp = vm.sp
-                        tailrec fun loop(index: Int, last: Int): PtrObject =
-                            if (index < n) {
-                                val obj = (vm.stack.index(sp, index).toVal(res) as? ScmChar)?.toLowerCase()
-                                    ?: throw KevesExceptions.expectedNumber(id)
-                                if (last >= obj) loop(index = index + 1, last = obj)
-                                else vm.res.constFalse
-                            } else {
-                                vm.res.constTrue
-                            }
+                    else ->
+                        try {
+                            val sp = vm.sp
+                            tailrec fun loop(index: Int, last: Int): PtrObject =
+                                if (index < n) {
+                                    val obj = vm.stack.index(sp, index).asChar(res).toLowerCase()
+                                    if (last >= obj) loop(index = index + 1, last = obj)
+                                    else vm.res.constFalse
+                                } else {
+                                    vm.res.constTrue
+                                }
 
-                        val first = (vm.stack.index(sp, 0).toVal(res) as? ScmChar)?.toLowerCase()
-                            ?: throw KevesExceptions.expectedNumber(id)
-                        val result = loop(1, first)
-
-                        vm.scmProcReturn(result, n)
-                    }
+                            val first = vm.stack.index(sp, 0).asChar(res).toLowerCase()
+                            val result = loop(1, first)
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                 }
             }
         })
@@ -340,9 +340,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isAlphabetic = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)?.isAlphabetic()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = if (isAlphabetic) res.constTrue else res.constFalse //ScmConstant.TRUE else ScmConstant.FALSE
+                        val isAlphabetic = try {
+                            vm.stack.index(vm.sp, 0).asChar(res).isAlphabetic()
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = if (isAlphabetic) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -359,9 +362,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isNumeric = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)?.isNumeric()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = if (isNumeric) res.constTrue else res.constFalse //ScmConstant.TRUE else ScmConstant.FALSE
+                        val isNumeric = try {
+                            vm.stack.index(vm.sp, 0).asChar(res).isNumeric()
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = if (isNumeric) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -378,9 +384,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isWhitespace = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)?.isWhitespace()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = if (isWhitespace) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        val isWhitespace = try {
+                            vm.stack.index(vm.sp, 0).asChar(res).isWhitespace()
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = if (isWhitespace) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -397,9 +406,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isUpperCase = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)?.isUpperCase()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = if (isUpperCase) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        val isUpperCase = try {
+                            vm.stack.index(vm.sp, 0).asChar(res).isUpperCase()
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = if (isUpperCase) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -416,9 +428,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val isLowerCase = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)?.isLowerCase()
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = if (isLowerCase) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        val isLowerCase = try {
+                            vm.stack.index(vm.sp, 0).asChar(res).isLowerCase()
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = if (isLowerCase) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -435,10 +450,13 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(id)
+                        val char = try {
+                            vm.stack.index(vm.sp, 0).asChar(res)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
                         val value = char.digitToInt()
-                        val result = if (value >= 0) ScmInt.make(value, vm.res) else res.constFalse
+                        val result = if (value >= 0) ScmInt.make(value, vm.res).toObject() else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -455,9 +473,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar)
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = ScmInt.make(char.toUtf32(), vm.res)
+                        val char = try {
+                            vm.stack.index(vm.sp, 0).asChar(res)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = ScmInt.make(char.toUtf32(), vm.res).toObject()
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -473,12 +494,14 @@ class R7rsChar(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
-                    1 -> {
-                        val value = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
-                        val result = ScmChar.make(value, vm.res)
-                        vm.scmProcReturn(result, n)
-                    }
+                    1 ->
+                        try {
+                            val value = vm.stack.index(vm.sp, 0).asInt(res).value
+                            val result = ScmChar.make(value, vm.res).toObject()
+                            vm.scmProcReturn(result, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -493,9 +516,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = ScmChar.make(char.toUpperCase(), vm.res)
+                        val char = try {
+                            vm.stack.index(vm.sp, 0).asChar(res)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = ScmChar.make(char.toUpperCase(), vm.res).toObject()
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -512,9 +538,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = ScmChar.make(char.toLowerCase(), vm.res)
+                        val char = try {
+                            vm.stack.index(vm.sp, 0).asChar(res)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = ScmChar.make(char.toLowerCase(), vm.res).toObject()
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -531,9 +560,12 @@ class R7rsChar(private val res: KevesResources) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
-                        val char = vm.stack.index(vm.sp, 0).toVal(res) as? ScmChar
-                            ?: throw KevesExceptions.expectedChar(id)
-                        val result = ScmChar.make(char.toFoldCase(), vm.res)
+                        val char = try {
+                            vm.stack.index(vm.sp, 0).asChar(res)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedChar(id)
+                        }
+                        val result = ScmChar.make(char.toFoldCase(), vm.res).toObject()
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)

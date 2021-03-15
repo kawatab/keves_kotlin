@@ -75,19 +75,17 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
     }
 
     companion object {
-        // fun make(array: Array<ScmObject?>, res: KevesResources) = ScmVector(array).let { res.add(it) }
-        fun make(array: IntArray, res: KevesResources) = ScmVector(array).let { res.add(it) }
-        fun make(size: Int, res: KevesResources) = ScmVector(size, res).let { res.add(it) }
+        fun make(array: IntArray, res: KevesResources) = ScmVector(array).let { res.addVector(it) }
+        fun make(size: Int, res: KevesResources) = ScmVector(size, res).let { res.addVector(it) }
 
-        // fun make(size: Int, fill: ScmObject?, res: KevesResources) = ScmVector(size, fill, res).let { res.add(it) }
-        fun make(size: Int, fill: PtrObject, res: KevesResources) = ScmVector(size, fill).let { res.add(it) }
+        fun make(size: Int, fill: PtrObject, res: KevesResources) = ScmVector(size, fill).let { res.addVector(it) }
 
-        fun ScmPair?.toVector(res: KevesResources): PtrObject =
+        fun ScmPair?.toVector(res: KevesResources) =
             make(ScmPair.length(this, res), res).also { vector ->
                 tailrec fun loop(rest: ScmPair?, i: Int) {
                     if (rest == null) return
-                    (vector.toVal(res) as ScmVector).set(i, rest.car) // ?: PtrObject(0))
-                    loop(rest.cdr.toVal(res) as? ScmPair, i + 1)
+                    vector.toVal(res).set(i, rest.car)
+                    loop(rest.cdr.asPairOrNull(res), i + 1)
                 }
                 loop(rest = this, i = 0)
             }

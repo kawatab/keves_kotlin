@@ -21,15 +21,12 @@
 
 package io.github.kawatab.keveskotlin.libraries
 
-import io.github.kawatab.keveskotlin.KevesExceptions
-import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.KevesVM
-import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.*
 import io.github.kawatab.keveskotlin.objects.*
 
 class R7rsString(private val res: KevesResources) {
     /** procedure: string? */
-    val procStringQ by lazy {
+    val procStringQ: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure("string?", null) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
@@ -54,13 +51,15 @@ class R7rsString(private val res: KevesResources) {
                 when (n) {
                     0, 1 -> throw KevesExceptions.expected2OrMoreDatumGotLess(id)
                     else -> {
-                        val sp = vm.sp
-                        val first = vm.stack.index(sp, 0).toVal(res) as? ScmString
-                            ?: throw KevesExceptions.expectedString(id)
-                        for (i in 1 until n) {
-                            val obj = vm.stack.index(sp, i).toVal(res) as? ScmString
-                                ?: throw KevesExceptions.expectedString(id)
-                            if (!first.equalQ(obj, res)) return vm.scmProcReturn(res.constFalse, n)
+                        try {
+                            val sp = vm.sp
+                            val first = vm.stack.index(sp, 0).asString(res)
+                            for (i in 1 until n) {
+                                val obj = vm.stack.index(sp, i).asString(res)
+                                if (!first.equalQ(obj, res)) return vm.scmProcReturn(res.constFalse, n)
+                            }
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedString(id)
                         }
                         vm.scmProcReturn(res.constTrue, n)
                     }

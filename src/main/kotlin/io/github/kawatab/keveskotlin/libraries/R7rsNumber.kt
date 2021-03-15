@@ -21,10 +21,7 @@
 
 package io.github.kawatab.keveskotlin.libraries
 
-import io.github.kawatab.keveskotlin.KevesExceptions
-import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.KevesVM
-import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.*
 import io.github.kawatab.keveskotlin.objects.*
 
 class R7rsNumber(private val res: KevesResources) {
@@ -50,14 +47,14 @@ class R7rsNumber(private val res: KevesResources) {
     }
 
     /** procedure: add */
-    val procAdd by lazy {
+    val procAdd: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure("+", null) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val sp = vm.sp
                 when (n) {
                     0 -> {
-                        vm.scmProcReturn(ScmInt.make(0, vm.res), n)
+                        vm.scmProcReturn(ScmInt.make(0, vm.res).toObject(), n)
                     }
                     1 -> {
                         val ptr = vm.stack.index(sp, 0)
@@ -88,7 +85,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmDouble.make(sum, vm.res)
+                                ScmDouble.make(sum, vm.res).toObject()
                             }
 
                         tailrec fun floatLoop(index: Int, sum: Float): PtrObject =
@@ -100,7 +97,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmFloat.make(sum, vm.res)
+                                ScmFloat.make(sum, vm.res).toObject()
                             }
 
                         tailrec fun loop(index: Int, sum: Int): PtrObject =
@@ -112,7 +109,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmInt.make(sum, vm.res)
+                                ScmInt.make(sum, vm.res).toObject()
                             }
 
                         val sum = loop(0, 0)
@@ -132,9 +129,9 @@ class R7rsNumber(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1OrMoreDatumGot0(id)
                     1 -> {
                         when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
-                            is ScmInt -> ScmInt.make(-obj.value, vm.res) // opposite
-                            is ScmFloat -> ScmFloat.make(-obj.value, vm.res) // opposite
-                            is ScmDouble -> ScmDouble.make(-obj.value, vm.res) // opposite
+                            is ScmInt -> ScmInt.make(-obj.value, vm.res).toObject() // opposite
+                            is ScmFloat -> ScmFloat.make(-obj.value, vm.res).toObject() // opposite
+                            is ScmDouble -> ScmDouble.make(-obj.value, vm.res).toObject() // opposite
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
@@ -159,7 +156,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmDouble.make(difference, vm.res)
+                                ScmDouble.make(difference, vm.res).toObject()
                             }
 
                         tailrec fun floatLoop(index: Int, difference: Float): PtrObject =
@@ -171,7 +168,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmFloat.make(difference, vm.res)
+                                ScmFloat.make(difference, vm.res).toObject()
                             }
 
                         tailrec fun intLoop(index: Int, difference: Int): PtrObject =
@@ -183,7 +180,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmInt.make(difference, vm.res)
+                                ScmInt.make(difference, vm.res).toObject()
                             }
 
                         when (val first = vm.stack.index(sp, 0).toVal(res)) {
@@ -218,7 +215,7 @@ class R7rsNumber(private val res: KevesResources) {
                             }
                         )
                     } else {
-                        ScmDouble.make(product, vm.res)
+                        ScmDouble.make(product, vm.res).toObject()
                     }
 
                 tailrec fun floatLoop(index: Int, product: Float): PtrObject =
@@ -230,7 +227,7 @@ class R7rsNumber(private val res: KevesResources) {
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     } else {
-                        ScmFloat.make(product, vm.res)
+                        ScmFloat.make(product, vm.res).toObject()
                     }
 
                 tailrec fun intLoop(index: Int, product: Int): PtrObject =
@@ -242,7 +239,7 @@ class R7rsNumber(private val res: KevesResources) {
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     } else {
-                        ScmInt.make(product, vm.res)
+                        ScmInt.make(product, vm.res).toObject()
                     }
 
                 val product = intLoop(0, 1)
@@ -262,11 +259,11 @@ class R7rsNumber(private val res: KevesResources) {
                         when (val obj = vm.stack.index(vm.sp, 0).toVal(res)) {
                             is ScmInt -> when (obj.value) { // reciprocal
                                 0 -> throw KevesExceptions.expectedNonZero(id)
-                                -1, 1 -> ScmInt.make(obj.value, res) // TODO("remove ScmInt.make")
-                                else -> ScmDouble.make(1.0 / obj.value.toDouble(), vm.res)
+                                -1, 1 -> ScmInt.make(obj.value, res).toObject() // TODO("remove ScmInt.make")
+                                else -> ScmDouble.make(1.0 / obj.value.toDouble(), vm.res).toObject()
                             }
 
-                            is ScmDouble -> ScmDouble.make(1.0 / obj.value, vm.res) // reciprocal
+                            is ScmDouble -> ScmDouble.make(1.0 / obj.value, vm.res).toObject() // reciprocal
 
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
@@ -282,7 +279,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmDouble.make(quotient, vm.res)
+                                ScmDouble.make(quotient, vm.res).toObject()
                             }
 
                         tailrec fun floatLoop(index: Int, quotient: Float): PtrObject =
@@ -294,7 +291,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmFloat.make(quotient, vm.res)
+                                ScmFloat.make(quotient, vm.res).toObject()
                             }
 
                         tailrec fun intLoop(index: Int, quotient: Int): PtrObject =
@@ -316,7 +313,7 @@ class R7rsNumber(private val res: KevesResources) {
                                     else -> throw KevesExceptions.expectedNumber(id)
                                 }
                             } else {
-                                ScmInt.make(quotient, vm.res)
+                                ScmInt.make(quotient, vm.res).toObject()
                             }
 
                         when (val first = vm.stack.index(sp, 0).toVal(res)) {

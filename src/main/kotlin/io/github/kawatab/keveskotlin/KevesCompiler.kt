@@ -190,12 +190,12 @@ class KevesCompiler(private val res: KevesResources) {
                     obj is ScmSyntax -> {
                         obj.compile(x.toPairNonNull(), e, s, next, this)
                     }
-                    (obj as? ScmProcedure)?.syntax != null -> {
-                        obj.syntax!!.compile(x.toPairNonNull(), e, s, next, this)
+                    (obj is ScmProcedure) && obj.syntax != null -> {
+                        obj.syntax.compile(x.toPairNonNull(), e, s, next, this)
                     }
                     else -> {
                         val ptrInstApply = ScmInstruction.Apply.make(0, res)
-                        val instApply = ptrInstApply.toVal(res) as ScmInstruction.Apply
+                        val instApply = ptrInstApply.toVal(res)
                         fun loop(args: PtrPair, c: PtrInstruction, n: Int): PtrInstruction =
                             if (args.isNull()) {
                                 instApply.n = n
@@ -224,14 +224,14 @@ class KevesCompiler(private val res: KevesResources) {
                                 e,
                                 s,
                                 if (tailQ(next, res)) {
-                                    ScmInstruction.Shift.make( // SHIFT,
-                                        ScmPair.length(valX.cdr.toVal(res) as? ScmPair, res),
-                                        (next.toVal(res) as ScmInstruction.Return).n, // ScmPair.cadr(next),
-                                        ptrInstApply,
+                                    ScmInstruction.Shift.make(
+                                        ScmPair.length(valX.cdr.asPairOrNull(res), res),
+                                        next.asInstructionReturn(res).n,
+                                        ptrInstApply.toInstruction(),
                                         res
                                     )
                                 } else {
-                                    ptrInstApply
+                                    ptrInstApply.toInstruction()
                                 }
                             ),
                             0
@@ -258,10 +258,10 @@ class KevesCompiler(private val res: KevesResources) {
                 val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
                 val second = bind?.second?.toVal(res)
                 when {
-                    second as? ScmSyntax != null ->
+                    second is ScmSyntax ->
                         second.findSets(x.toPairNonNull(), v, this)
-                    (second as? ScmProcedure)?.syntax != null ->
-                        second.syntax!!.findSets(x.toPairNonNull(), v, this)
+                    second is ScmProcedure && second.syntax != null ->
+                        second.syntax.findSets(x.toPairNonNull(), v, this)
                     else -> {
                         fun next(x: PtrPair): PtrPair =
                             if (x.isNull()) PtrPair(0)
@@ -303,10 +303,10 @@ class KevesCompiler(private val res: KevesResources) {
                 val bind = valX.car.let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
                 val second = bind?.second?.toVal(res)
                 when {
-                    second as? ScmSyntax != null ->
+                    second is ScmSyntax ->
                         second.findFree(x.toPairNonNull(), b, this)
-                    (second as? ScmProcedure)?.syntax != null ->
-                        second.syntax!!.findFree(x.toPairNonNull(), b, this)
+                    second is ScmProcedure && second.syntax != null ->
+                        second.syntax.findFree(x.toPairNonNull(), b, this)
                     else -> {
                         fun next(x: PtrPair): PtrPair =
                             if (x.isNull()) PtrPair(0)
@@ -344,7 +344,7 @@ class KevesCompiler(private val res: KevesResources) {
                 } // REFER_FREE, ScmInt(n), next) }
             )
         } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("found undefined variable: ${x.toVal(res)?.toStringForWrite(res)}")
+            throw IllegalArgumentException("found undefined variable: ${x.toVal(res).toStringForWrite(res)}")
         }
 
     /**
@@ -359,17 +359,17 @@ class KevesCompiler(private val res: KevesResources) {
         returnFree: (Int) -> PtrInstruction
     ): PtrInstruction {
         tailrec fun nextFree(free: PtrObject, n: Int): PtrInstruction =
-            if (x.toObject() == ScmPair.car(free.toVal(res))) returnFree(n)
-            else nextFree(free = ScmPair.cdr(free.toVal(res)), n = n + 1)
+            if (x.toObject() == ScmPair.car(free, res)) returnFree(n)
+            else nextFree(free = ScmPair.cdr(free, res), n = n + 1)
 
         tailrec fun nextLocal(locals: PtrObject, n: Int): PtrInstruction =
             when {
-                locals.isNull() -> nextFree(free = ScmPair.cdr(e.toVal(res)), n = 0)
-                x.toObject() == ScmPair.car(locals.toVal(res)) -> returnLocal(n)
-                else -> nextLocal(locals = ScmPair.cdr(locals.toVal(res)), n = n + 1)
+                locals.isNull() -> nextFree(free = e.toVal(res)?.cdr ?: PtrObject(0), n = 0)
+                x.toObject() == ScmPair.car(locals, res) -> returnLocal(n)
+                else -> nextLocal(locals = ScmPair.cdr(locals, res), n = n + 1)
             }
 
-        return nextLocal(locals = ScmPair.car(e.toVal(res)), n = 0)
+        return nextLocal(locals = e.toVal(res)?.car ?: PtrObject(0), n = 0)
     }
 
     /**
@@ -534,7 +534,7 @@ companion object {
                     .toPairNonNull()
                 val variable = pair.car(res)
                     .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("syntax error") }
-                val value = ScmPair.cadr(pair.toVal(res), res)
+                val value = ScmPair.cadr(pair.toObject(), res)
                 val cdr = binds.cdr(res)
                     .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("Syntax error") }
                     .toPair()

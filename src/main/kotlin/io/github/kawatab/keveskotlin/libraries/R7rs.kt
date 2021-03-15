@@ -33,11 +33,11 @@ class R7rs(private val res: KevesResources) {
 
     val listOfBinds by lazy {
         listOf<Pair<PtrSymbol, PtrObject>>(
-            ScmSymbol.get("begin", res) to syntaxBegin,
-            ScmSymbol.get("quote", res) to syntaxQuote,
-            ScmSymbol.get("lambda", res) to syntaxLambda,
-            ScmSymbol.get("if", res) to syntaxIf,
-            ScmSymbol.get("set!", res) to syntaxSetE,
+            ScmSymbol.get("begin", res) to syntaxBegin.toObject(),
+            ScmSymbol.get("quote", res) to syntaxQuote.toObject(),
+            ScmSymbol.get("lambda", res) to syntaxLambda.toObject(),
+            ScmSymbol.get("if", res) to syntaxIf.toObject(),
+            ScmSymbol.get("set!", res) to syntaxSetE.toObject(),
             ScmSymbol.get("let", res) to macroLet,
             ScmSymbol.get("let*", res) to macroLetStar,
             ScmSymbol.get("letrec", res) to macroLetrec,
@@ -45,100 +45,100 @@ class R7rs(private val res: KevesResources) {
             ScmSymbol.get("cond", res) to macroCond,
             ScmSymbol.get("when", res) to macroWhen,
             ScmSymbol.get("until", res) to macroUntil,
-            ScmSymbol.get("call/cc", res) to procCallWithCC,
-            ScmSymbol.get("call-with-current-continuation", res) to procCallWithCC,
-            ScmSymbol.get("display", res) to procDisplay,
-            ScmSymbol.get("*", res) to r7rsNumber.procMultiple,
-            ScmSymbol.get("+", res) to r7rsNumber.procAdd,
-            ScmSymbol.get("-", res) to r7rsNumber.procSubtract,
-            ScmSymbol.get("/", res) to r7rsNumber.procDivide,
-            ScmSymbol.get("<", res) to r7rsNumber.procLessThan,
-            ScmSymbol.get("=", res) to r7rsNumber.procEqual,
-            ScmSymbol.get(">", res) to r7rsNumber.procGraterThan,
-            ScmSymbol.get("append", res) to r7rsList.procAppend,
-            ScmSymbol.get("assoc", res) to r7rsList.procAssoc,
-            ScmSymbol.get("assq", res) to r7rsList.procAssq,
-            ScmSymbol.get("assv", res) to r7rsList.procAssv,
-            ScmSymbol.get("cons", res) to r7rsList.procCons,
-            ScmSymbol.get("caaaar", res) to r7rsList.procCaaaar,
-            ScmSymbol.get("caaadr", res) to r7rsList.procCaaadr,
-            ScmSymbol.get("caaar", res) to r7rsList.procCaaar,
-            ScmSymbol.get("caadar", res) to r7rsList.procCaadar,
-            ScmSymbol.get("caaddr", res) to r7rsList.procCaaddr,
-            ScmSymbol.get("caadr", res) to r7rsList.procCaadr,
-            ScmSymbol.get("caar", res) to r7rsList.procCaar,
-            ScmSymbol.get("cadaar", res) to r7rsList.procCadaar,
-            ScmSymbol.get("cadadr", res) to r7rsList.procCadadr,
-            ScmSymbol.get("cadar", res) to r7rsList.procCadar,
-            ScmSymbol.get("caddar", res) to r7rsList.procCaddar,
-            ScmSymbol.get("cadddr", res) to r7rsList.procCadddr,
-            ScmSymbol.get("caddr", res) to r7rsList.procCaddr,
-            ScmSymbol.get("cadr", res) to r7rsList.procCadr,
-            ScmSymbol.get("car", res) to r7rsList.procCar,
-            ScmSymbol.get("cdaaar", res) to r7rsList.procCdaaar,
-            ScmSymbol.get("cdaadr", res) to r7rsList.procCdaadr,
-            ScmSymbol.get("cdaar", res) to r7rsList.procCdaar,
-            ScmSymbol.get("cdadar", res) to r7rsList.procCdadar,
-            ScmSymbol.get("cdaddr", res) to r7rsList.procCdaddr,
-            ScmSymbol.get("cdadr", res) to r7rsList.procCdadr,
-            ScmSymbol.get("cdar", res) to r7rsList.procCdar,
-            ScmSymbol.get("cddaar", res) to r7rsList.procCddaar,
-            ScmSymbol.get("cddadr", res) to r7rsList.procCddadr,
-            ScmSymbol.get("cddar", res) to r7rsList.procCddar,
-            ScmSymbol.get("cdddar", res) to r7rsList.procCdddar,
-            ScmSymbol.get("cddddr", res) to r7rsList.procCddddr,
-            ScmSymbol.get("cdddr", res) to r7rsList.procCdddr,
-            ScmSymbol.get("cddr", res) to r7rsList.procCddr,
-            ScmSymbol.get("cdr", res) to r7rsList.procCdr,
-            ScmSymbol.get("char?", res) to r7rsChar.procCharQ,
-            ScmSymbol.get("char->integer", res) to r7rsChar.procCharToInteger,
-            ScmSymbol.get("char-ci<=?", res) to r7rsChar.procCharCILessThanEqualQ,
-            ScmSymbol.get("char-ci<?", res) to r7rsChar.procCharCILessThanQ,
-            ScmSymbol.get("char-ci=?", res) to r7rsChar.procCharCIEqualQ,
-            ScmSymbol.get("char-ci>=?", res) to r7rsChar.procCharCIGraterThanEqualQ,
-            ScmSymbol.get("char-ci>?", res) to r7rsChar.procCharCIGraterThanQ,
-            ScmSymbol.get("char-alphabetic?", res) to r7rsChar.procCharAlphabeticQ,
-            ScmSymbol.get("char-downcase", res) to r7rsChar.procCharDowncase,
-            ScmSymbol.get("char-foldcase", res) to r7rsChar.procCharFoldcase,
-            ScmSymbol.get("char-lower-case?", res) to r7rsChar.procCharLowerCaseQ,
-            ScmSymbol.get("char-numeric?", res) to r7rsChar.procCharNumericQ,
-            ScmSymbol.get("char-upper-case?", res) to r7rsChar.procCharUpperCaseQ,
-            ScmSymbol.get("char-upcase", res) to r7rsChar.procCharUpcase,
-            ScmSymbol.get("char-whitespace?", res) to r7rsChar.procCharWhitespaceQ,
-            ScmSymbol.get("char<=?", res) to r7rsChar.procCharLessThanEqualQ,
-            ScmSymbol.get("char<?", res) to r7rsChar.procCharLessThanQ,
-            ScmSymbol.get("char=?", res) to r7rsChar.procCharEqualQ,
-            ScmSymbol.get("char>=?", res) to r7rsChar.procCharGraterThanEqualQ,
-            ScmSymbol.get("char>?", res) to r7rsChar.procCharGraterThanQ,
-            ScmSymbol.get("digit-value", res) to r7rsChar.procDigitValue,
-            ScmSymbol.get("eq?", res) to procEqQ,
-            ScmSymbol.get("equal?", res) to procEqualQ,
-            ScmSymbol.get("eqv?", res) to procEqvQ,
-            ScmSymbol.get("integer->char", res) to r7rsChar.procIntegerToChar,
-            ScmSymbol.get("length", res) to r7rsList.procLength,
-            ScmSymbol.get("list", res) to r7rsList.procList,
-            ScmSymbol.get("list-copy", res) to r7rsList.procListCopy,
-            ScmSymbol.get("list-ref", res) to r7rsList.procListRef,
-            ScmSymbol.get("list-set!", res) to r7rsList.procListSetE,
-            ScmSymbol.get("list-tail", res) to r7rsList.procListTail,
-            ScmSymbol.get("list?", res) to r7rsList.procListQ,
-            ScmSymbol.get("make-list", res) to r7rsList.procMakeList,
-            ScmSymbol.get("make-vector", res) to procMakeVector,
-            ScmSymbol.get("member", res) to r7rsList.procMember,
-            ScmSymbol.get("memq", res) to r7rsList.procMemq,
-            ScmSymbol.get("memv", res) to r7rsList.procMemv,
-            ScmSymbol.get("null?", res) to r7rsList.procNullQ,
-            ScmSymbol.get("pair?", res) to r7rsList.procPairQ,
-            ScmSymbol.get("reverse", res) to r7rsList.procReverse,
-            ScmSymbol.get("set-car!", res) to r7rsList.procSetCarE,
-            ScmSymbol.get("set-cdr!", res) to r7rsList.procSetCdrE,
-            ScmSymbol.get("string->symbol", res) to r7rsSymbol.procStringToSymbol,
-            ScmSymbol.get("string=?", res) to r7rsString.procStringEqualQ,
-            ScmSymbol.get("string?", res) to r7rsString.procStringQ,
-            ScmSymbol.get("symbol->string", res) to r7rsSymbol.procSymbolToString,
-            ScmSymbol.get("symbol=?", res) to r7rsSymbol.procSymbolEqualQ,
-            ScmSymbol.get("symbol?", res) to r7rsSymbol.procSymbolQ,
-            ScmSymbol.get("zero?", res) to r7rsNumber.procZeroQ,
+            ScmSymbol.get("call/cc", res) to procCallWithCC.toObject(),
+            ScmSymbol.get("call-with-current-continuation", res) to procCallWithCC.toObject(),
+            ScmSymbol.get("display", res) to procDisplay.toObject(),
+            ScmSymbol.get("*", res) to r7rsNumber.procMultiple.toObject(),
+            ScmSymbol.get("+", res) to r7rsNumber.procAdd.toObject(),
+            ScmSymbol.get("-", res) to r7rsNumber.procSubtract.toObject(),
+            ScmSymbol.get("/", res) to r7rsNumber.procDivide.toObject(),
+            ScmSymbol.get("<", res) to r7rsNumber.procLessThan.toObject(),
+            ScmSymbol.get("=", res) to r7rsNumber.procEqual.toObject(),
+            ScmSymbol.get(">", res) to r7rsNumber.procGraterThan.toObject(),
+            ScmSymbol.get("append", res) to r7rsList.procAppend.toObject(),
+            ScmSymbol.get("assoc", res) to r7rsList.procAssoc.toObject(),
+            ScmSymbol.get("assq", res) to r7rsList.procAssq.toObject(),
+            ScmSymbol.get("assv", res) to r7rsList.procAssv.toObject(),
+            ScmSymbol.get("cons", res) to r7rsList.procCons.toObject(),
+            ScmSymbol.get("caaaar", res) to r7rsList.procCaaaar.toObject(),
+            ScmSymbol.get("caaadr", res) to r7rsList.procCaaadr.toObject(),
+            ScmSymbol.get("caaar", res) to r7rsList.procCaaar.toObject(),
+            ScmSymbol.get("caadar", res) to r7rsList.procCaadar.toObject(),
+            ScmSymbol.get("caaddr", res) to r7rsList.procCaaddr.toObject(),
+            ScmSymbol.get("caadr", res) to r7rsList.procCaadr.toObject(),
+            ScmSymbol.get("caar", res) to r7rsList.procCaar.toObject(),
+            ScmSymbol.get("cadaar", res) to r7rsList.procCadaar.toObject(),
+            ScmSymbol.get("cadadr", res) to r7rsList.procCadadr.toObject(),
+            ScmSymbol.get("cadar", res) to r7rsList.procCadar.toObject(),
+            ScmSymbol.get("caddar", res) to r7rsList.procCaddar.toObject(),
+            ScmSymbol.get("cadddr", res) to r7rsList.procCadddr.toObject(),
+            ScmSymbol.get("caddr", res) to r7rsList.procCaddr.toObject(),
+            ScmSymbol.get("cadr", res) to r7rsList.procCadr.toObject(),
+            ScmSymbol.get("car", res) to r7rsList.procCar.toObject(),
+            ScmSymbol.get("cdaaar", res) to r7rsList.procCdaaar.toObject(),
+            ScmSymbol.get("cdaadr", res) to r7rsList.procCdaadr.toObject(),
+            ScmSymbol.get("cdaar", res) to r7rsList.procCdaar.toObject(),
+            ScmSymbol.get("cdadar", res) to r7rsList.procCdadar.toObject(),
+            ScmSymbol.get("cdaddr", res) to r7rsList.procCdaddr.toObject(),
+            ScmSymbol.get("cdadr", res) to r7rsList.procCdadr.toObject(),
+            ScmSymbol.get("cdar", res) to r7rsList.procCdar.toObject(),
+            ScmSymbol.get("cddaar", res) to r7rsList.procCddaar.toObject(),
+            ScmSymbol.get("cddadr", res) to r7rsList.procCddadr.toObject(),
+            ScmSymbol.get("cddar", res) to r7rsList.procCddar.toObject(),
+            ScmSymbol.get("cdddar", res) to r7rsList.procCdddar.toObject(),
+            ScmSymbol.get("cddddr", res) to r7rsList.procCddddr.toObject(),
+            ScmSymbol.get("cdddr", res) to r7rsList.procCdddr.toObject(),
+            ScmSymbol.get("cddr", res) to r7rsList.procCddr.toObject(),
+            ScmSymbol.get("cdr", res) to r7rsList.procCdr.toObject(),
+            ScmSymbol.get("char?", res) to r7rsChar.procCharQ.toObject(),
+            ScmSymbol.get("char->integer", res) to r7rsChar.procCharToInteger.toObject(),
+            ScmSymbol.get("char-ci<=?", res) to r7rsChar.procCharCILessThanEqualQ.toObject(),
+            ScmSymbol.get("char-ci<?", res) to r7rsChar.procCharCILessThanQ.toObject(),
+            ScmSymbol.get("char-ci=?", res) to r7rsChar.procCharCIEqualQ.toObject(),
+            ScmSymbol.get("char-ci>=?", res) to r7rsChar.procCharCIGraterThanEqualQ.toObject(),
+            ScmSymbol.get("char-ci>?", res) to r7rsChar.procCharCIGraterThanQ.toObject(),
+            ScmSymbol.get("char-alphabetic?", res) to r7rsChar.procCharAlphabeticQ.toObject(),
+            ScmSymbol.get("char-downcase", res) to r7rsChar.procCharDowncase.toObject(),
+            ScmSymbol.get("char-foldcase", res) to r7rsChar.procCharFoldcase.toObject(),
+            ScmSymbol.get("char-lower-case?", res) to r7rsChar.procCharLowerCaseQ.toObject(),
+            ScmSymbol.get("char-numeric?", res) to r7rsChar.procCharNumericQ.toObject(),
+            ScmSymbol.get("char-upper-case?", res) to r7rsChar.procCharUpperCaseQ.toObject(),
+            ScmSymbol.get("char-upcase", res) to r7rsChar.procCharUpcase.toObject(),
+            ScmSymbol.get("char-whitespace?", res) to r7rsChar.procCharWhitespaceQ.toObject(),
+            ScmSymbol.get("char<=?", res) to r7rsChar.procCharLessThanEqualQ.toObject(),
+            ScmSymbol.get("char<?", res) to r7rsChar.procCharLessThanQ.toObject(),
+            ScmSymbol.get("char=?", res) to r7rsChar.procCharEqualQ.toObject(),
+            ScmSymbol.get("char>=?", res) to r7rsChar.procCharGraterThanEqualQ.toObject(),
+            ScmSymbol.get("char>?", res) to r7rsChar.procCharGraterThanQ.toObject(),
+            ScmSymbol.get("digit-value", res) to r7rsChar.procDigitValue.toObject(),
+            ScmSymbol.get("eq?", res) to procEqQ.toObject(),
+            ScmSymbol.get("equal?", res) to procEqualQ.toObject(),
+            ScmSymbol.get("eqv?", res) to procEqvQ.toObject(),
+            ScmSymbol.get("integer->char", res) to r7rsChar.procIntegerToChar.toObject(),
+            ScmSymbol.get("length", res) to r7rsList.procLength.toObject(),
+            ScmSymbol.get("list", res) to r7rsList.procList.toObject(),
+            ScmSymbol.get("list-copy", res) to r7rsList.procListCopy.toObject(),
+            ScmSymbol.get("list-ref", res) to r7rsList.procListRef.toObject(),
+            ScmSymbol.get("list-set!", res) to r7rsList.procListSetE.toObject(),
+            ScmSymbol.get("list-tail", res) to r7rsList.procListTail.toObject(),
+            ScmSymbol.get("list?", res) to r7rsList.procListQ.toObject(),
+            ScmSymbol.get("make-list", res) to r7rsList.procMakeList.toObject(),
+            ScmSymbol.get("make-vector", res) to procMakeVector.toObject(),
+            ScmSymbol.get("member", res) to r7rsList.procMember.toObject(),
+            ScmSymbol.get("memq", res) to r7rsList.procMemq.toObject(),
+            ScmSymbol.get("memv", res) to r7rsList.procMemv.toObject(),
+            ScmSymbol.get("null?", res) to r7rsList.procNullQ.toObject(),
+            ScmSymbol.get("pair?", res) to r7rsList.procPairQ.toObject(),
+            ScmSymbol.get("reverse", res) to r7rsList.procReverse.toObject(),
+            ScmSymbol.get("set-car!", res) to r7rsList.procSetCarE.toObject(),
+            ScmSymbol.get("set-cdr!", res) to r7rsList.procSetCdrE.toObject(),
+            ScmSymbol.get("string->symbol", res) to r7rsSymbol.procStringToSymbol.toObject(),
+            ScmSymbol.get("string=?", res) to r7rsString.procStringEqualQ.toObject(),
+            ScmSymbol.get("string?", res) to r7rsString.procStringQ.toObject(),
+            ScmSymbol.get("symbol->string", res) to r7rsSymbol.procSymbolToString.toObject(),
+            ScmSymbol.get("symbol=?", res) to r7rsSymbol.procSymbolEqualQ.toObject(),
+            ScmSymbol.get("symbol?", res) to r7rsSymbol.procSymbolQ.toObject(),
+            ScmSymbol.get("zero?", res) to r7rsNumber.procZeroQ.toObject(),
         )
     }
 
@@ -170,7 +170,6 @@ class R7rs(private val res: KevesResources) {
                 if (expressions.isNull()) ScmInstruction.Constant.make(res.constUndef, next, res)
                 else loop(ScmMutablePair.reverse(expressions, res).toPair(), next)
             }
-            // } ?: res.get(ScmInstruction.Constant.make(ScmConstant.UNDEF, next, res)) as ScmInstruction
         }
 
         override fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair {
@@ -199,28 +198,28 @@ class R7rs(private val res: KevesResources) {
             next: PtrInstruction,
             compiler: KevesCompiler
         ): PtrInstruction {
-            val obj = patternMatchQuote(x.toVal(res))
+            val obj = patternMatchQuote(x)
             return ScmInstruction.Constant.make(obj, next, res)
         }
 
         override fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair {
-            patternMatchQuote(x.toVal(res))
+            patternMatchQuote(x)
             return PtrPair(0)
         }
 
         override fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair {
-            patternMatchQuote(x.toVal(res))
+            patternMatchQuote(x)
             return PtrPair(0)
         }
     })
 
-    private fun patternMatchQuote(x: ScmPair): PtrObject =
+    private fun patternMatchQuote(x: PtrPairNonNull): PtrObject =
         try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(KevesExceptions.expected1DatumGot0("quote"))
         }.also {
-            if (ScmPair.cddr(x, res).isNotNull())
+            if (ScmPair.cddr(x.toObject(), res).isNotNull())
                 throw IllegalArgumentException(KevesExceptions.expected1DatumGotMore("quote"))
         }
 
@@ -233,7 +232,7 @@ class R7rs(private val res: KevesResources) {
             next: PtrInstruction,
             compiler: KevesCompiler
         ): PtrInstruction {
-            val (vars, body) = patternMatchLambda(x.toVal(res))
+            val (vars, body) = patternMatchLambda(x)
             val (varsAsProperList, numArg) = ScmPair.toProperList(vars, res)
             val free = compiler.findFree(body.toObject(), varsAsProperList)
             val sets = compiler.findSets(body.toObject(), varsAsProperList)
@@ -263,27 +262,31 @@ class R7rs(private val res: KevesResources) {
         }
 
         override fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (vars, body) = patternMatchLambda(x.toVal(res))
+            val (vars, body) = patternMatchLambda(x)
             return compiler.findSets(body.toObject(), compiler.setMinus(v, ScmPair.toProperList(vars, res).first))
         }
 
         override fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (vars, body) = patternMatchLambda(x.toVal(res))
+            val (vars, body) = patternMatchLambda(x)
             return compiler.findFree(body.toObject(), compiler.setUnion(ScmPair.toProperList(vars, res).first, b))
         }
     })
 
-    private fun patternMatchLambda(x: ScmPair): Pair<PtrObject, PtrPairNonNull> {
+    private fun patternMatchLambda(x: PtrPairNonNull): Pair<PtrObject, PtrPairNonNull> {
         val vars: PtrObject = try {
-            ScmPair.cadr(x, res).also {
-                if (it.isNeitherNullNorPair(res) && it.isNotSymbol(res)) throw KevesExceptions.badSyntax(x.toStringForWrite(res))
+            ScmPair.cadr(x.toObject(), res).also {
+                if (it.isNeitherNullNorPair(res) && it.isNotSymbol(res)) throw KevesExceptions.badSyntax(
+                    x.toVal(res).toStringForWrite(
+                        res
+                    )
+                )
             }
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException(KevesExceptions.expected2OrMoreDatumGotLess("lambda"))
         }
         val body: PtrPairNonNull = try {
-            ScmPair.cddr(x, res).also { // original is caddr instead of cddr
-                if (it.isNotPair(res)) throw KevesExceptions.badSyntax(x.toStringForWrite(res))
+            ScmPair.cddr(x.toObject(), res).also { // original is caddr instead of cddr
+                if (it.isNotPair(res)) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
             }.toPairNonNull()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2OrMoreDatumGotLess("lambda")
@@ -300,7 +303,7 @@ class R7rs(private val res: KevesResources) {
             next: PtrInstruction,
             compiler: KevesCompiler
         ): PtrInstruction {
-            val (test, thn, els) = patternMatchIf(x.toVal(res))
+            val (test, thn, els) = patternMatchIf(x)
             val thenC = compiler.compile(thn, e, s, next)
             val elseC = compiler.compile(els, e, s, next)
             return compiler.compile(
@@ -312,7 +315,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         override fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (test, thn, els) = patternMatchIf(x.toVal(res))
+            val (test, thn, els) = patternMatchIf(x)
             return compiler.setUnion(
                 compiler.findSets(test, v),
                 compiler.setUnion(compiler.findSets(thn, v), compiler.findSets(els, v))
@@ -320,7 +323,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         override fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (test, thn, els) = patternMatchIf(x.toVal(res))
+            val (test, thn, els) = patternMatchIf(x)
             return compiler.setUnion(
                 compiler.findFree(test, b),
                 compiler.setUnion(compiler.findFree(thn, b), compiler.findFree(els, b))
@@ -328,23 +331,23 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchIf(x: ScmPair): Triple<PtrObject, PtrObject, PtrObject> {
+    private fun patternMatchIf(x: PtrPairNonNull): Triple<PtrObject, PtrObject, PtrObject> {
         val test: PtrObject = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected3DatumGotLess("if")
         }
         val thn: PtrObject = try {
-            ScmPair.caddr(x, res)
+            ScmPair.caddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected3DatumGotLess("if")
         }
         val els: PtrObject = try {
-            ScmPair.cadddr(x, res)
+            ScmPair.cadddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected3DatumGotLess("if")
         }
-        if (ScmPair.cddddr(x, res).isNotNull()) throw KevesExceptions.expected3DatumGotMore("if")
+        if (ScmPair.cddddr(x.toObject(), res).isNotNull()) throw KevesExceptions.expected3DatumGotMore("if")
         return Triple(test, thn, els)
     }
 
@@ -357,7 +360,7 @@ class R7rs(private val res: KevesResources) {
             next: PtrInstruction,
             compiler: KevesCompiler
         ): PtrInstruction {
-            val (variable, xx) = patternMatchSetE(x.toVal(res))
+            val (variable, xx) = patternMatchSetE(x)
             return compiler.compileLookup(
                 variable,
                 e,
@@ -381,7 +384,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         override fun findSets(x: PtrPairNonNull, v: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (variable, xx) = patternMatchSetE(x.toVal(res))
+            val (variable, xx) = patternMatchSetE(x)
             return compiler.setUnion(
                 if (compiler.setMemberQ(variable, v)) ScmPair.list(variable.toObject(), res) else PtrPair(0),
                 compiler.findSets(xx, v)
@@ -389,7 +392,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         override fun findFree(x: PtrPairNonNull, b: PtrPair, compiler: KevesCompiler): PtrPair {
-            val (variable, exp) = patternMatchSetE(x.toVal(res))
+            val (variable, exp) = patternMatchSetE(x)
             return compiler.setUnion(
                 if (compiler.setMemberQ(variable, b)) PtrPair(0) else ScmPair.list(variable.toObject(), res),
                 compiler.findFree(exp, b)
@@ -397,27 +400,27 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchSetE(x: ScmPair): Pair<PtrSymbol, PtrObject> {
+    private fun patternMatchSetE(x: PtrPairNonNull): Pair<PtrSymbol, PtrObject> {
         val variable: PtrSymbol = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
                 .also { if (it.isNotSymbol(res)) throw KevesExceptions.expectedSymbol("set!") }
                 .toSymbol()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("set!")
         }
         val exp: PtrObject = try {
-            ScmPair.caddr(x, res)
+            ScmPair.caddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("set!")
         }
-        if (ScmPair.cdddr(x, res).isNotNull()) throw KevesExceptions.expected2DatumGotMore("set!")
+        if (ScmPair.cdddr(x.toObject(), res).isNotNull()) throw KevesExceptions.expected2DatumGotMore("set!")
         return variable to exp
     }
 
     /** macro: let */
     private val macroLet = res.addMacro(object : ScmMacro("let") {
         override fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject {
-            val (bindings, body) = patternMatchLet(x.toVal(res))
+            val (bindings, body) = patternMatchLet(x)
             return compiler.transform(
                 if (bindings.isNull()) {
                     ScmPair.make(ScmSymbol.get("begin", res).toObject(), body.toObject(), res).toObject()
@@ -437,9 +440,9 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchLet(x: ScmPair): Pair<PtrPair, PtrPair> {
+    private fun patternMatchLet(x: PtrPairNonNull): Pair<PtrPair, PtrPair> {
         val bindings: PtrPair = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let")
         }.also {
@@ -447,7 +450,7 @@ class R7rs(private val res: KevesResources) {
         }.toPair()
 
         val body: PtrPair = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let")
         }.also {
@@ -460,7 +463,7 @@ class R7rs(private val res: KevesResources) {
     /** macro: let* */
     private val macroLetStar = res.addMacro(object : ScmMacro("let*") {
         override fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject {
-            val (bindings, body) = patternMatchLetStar(x.toVal(res))
+            val (bindings, body) = patternMatchLetStar(x)
             return compiler.transform(
                 if (bindings.isNull()) {
                     ScmPair.make(ScmSymbol.get("begin", res).toObject(), body.toObject(), res).toObject()
@@ -485,9 +488,9 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchLetStar(x: ScmPair): Pair<PtrPair, PtrPair> {
+    private fun patternMatchLetStar(x: PtrPairNonNull): Pair<PtrPair, PtrPair> {
         val bindings: PtrPair = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let*")
         }.also {
@@ -495,7 +498,7 @@ class R7rs(private val res: KevesResources) {
         }.toPair()
 
         val body: PtrPair = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let*")
         }.also {
@@ -544,7 +547,7 @@ class R7rs(private val res: KevesResources) {
                     )
                 }
 
-            val (bindings, body) = patternMatchLetrec(x.toVal(res))
+            val (bindings, body) = patternMatchLetrec(x)
             return compiler.transform(
                 if (bindings.isNull()) {
                     ScmPair.make(ScmSymbol.get("begin", res).toObject(), body.toObject(), res).toObject()
@@ -570,9 +573,9 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchLetrec(x: ScmPair): Pair<PtrPair, PtrPair> {
+    private fun patternMatchLetrec(x: PtrPairNonNull): Pair<PtrPair, PtrPair> {
         val bindings: PtrPair = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
                 .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec") }
                 .toPair()
         } catch (e: IllegalArgumentException) {
@@ -580,7 +583,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         val body: PtrPair = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
                 .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec") }
                 .toPair()
         } catch (e: IllegalArgumentException) {
@@ -612,7 +615,7 @@ class R7rs(private val res: KevesResources) {
                     initValues = ScmPair.make(res.constUndef, initValues.toObject(), res)
                 )
 
-            val (bindings, body) = patternMatchLetrecStar(x.toVal(res))
+            val (bindings, body) = patternMatchLetrecStar(x)
             return compiler.transform(
                 if (bindings.isNull()) {
                     ScmPair.make(ScmSymbol.get("begin", res).toObject(), body.toObject(), res).toObject()
@@ -633,9 +636,9 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchLetrecStar(x: ScmPair): Pair<PtrPair, PtrPair> {
+    private fun patternMatchLetrecStar(x: PtrPairNonNull): Pair<PtrPair, PtrPair> {
         val bindings: PtrPair = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
                 .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec*") }
                 .toPair()
         } catch (e: IllegalArgumentException) {
@@ -643,7 +646,7 @@ class R7rs(private val res: KevesResources) {
         }
 
         val body: PtrPair = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
                 .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec*") }
                 .toPair()
         } catch (e: IllegalArgumentException) {
@@ -677,10 +680,10 @@ class R7rs(private val res: KevesResources) {
                 if (it.toVal(res) is ScmPair) it.toPair() else throw IllegalArgumentException("'cond' had no clause")
             }
             val converted = addBeginToExpressions(rest = clause, result = PtrPair(0))
-            val first = ScmPair.car(converted.toVal(res))
-            val rest = ScmPair.cdr(converted.toVal(res))
-            val firstTest = ScmPair.car(first.toVal(res))
-            val firstExpression = ScmPair.cdr(first.toVal(res))
+            val first = converted.toVal(res)?.car ?: throw IllegalArgumentException("'cond' was malformed")
+            val rest = converted.toVal(res)?.cdr ?: throw IllegalArgumentException("'cond' was malformed")
+            val firstTest = ScmPair.car(first, res)
+            val firstExpression = ScmPair.cdr(first, res)
             val result =
                 if (firstTest.toSymbol() == ScmSymbol.get("else", res)) firstExpression
                 else ScmPair.list(
@@ -726,7 +729,7 @@ class R7rs(private val res: KevesResources) {
     /** macro: when */
     private val macroWhen = res.addMacro(object : ScmMacro("when") {
         override fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject {
-            val (test, expressions) = patternMatchWhen(x.toVal(res))
+            val (test, expressions) = patternMatchWhen(x)
             val xx =
                 if (ScmPair.length(expressions.toVal(res), res) > 1) {
                     ScmPair.list(
@@ -749,15 +752,15 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchWhen(x: ScmPair): Pair<PtrPairNonNull, PtrPairNonNull> {
+    private fun patternMatchWhen(x: PtrPairNonNull): Pair<PtrPairNonNull, PtrPairNonNull> {
         val test: PtrPairNonNull = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("when")
         }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("when") }.toPairNonNull()
 
         val expressions: PtrPairNonNull = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("when")
         }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("when") }.toPairNonNull()
@@ -768,7 +771,7 @@ class R7rs(private val res: KevesResources) {
     /** macro: until */
     private val macroUntil = res.addMacro(object : ScmMacro("until") {
         override fun transform(x: PtrPairNonNull, compiler: KevesCompiler): PtrObject {
-            val (test, expressions) = patternMatchUntil(x.toVal(res))
+            val (test, expressions) = patternMatchUntil(x)
             val xx =
                 if (ScmPair.length(expressions.toVal(res), res) > 1) {
                     ScmPair.list(
@@ -791,15 +794,15 @@ class R7rs(private val res: KevesResources) {
         }
     })
 
-    private fun patternMatchUntil(x: ScmPair): Pair<PtrPairNonNull, PtrPairNonNull> {
+    private fun patternMatchUntil(x: PtrPairNonNull): Pair<PtrPairNonNull, PtrPairNonNull> {
         val test: PtrPairNonNull = try {
-            ScmPair.cadr(x, res)
+            ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("until")
         }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("until") }.toPairNonNull()
 
         val expressions: PtrPairNonNull = try {
-            ScmPair.cddr(x, res)
+            ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("until")
         }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("until") }.toPairNonNull()
@@ -828,12 +831,11 @@ class R7rs(private val res: KevesResources) {
                             if (compiler.tailQ(next, res))
                                 ScmInstruction.Shift.make(
                                     1,
-                                    (next.toVal(res) as ScmInstruction.Return).n,
-                                    // (ScmPair.car(next, res).toVal(res) as ScmInstruction.Return).n,
-                                    ScmInstruction.Apply.make(1, res),
+                                    next.asInstructionReturn(res).n,
+                                    ScmInstruction.Apply.make(1, res).toInstruction(),
                                     res
                                 )
-                            else ScmInstruction.Apply.make(1, res)
+                            else ScmInstruction.Apply.make(1, res).toInstruction()
                         ),
                         res
                     ),
@@ -852,7 +854,7 @@ class R7rs(private val res: KevesResources) {
                 val exp = patternMatchCallCC(x)
                 return compiler.findFree(exp.toObject(), b)
             }
-        }).toVal(res) as ScmSyntax
+        }).toVal(res)
     ) {
         override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
         override fun normalProc(n: Int, vm: KevesVM) {}
@@ -860,16 +862,16 @@ class R7rs(private val res: KevesResources) {
 
     private fun patternMatchCallCC(x: PtrPairNonNull): PtrPair =
         try {
-            ScmPair.cadr(x.toVal(res), res) // exp
+            ScmPair.cadr(x.toObject(), res) // exp
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected1DatumGot0("call/cc")
         }.also {
             if (it.isNotPair(res)) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
-            if (ScmPair.cddr(x.toVal(res), res).isNotNull()) throw KevesExceptions.expected1DatumGotMore("call/cc")
+            if (ScmPair.cddr(x.toObject(), res).isNotNull()) throw KevesExceptions.expected1DatumGotMore("call/cc")
         }.toPair()
 
     /** procedure: display */
-    private val procDisplay: PtrObject by lazy {
+    private val procDisplay: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure(
             "display",
             res.addSyntax(object : ScmSyntax("display") {
@@ -880,7 +882,7 @@ class R7rs(private val res: KevesResources) {
                     next: PtrInstruction,
                     compiler: KevesCompiler
                 ): PtrInstruction {
-                    val xx = patternMatchDisplay(x.toVal(res))
+                    val xx = patternMatchDisplay(x)
                     val c = compiler.compile(
                         xx,
                         e,
@@ -888,18 +890,14 @@ class R7rs(private val res: KevesResources) {
                         if (compiler.tailQ(next, res))
                             ScmInstruction.Shift.make( // SHIFT,
                                 0, // ScmInt(0),
-                                (next.toVal(res) as ScmInstruction.Return).n,
-                                // (ScmPair.car(next) as ScmInstruction.Return).n,
+                                next.asInstructionReturn(res).n,
                                 ScmInstruction.ApplyDirect.make(
-                                    procDisplay.toVal(res) as ScmProcedure,
+                                    procDisplay,
                                     res
                                 ),
                                 res
                             )
-                        else ScmInstruction.ApplyDirect.make(
-                            procDisplay.toVal(res) as ScmProcedure,
-                            res
-                        )
+                        else ScmInstruction.ApplyDirect.make(procDisplay, res)
                     )
                     return if (compiler.tailQ(next, res)) c
                     else ScmInstruction.Frame.make(next, c, res)
@@ -914,16 +912,18 @@ class R7rs(private val res: KevesResources) {
                     val exp = patternMatchCallCC(x)
                     return compiler.findFree(exp.toObject(), b)
                 }
-            }).toVal(res) as ScmSyntax
+            }).toVal(res)
         ) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {
                 print(getStringForDisplay(acc.toVal(res), res))
-                val ret: ScmInstruction = vm.stack.index(sp, 0).toVal(res) as ScmInstruction
-                val f: Int =
-                    (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
-                        ?: throw IllegalArgumentException("$id did wrong")
+                val ret: ScmInstruction = vm.stack.index(sp, 0).asInstruction(res)
+                val f: Int = try {
+                    vm.stack.index(sp, 1).asInt(res).value
+                } catch (e: TypeCastException) {
+                    throw IllegalArgumentException("$id did wrong")
+                }
                 val c: PtrClosure = vm.stack.index(sp, 2).toClosure()
-                vm.acc = res.constUndef // ScmConstant.UNDEF
+                vm.acc = res.constUndef
                 vm.x = ret
                 vm.fp = f
                 vm.clsr = c
@@ -935,9 +935,9 @@ class R7rs(private val res: KevesResources) {
         })
     }
 
-    private fun patternMatchDisplay(x: ScmPair): PtrObject =
+    private fun patternMatchDisplay(x: PtrPairNonNull): PtrObject =
         try {
-            ScmPair.cadr(x, res) // exp
+            ScmPair.cadr(x.toObject(), res) // exp
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected1DatumGot0("display")
         }
@@ -950,22 +950,28 @@ class R7rs(private val res: KevesResources) {
                 val result = when (n) {
                     0 -> throw IllegalArgumentException("$id expected two or more object, but got nothing")
                     1 -> {
-                        val k = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmInt)?.value
-                            ?: throw IllegalArgumentException("$id expected int but got other")
+                        val k = try {
+                            vm.stack.index(vm.sp, 0).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw IllegalArgumentException("$id expected int but got other")
+                        }
                         if (k < 0) throw IllegalArgumentException("$id doesn't accept negative number")
                         ScmVector.make(k, vm.res)
                     }
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 0).toVal(res) as? ScmInt)?.value
-                            ?: throw IllegalArgumentException("$id expected int but got other")
+                        val k = try {
+                            vm.stack.index(sp, 0).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw IllegalArgumentException("$id expected int but got other")
+                        }
                         if (k < 0) throw IllegalArgumentException("$id doesn't accept negative number")
                         val fill = vm.stack.index(sp, 1)
                         ScmVector.make(k, fill, vm.res)
                     }
                     else -> throw IllegalArgumentException("$id expected two or more object, but got more")
                 }
-                vm.scmProcReturn(result, n)
+                vm.scmProcReturn(result.toObject(), n)
             }
         })
     }

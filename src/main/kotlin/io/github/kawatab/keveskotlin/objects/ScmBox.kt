@@ -25,18 +25,18 @@ import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.PtrObject
 
 // class ScmBox private constructor(var value: ScmObject?) : ScmObject() {
-class ScmBox private constructor(var ptr: PtrObject) : ScmObject() {
-    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(ptr.toVal(res), res)}>"
-    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(ptr.toVal(res), res)}>"
-    override fun toString(): String = "#<box $ptr>"
+class ScmBox private constructor(var obj: PtrObject) : ScmObject() {
+    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(obj.toVal(res), res)}>"
+    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(obj.toVal(res), res)}>"
+    override fun toString(): String = "#<box $obj>"
     override fun equalQ(other: ScmObject?, res: KevesResources): Boolean =
         if (this === other) true else (other is ScmBox && equalQ(other, ArrayDeque(), res))
 
     fun equalQ(other: ScmBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) -> (this == first && other == second) || (this == second && other == first) } >= 0) return true
         duplicated.addLast(this to other)
-        val ptrObj1 = this.ptr
-        val ptrObj2 = other.ptr
+        val ptrObj1 = this.obj
+        val ptrObj2 = other.obj
         if (ptrObj1 == ptrObj2) return true
         if (!res.isScmObject(ptrObj1) || !res.isScmObject(ptrObj2)) return false
         val obj1 = ptrObj1.toVal(res)
@@ -51,19 +51,13 @@ class ScmBox private constructor(var ptr: PtrObject) : ScmObject() {
     }
 
     companion object {
-        // fun make(obj: ScmObject?, res: KevesResources) = ScmBox(obj).let { res.add(it) }
-        fun make(obj: PtrObject, res: KevesResources) = ScmBox(obj).let { res.add(it) }
+        fun make(obj: PtrObject, res: KevesResources) = ScmBox(obj).let { res.addBox(it) }
 
-        /*
-        fun unbox(obj: ScmObject?): ScmObject? =
-            ((obj as? ScmBox) ?: throw RuntimeException("'unbox' got non box object")).value
-         */
-        fun unbox(obj: PtrObject, res: KevesResources): PtrObject {
-            if (res.isScmObject(obj)) {
-                val box = obj.toVal(res) as? ScmBox
-                if (box != null) return box.ptr
+        fun unbox(obj: PtrObject, res: KevesResources): PtrObject =
+            try {
+                obj.asBox(res).obj
+            } catch (e: TypeCastException) {
+                throw RuntimeException("'unbox' got non box object")
             }
-            throw RuntimeException("'unbox' got non box object")
-        }
     }
 }

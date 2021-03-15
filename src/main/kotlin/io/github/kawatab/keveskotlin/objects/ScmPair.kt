@@ -71,8 +71,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 allPair.addLast(rest)
                 val car = rest.car
                 val cdr = rest.cdr
-                searchCirculation(car.toVal(this) as? ScmPair, allPair, duplicatedPair)
-                searchCirculation(cdr.toVal(this) as? ScmPair, allPair, duplicatedPair)
+                searchCirculation(if (car.isPair(this)) car.asPair(this) else null, allPair, duplicatedPair)
+                searchCirculation(if (cdr.isPair(this)) cdr.asPair(this) else null, allPair, duplicatedPair)
             } else if (duplicatedPair.indexOfFirst { (pair, _) -> pair == rest } < 0) {
                 duplicatedPair.addLast(rest to false)
             }
@@ -214,14 +214,6 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 else -> "$carStr . ${cdr.toStringForDisplay(res)}"
             }
         }
-    }
-
-    fun ref2and3(res: KevesResources): Pair<PtrObject, PtrObject> {
-        val cdr = this.cdr.toVal(res) as? ScmPair ?: throw IllegalArgumentException("cdr was not pair")
-        val cddr = cdr.cdr.toVal(res) as? ScmPair ?: throw IllegalArgumentException("cddr was not pair")
-        val obj1 = cdr.car
-        val obj2 = cddr.car
-        return obj1 to obj2
     }
 
     companion object {
@@ -448,233 +440,241 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         }
 
         @Suppress("unused")
-        fun car(pair: ScmObject?): PtrObject =
-            (pair as? ScmPair ?: throw IllegalArgumentException("'car' required pair, but got other")).car
-
-        @Suppress("unused")
-        fun cdr(pair: ScmObject?): PtrObject =
-            (pair as? ScmPair ?: throw IllegalArgumentException("'cdr' required pair, but got other")).cdr
-
-        @Suppress("unused")
-        fun caar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun car(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(car(pair).toVal(res))
+                obj.asPair(res).car
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("'car' required pair, but got other")
+            }
+
+        @Suppress("unused")
+        fun cdr(obj: PtrObject, res: KevesResources): PtrObject =
+            try {
+                obj.asPair(res).cdr
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("'cdr' required pair, but got other")
+            }
+
+        @Suppress("unused")
+        fun caar(obj: PtrObject, res: KevesResources): PtrObject =
+            try {
+                car(car(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cdr(pair).toVal(res))
+                car(cdr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(car(pair).toVal(res))
+                cdr(car(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cdr(pair).toVal(res))
+                cdr(cdr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(caar(pair, res).toVal(res))
+                car(caar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cadr(pair, res).toVal(res))
+                car(cadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cadar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cdar(pair, res).toVal(res))
+                car(cdar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cddr(pair, res).toVal(res))
+                car(cddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(caar(pair, res).toVal(res))
+                cdr(caar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cadr(pair, res).toVal(res))
+                cdr(cadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cddar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cdar(pair, res).toVal(res))
+                cdr(cdar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cddr(pair, res).toVal(res))
+                cdr(cddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caaaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(caaar(pair, res).toVal(res))
+                car(caaar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caaadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(caadr(pair, res).toVal(res))
+                car(caadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caadar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caadar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cadar(pair, res).toVal(res))
+                car(cadar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caaddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caaddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(caddr(pair, res).toVal(res))
+                car(caddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caaddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cadaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cdaar(pair, res).toVal(res))
+                car(cdaar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cadadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cdadr(pair, res).toVal(res))
+                car(cdadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun caddar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun caddar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cddar(pair, res).toVal(res))
+                car(cddar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'caddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cadddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cadddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                car(cdddr(pair, res).toVal(res))
+                car(cdddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cadddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdaaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(caaar(pair, res).toVal(res))
+                cdr(caaar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdaadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(caadr(pair, res).toVal(res))
+                cdr(caadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdadar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdadar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cadar(pair, res).toVal(res))
+                cdr(cadar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdadar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdaddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdaddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(caddr(pair, res).toVal(res))
+                cdr(caddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdaddr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddaar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cddaar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cdaar(pair, res).toVal(res))
+                cdr(cdaar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddaar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddadr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cddadr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cdadr(pair, res).toVal(res))
+                cdr(cdadr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddadr' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cdddar(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cdddar(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cddar(pair, res).toVal(res))
+                cdr(cddar(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cdddar' required pair, but got other")
             }
 
         @Suppress("unused")
-        fun cddddr(pair: ScmObject?, res: KevesResources): PtrObject =
+        fun cddddr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                cdr(cdddr(pair, res).toVal(res))
+                cdr(cdddr(obj, res), res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("'cddddr' required pair, but got other")
             }

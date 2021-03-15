@@ -30,7 +30,7 @@ class ScmString(private val string: String) : ScmObject() {
         this === other || (other is ScmString && this.string == other.string)
 
     companion object {
-        fun make(string: String, res: KevesResources) = ScmString(string).let { res.add(it) }
+        fun make(string: String, res: KevesResources) = ScmString(string).let { res.addString(it) }
         fun append(str1: ScmString, str2: ScmString, res: KevesResources) = make(str1.string + str2.string, res)
     }
 }

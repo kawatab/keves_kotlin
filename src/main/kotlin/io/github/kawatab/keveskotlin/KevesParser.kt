@@ -101,11 +101,11 @@ class KevesParser(private val text: String, private val res: KevesResources) {
             "+inf.0" -> return res.constPositiveInfinity.toNonNull()
             "-inf.0" -> return res.constNegativeInfinity.toNonNull()
         }
-        text.toIntOrNull()?.let { return@parseText ScmInt.make(it, res).toNonNull() }
+        text.toIntOrNull()?.let { return@parseText ScmInt.make(it, res).toObjectNonNull() }
         text.replace('l', 'e', true).toDoubleOrNull()
-            ?.let { return@parseText ScmDouble.make(it, res).toNonNull() }
+            ?.let { return@parseText ScmDouble.make(it, res).toObjectNonNull() }
         text.replace('s', 'e', true).replace('f', 'e', true).toFloatOrNull()
-            ?.let { return@parseText ScmFloat.make(it, res).toNonNull() }
+            ?.let { return@parseText ScmFloat.make(it, res).toObjectNonNull() }
         return ScmSymbol.get(text, res).toObject().let {
             if (it.isNotNull()) it.toNonNull() else throw RuntimeException("parseText got null as symbol")
         }
@@ -355,7 +355,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         }
                     } while (text[i] != '"')
 
-                    val value = ScmString.make(text.substring(previousPosition + 1, i), res)
+                    val value = ScmString.make(text.substring(previousPosition + 1, i), res).toObject()
                     if (startChar.isEmpty()) return value to i + 1
                     stack.addLast(value)
                     i += 1
@@ -450,7 +450,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         )
                     }
                     result.let { (value, index) ->
-                        val datum = (value.toVal(res) as? ScmPair).toVector(res)
+                        val datum = value.asPairOrNull(res).toVector(res).toObject()
                         if (startChar.isEmpty()) return datum to index
                         stack.addLast(datum)
                         i = index
@@ -494,9 +494,9 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                     val char1 = currentText[2]
                     val (result, length) = if (char1.isSurrogate()) {
                         val char2 = currentText[3]
-                        ScmChar.make(char1, char2, res) to 4
+                        ScmChar.make(char1, char2, res).toObject() to 4
                     } else {
-                        ScmChar.make(currentText[2], res) to 3
+                        ScmChar.make(currentText[2], res).toObject() to 3
                     }
                     if (startChar.isEmpty()) return result to i + length
                     stack.addLast(result)
@@ -504,63 +504,63 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                     previousPosition = i
                 }
                 regexAlarm matches currentText -> { // #\alarm
-                    val result = ScmChar.make('\u0007', res)
+                    val result = ScmChar.make('\u0007', res).toObject()
                     if (startChar.isEmpty()) return result to i + 7
                     stack.addLast(result)
                     i += 7
                     previousPosition = i
                 }
                 regexBackspace matches currentText -> { // #\backspace
-                    val result = ScmChar.make('\u0008', res)
+                    val result = ScmChar.make('\u0008', res).toObject()
                     if (startChar.isEmpty()) return result to i + 11
                     stack.addLast(result)
                     i += 11
                     previousPosition = i
                 }
                 regexDelete matches currentText -> { // #\delete
-                    val result = ScmChar.make('\u007F', res)
+                    val result = ScmChar.make('\u007F', res).toObject()
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexEscape matches currentText -> { // #\escape
-                    val result = ScmChar.make('\u001B', res)
+                    val result = ScmChar.make('\u001B', res).toObject()
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexNewline matches currentText -> { // #\newline
-                    val result = ScmChar.make('\u000A', res)
+                    val result = ScmChar.make('\u000A', res).toObject()
                     if (startChar.isEmpty()) return result to i + 9
                     stack.addLast(result)
                     i += 9
                     previousPosition = i
                 }
                 regexNull matches currentText -> { // #\null
-                    val result = ScmChar.make('\u0000', res)
+                    val result = ScmChar.make('\u0000', res).toObject()
                     if (startChar.isEmpty()) return result to i + 6
                     stack.addLast(result)
                     i += 6
                     previousPosition = i
                 }
                 regexReturn matches currentText -> { // #\return
-                    val result = ScmChar.make('\u000D', res)
+                    val result = ScmChar.make('\u000D', res).toObject()
                     if (startChar.isEmpty()) return result to i + 8
                     stack.addLast(result)
                     i += 8
                     previousPosition = i
                 }
                 regexSpace matches currentText -> { // #\space
-                    val result = ScmChar.make(' ', res)
+                    val result = ScmChar.make(' ', res).toObject()
                     if (startChar.isEmpty()) return result to i + 7
                     stack.addLast(result)
                     i += 7
                     previousPosition = i
                 }
                 regexTab matches currentText -> { // #\tab
-                    val result = ScmChar.make('\u0009', res)
+                    val result = ScmChar.make('\u0009', res).toObject()
                     if (startChar.isEmpty()) return result to i + 5
                     stack.addLast(result)
                     i += 5
@@ -582,14 +582,14 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                             }
 
                     val value = hexValue.toInt(16)
-                    val result = ScmChar.make(value, res)
+                    val result = ScmChar.make(value, res).toObject()
                     if (startChar.isEmpty()) return result to i + 3 + hexValue.length
                     stack.addLast(result)
                     i += 3 + hexValue.length
                     previousPosition = i
                 }
                 regexCrossHatch matches currentText -> { // #
-                    val result = ScmChar.make('#', res)
+                    val result = ScmChar.make('#', res).toObject()
                     if (startChar.isEmpty()) return result to i + 1
                     stack.addLast(result)
                     i += 1
@@ -654,7 +654,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         )
                     }
 
-            if ((last.toVal(res) as? ScmPair)?.cdr?.isNotNull() != false) {
+            if (last.isPair(res) && last.asPair(res).cdr.isNotNull()) {
                 errorList.add(
                     ScmError.make(
                         "parser",
@@ -665,7 +665,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                 return null
             }
 
-            var result: PtrObject = (last.toVal(res) as? ScmPair)?.car ?: PtrObject(0)
+            var result: PtrObject = if (last.isPair(res)) last.asPair(res).car else PtrObject(0)
             while (stack.isNotEmpty()) {
                 val value = stack.removeLast()
                 result = ScmPair.make(value, result, res).toObject()

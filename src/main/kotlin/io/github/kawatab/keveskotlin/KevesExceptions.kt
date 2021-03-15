@@ -78,12 +78,12 @@ object KevesExceptions {
 
 
     // Invalid string
-    fun expectedString(who: String) = IllegalArgumentException(
+    fun expectedString(who: String) = RuntimeException(
         "'%s' expected a string, but got other".format(who)
     )
 
     // Invalid symbol
-    fun expectedSymbol(who: String) = IllegalArgumentException(
+    fun expectedSymbol(who: String) = RuntimeException(
         "'%s' expected a symbol, but got other".format(who)
     )
 
@@ -128,4 +128,22 @@ object KevesExceptions {
         "'%s' expected 3 datum, but got more".format(who)
     )
 
+    val typeCastFailedToBox = TypeCastException("Type cast to Box failed")
+    val typeCastFailedToByteVector = TypeCastException("Type cast to ByteVector failed")
+    val typeCastFailedToChar = TypeCastException("Type cast to Char failed")
+    val typeCastFailedToClosure = TypeCastException("Type cast to Closure failed")
+    val typeCastFailedToDouble = TypeCastException("Type cast to Double failed")
+    val typeCastFailedToError = TypeCastException("Type cast to Error failed")
+    val typeCastFailedToFloat = TypeCastException("Type cast to Float failed")
+    val typeCastFailedToInstruction = TypeCastException("Type cast to Instruction failed")
+    val typeCastFailedToInstructionApply = TypeCastException("Type cast to Instruction.Apply failed")
+    val typeCastFailedToInstructionReturn = TypeCastException("Type cast to Instruction.Return failed")
+    val typeCastFailedToInt = TypeCastException("Type cast to Int failed")
+    val typeCastFailedToPair = TypeCastException("Type cast to Pair failed")
+    val typeCastFailedToMutablePairOrNull = TypeCastException("Type cast to MutablePair or null failed")
+    val typeCastFailedToProcedure = TypeCastException("Type cast to Procedure failed")
+    val typeCastFailedToString = TypeCastException("Type cast to String failed")
+    val typeCastFailedToSymbol = TypeCastException("Type cast to Symbol failed")
+    val typeCastFailedToSyntax = TypeCastException("Type cast to Syntax failed")
+    val typeCastFailedToVector = TypeCastException("Type cast to Vector failed")
 }

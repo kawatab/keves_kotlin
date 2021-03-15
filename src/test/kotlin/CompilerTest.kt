@@ -20,6 +20,7 @@
  */
 
 import io.github.kawatab.keveskotlin.KevesResources
+import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.PtrPairNonNull
 import io.github.kawatab.keveskotlin.libraries.R7rs
 import io.github.kawatab.keveskotlin.objects.*
@@ -41,14 +42,14 @@ class CompilerTest {
     @Test
     fun testPatternMatchQuote() {
         val patternMatchQuote =
-            compiler.javaClass.getDeclaredMethod("patternMatchQuote", ScmPair::class.java)
+            compiler.javaClass.getDeclaredMethod("patternMatchQuote", PtrPairNonNull::class.java)
         patternMatchQuote.isAccessible = true
 
-        val int123 = ScmInt.make(123, res)
+        val int123 = ScmInt.make(123, res).toObject()
         // should be failed
         val wrongX = ScmPair.list(res.constTrue, int123, res.constUndef, res)
         assertFailsWith<InvocationTargetException> {
-            patternMatchQuote.invoke(compiler, wrongX.toVal(res))
+            patternMatchQuote.invoke(compiler, wrongX)
         }
         // should be succeed
         val goodX = ScmPair.list(ScmSymbol.get("quote", res).toObject(), int123, res)
@@ -67,7 +68,7 @@ class CompilerTest {
             ScmSymbol.get("ghi", res).toObject(),
             res
         )
-        val body = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res), ScmInt.make(456, res), res)
+        val body = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res).toObject(), ScmInt.make(456, res).toObject(), res)
 
         val wrongX = ScmPair.make(ScmSymbol.get("lambda", res).toObject(), vars.toObject(), res)
         val match1 = patternMatchLambda.invoke(compiler, wrongX.toVal(res)) as? Pair<*, *>
@@ -93,9 +94,9 @@ class CompilerTest {
             ScmSymbol.get("ghi", res).toObject(),
             res
         )
-        val thn = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res), ScmInt.make(456, res), res)
+        val thn = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res).toObject(), ScmInt.make(456, res).toObject(), res)
         val els =
-            ScmPair.list(ScmSymbol.get("mno", res).toObject(), ScmInt.make(789, res), ScmDouble.make(0.12, res), res)
+            ScmPair.list(ScmSymbol.get("mno", res).toObject(), ScmInt.make(789, res).toObject(), ScmDouble.make(0.12, res).toObject(), res)
         // should be failed
         val wrongX = ScmPair.list(
             ScmSymbol.get("if", res).toObject(),
@@ -120,11 +121,11 @@ class CompilerTest {
     @Test
     fun testPatternMatchSetE() {
         val patternMatchSetE =
-            compiler.javaClass.getDeclaredMethod("patternMatchSetE", ScmPair::class.java)
+            compiler.javaClass.getDeclaredMethod("patternMatchSetE", PtrPairNonNull::class.java)
         patternMatchSetE.isAccessible = true
 
         val variable = ScmSymbol.get("abc", res)
-        val x = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res), ScmInt.make(456, res), res)
+        val x = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res).toObject(), ScmInt.make(456, res).toObject(), res)
         // should be failed
         val wrongX =
             ScmPair.list(ScmSymbol.get("set!", res).toObject(), variable.toObject(), x.toObject(), res.constUndef, res)
@@ -144,7 +145,7 @@ class CompilerTest {
             compiler.javaClass.getDeclaredMethod("patternMatchCallCC", PtrPairNonNull::class.java)
         patternMatchCallCC.isAccessible = true
 
-        val x = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res), ScmInt.make(456, res), res)
+        val x = ScmPair.list(ScmSymbol.get("jkl", res).toObject(), ScmInt.make(123, res).toObject(), ScmInt.make(456, res).toObject(), res)
         // should be failed
         val wrongX = ScmPair.list(ScmSymbol.get("call/cc", res).toObject(), x.toObject(), res.constUndef, res)
         assertFailsWith<InvocationTargetException> {

@@ -68,18 +68,7 @@ class KevesStack(private val res: KevesResources) {
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 83
      */
     fun saveStack(s: Int): ScmVector =
-        /*
-        ScmVector.make(s).also { v ->
-            tailrec fun copy(i: Int) {
-                if (i == s) return
-                v.set(i, array[i])
-                return copy(i = i + 1)
-            }
-            copy(0)
-        }
-         */
-        // res.get(ScmVector.make(array.copyOfRange(0, s), res)) as ScmVector
-        (ScmVector.make(s, res).toVal(res) as ScmVector).also { v ->
+        ScmVector.make(s, res).toVal(res).also { v ->
             tailrec fun copy(i: Int) {
                 if (i == s) return
                 v.set(i, PtrObject(array[i]))
@@ -110,7 +99,6 @@ class KevesStack(private val res: KevesResources) {
     /** Shrinks arguments for lambda that accepts variable length of arguments */
     fun shrinkArgs(sp: Int, n: Int, shift: Int) {
         val start = sp - n
-        // tailrec fun loop1(i: Int, result: ScmPair?): ScmPair? =
         tailrec fun loop1(i: Int, result: PtrObject): PtrObject =
             if (i < 0) result
             else loop1(i - 1, ScmPair.make(PtrObject(array[start + shift - i]), result, res).toObject())

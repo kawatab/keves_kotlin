@@ -71,11 +71,13 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val pair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        vm.scmProcReturn(pair.car, n)
-                    }
+                    1 ->
+                        try {
+                            val pair = vm.stack.index(vm.sp, 0).asPair(res)
+                            vm.scmProcReturn(pair.car, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedPair(id)
+                        }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -89,11 +91,13 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val pair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        vm.scmProcReturn(pair.cdr, n)
-                    }
+                    1 ->
+                        try {
+                            val pair = vm.stack.index(vm.sp, 0).asPair(res)
+                            vm.scmProcReturn(pair.cdr, n)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedPair(id)
+                        }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -150,16 +154,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -173,16 +175,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -196,16 +196,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -219,16 +217,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -242,16 +238,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -265,16 +259,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -288,16 +280,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cadar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cadar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -311,16 +301,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -334,16 +322,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -357,16 +343,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -380,16 +364,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cddar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cddar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -403,16 +385,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -426,16 +406,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caaaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caaaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -449,16 +427,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caaadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caaadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -472,16 +448,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caadar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caadar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -495,16 +469,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caaddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caaddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -518,16 +490,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cadaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cadaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -541,16 +511,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cadadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cadadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -564,16 +532,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.caddar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.caddar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -587,16 +553,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cadddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cadddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -610,16 +574,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdaaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdaaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -633,16 +595,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdaadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdaadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -656,16 +616,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdadar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdadar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -679,16 +637,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdaddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdaddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -702,16 +658,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cddaar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cddaar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -725,16 +679,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cddadr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cddadr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -748,16 +700,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cdddar(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cdddar(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw IllegalArgumentException(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -771,16 +721,14 @@ class R7rsList(private val res: KevesResources) {
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
-                    1 -> {
-                        val obj: ScmPair = vm.stack.index(vm.sp, 0).toVal(res) as? ScmPair
-                            ?: throw KevesExceptions.expectedPair(id)
-                        val result = try {
-                            ScmPair.cddddr(obj, res)
+                    1 ->
+                        try {
+                            val obj = vm.stack.index(vm.sp, 0)
+                            val result = ScmPair.cddddr(obj, res)
+                            vm.scmProcReturn(result, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.failed(id)
                         }
-                        vm.scmProcReturn(result, n)
-                    }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
                 }
             }
@@ -836,15 +784,21 @@ class R7rsList(private val res: KevesResources) {
                 val result = when (n) {
                     0 -> throw KevesExceptions.expected1Or2DatumGot0(id)
                     1 -> {
-                        val k = (vm.stack.index(vm.sp, 0).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
+                        val k = try {
+                            vm.stack.index(vm.sp, 0).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         ScmMutablePair.makeList(k, vm.res)
                     }
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 0).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
+                        val k = try {
+                            vm.stack.index(sp, 0).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val fill = vm.stack.index(sp, 1)
                         ScmMutablePair.makeList(k, fill, vm.res)
@@ -886,7 +840,7 @@ class R7rsList(private val res: KevesResources) {
                     1 -> {
                         val list = vm.stack.index(vm.sp, 0)
                         try {
-                            val length = ScmInt.make(ScmPair.length(list.toVal(res), res), vm.res)
+                            val length = ScmInt.make(ScmPair.length(list.toVal(res), res), vm.res).toObject()
                             vm.scmProcReturn(length, n)
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedProperList(id)
@@ -912,7 +866,11 @@ class R7rsList(private val res: KevesResources) {
                                 result
                             } else {
                                 val list = vm.stack.index(sp, index)
-                                    .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedProperList(id) }
+                                    .also {
+                                        if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedProperList(
+                                            id
+                                        )
+                                    }
                                     .toPair()
                                 loop(
                                     index - 1,
@@ -966,8 +924,11 @@ class R7rsList(private val res: KevesResources) {
                     0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
+                        val k = try {
+                            vm.stack.index(sp, 1).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
                             .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
@@ -996,8 +957,11 @@ class R7rsList(private val res: KevesResources) {
                     3 -> {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 2)
-                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
+                        val k = try {
+                            vm.stack.index(sp, 1).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
                             .also { if (it.toVal(res) !is ScmPair) throw KevesExceptions.expectedList(id) }
@@ -1007,8 +971,11 @@ class R7rsList(private val res: KevesResources) {
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.tooShortList(id)
                         }
-                        (listTail.toVal(res) as? ScmMutablePair)?.assignCar(obj)
-                            ?: throw KevesExceptions.expectedMutablePair(id)
+                        try {
+                            listTail.toObject().asMutablePair(res).assignCar(obj)
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedMutablePair(id)
+                        }
                         return vm.scmProcReturn(res.constUndef, n)
                     }
                     else -> throw KevesExceptions.expected3DatumGotMore(id)
@@ -1018,7 +985,7 @@ class R7rsList(private val res: KevesResources) {
     }
 
     /** procedure: list-ref */
-    val procListRef by lazy {
+    val procListRef: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure("list-ref", null) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
@@ -1026,8 +993,11 @@ class R7rsList(private val res: KevesResources) {
                     0, 1 -> throw KevesExceptions.expected2DatumGotLess(id)
                     2 -> {
                         val sp = vm.sp
-                        val k = (vm.stack.index(sp, 1).toVal(res) as? ScmInt)?.value
-                            ?: throw KevesExceptions.expectedInt(id)
+                        val k = try {
+                            vm.stack.index(sp, 1).asInt(res).value
+                        } catch (e: TypeCastException) {
+                            throw KevesExceptions.expectedInt(id)
+                        }
                         if (k < 0) throw KevesExceptions.expectedPositiveNumberGotNegative(id)
                         val list = vm.stack.index(sp, 0)
                             .also {

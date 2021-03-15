@@ -28,6 +28,6 @@ class ScmError private constructor(private val who: String, private val message:
     override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
 
     companion object {
-        fun make(who: String, message: String, res: KevesResources) = ScmError(who, message).let { res.add(it) }.toError()
+        fun make(who: String, message: String, res: KevesResources) = ScmError(who, message).let { res.addError(it) }
     }
 }

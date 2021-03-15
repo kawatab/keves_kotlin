@@ -21,10 +21,7 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.KevesVM
-import io.github.kawatab.keveskotlin.PtrInstruction
-import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.*
 
 abstract class ScmInstruction private constructor() : ScmObject() {
     override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
@@ -39,7 +36,9 @@ abstract class ScmInstruction private constructor() : ScmObject() {
     }
 
     class ReferLocal private constructor(private val n: Int, private val next: PtrInstruction) : ScmInstruction() {
-        override fun toStringForWrite(res: KevesResources): String = "<REFER_LOCAL $n ${next.toVal(res).toStringForWrite(res)}>"
+        override fun toStringForWrite(res: KevesResources): String =
+            "<REFER_LOCAL $n ${next.toVal(res).toStringForWrite(res)}>"
+
         override fun exec(vm: KevesVM) {
             vm.acc = vm.stack.index(vm.fp, n)
             vm.x = next.toVal(vm.res)
@@ -129,7 +128,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
     class Box private constructor(private val n: Int, private val next: PtrInstruction) : ScmInstruction() {
         override fun toStringForWrite(res: KevesResources): String = "<BOX $n ${next.toVal(res).toStringForWrite(res)}>"
         override fun exec(vm: KevesVM) {
-            vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res))
+            vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res).toObject())
             vm.x = next.toVal(vm.res)
         }
 
@@ -143,7 +142,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<BOX_REST $n ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res))
+            vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res).toObject())
             vm.x = next.toVal(vm.res)
         }
 
@@ -170,15 +169,22 @@ abstract class ScmInstruction private constructor() : ScmObject() {
     }
 
     class AssignLocal private constructor(private val n: Int, private val next: PtrInstruction) : ScmInstruction() {
-        override fun toStringForWrite(res: KevesResources): String = "<ASSIGN_LOCAL $n ${next.toVal(res).toStringForWrite(res)}>"
+        override fun toStringForWrite(res: KevesResources): String =
+            "<ASSIGN_LOCAL $n ${next.toVal(res).toStringForWrite(res)}>"
+
         override fun exec(vm: KevesVM) {
             val box: ScmBox = try {
-                vm.stack.index(vm.fp, n).toVal(vm.res) as? ScmBox
+                vm.stack.index(vm.fp, n).asBox(vm.res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("<ASSIGN_LOCAL> expected box but got other")
-            } ?: throw IllegalArgumentException("<ASSIGN_LOCAL> expected box but got other ${vm.stack.index(vm.fp, n).toVal(vm.res)?.toStringForWrite(vm.res)}, ${vm.acc.toVal(vm.res)?.toStringForWrite(vm.res)}")
-            // box.value = vm.acc
-            box.ptr = vm.acc
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException(
+                    "<ASSIGN_LOCAL> expected box but got other ${
+                        vm.stack.index(vm.fp, n).toVal(vm.res)?.toStringForWrite(vm.res)
+                    }, ${vm.acc.toVal(vm.res)?.toStringForWrite(vm.res)}"
+                )
+            }
+            box.obj = vm.acc
             vm.x = next.toVal(vm.res)
         }
 
@@ -194,12 +200,13 @@ abstract class ScmInstruction private constructor() : ScmObject() {
 
         override fun exec(vm: KevesVM) {
             val box: ScmBox = try {
-                vm.clsr.toVal(vm.res).indexClosure(n).toVal(vm.res) as? ScmBox
+                vm.clsr.toVal(vm.res).indexClosure(n).asBox(vm.res)
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
-            } ?: throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
-            // box.value = vm.acc
-            box.ptr = vm.acc
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
+            }
+            box.obj = vm.acc
             vm.x = next.toVal(vm.res)
         }
 
@@ -243,7 +250,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             vm.x = next.toVal(vm.res)
             vm.sp = vm.stack.push(
                 ret.toObject(),
-                vm.stack.push(ScmInt.make(vm.fp, vm.res), vm.stack.push(vm.clsr.toObject(), vm.sp))
+                vm.stack.push(ScmInt.make(vm.fp, vm.res).toObject(), vm.stack.push(vm.clsr.toObject(), vm.sp))
             )
         }
 
@@ -286,26 +293,28 @@ abstract class ScmInstruction private constructor() : ScmObject() {
     class Apply private constructor(var n: Int) : ScmInstruction() {
         override fun toStringForWrite(res: KevesResources): String = "<APPLY $n>"
         override fun exec(vm: KevesVM) {
-            // (vm.acc as? ScmProcedure ?: throw IllegalArgumentException("<APPLY> got non procedure")).normalProc(
-            (vm.accToProcedure() ?: throw IllegalArgumentException("<APPLY> got non procedure")).normalProc(
-                n,
-                vm
-            )
+            try {
+                vm.acc.asProcedure(vm.res).normalProc(n, vm)
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("<APPLY> got non procedure")
+            }
         }
 
         companion object {
-            fun make(n: Int, res: KevesResources) = Apply(n).let { res.addInstruction(it) }
+            fun make(n: Int, res: KevesResources) = Apply(n).let { res.addInstructionApply(it) }
         }
     }
 
-    class ApplyDirect private constructor(private val proc: ScmProcedure) : ScmInstruction() {
-        override fun toStringForWrite(res: KevesResources): String = "<APPLY_DIRECT ${proc.toStringForWrite(res)}>"
+    class ApplyDirect private constructor(private val proc: PtrProcedure) : ScmInstruction() {
+        override fun toStringForWrite(res: KevesResources): String =
+            "<APPLY_DIRECT ${proc.toVal(res).toStringForWrite(res)}>"
+
         override fun exec(vm: KevesVM) {
-            proc.directProc(vm.acc, vm.sp, vm)
+            proc.toVal(vm.res).directProc(vm.acc, vm.sp, vm)
         }
 
         companion object {
-            fun make(proc: ScmProcedure, res: KevesResources) = ApplyDirect(proc).let { res.addInstruction(it) }
+            fun make(proc: PtrProcedure, res: KevesResources) = ApplyDirect(proc).let { res.addInstruction(it) }
         }
     }
 
@@ -313,10 +322,16 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun toStringForWrite(res: KevesResources): String = "<RETURN $n>"
         override fun exec(vm: KevesVM) {
             val sp1 = vm.sp - n
-            val s0: ScmInstruction = vm.stack.index(sp1, 0).toVal(vm.res) as? ScmInstruction
-                ?: throw IllegalArgumentException("SP pointed by <RETURN> did not include pair")
-            val s1: Int = (vm.stack.index(sp1, 1).toVal(vm.res) as? ScmInt)?.value
-                ?: throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
+            val s0: ScmInstruction = try {
+                vm.stack.index(sp1, 0).asInstruction(vm.res)
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("SP pointed by <RETURN> did not include pair")
+            }
+            val s1: Int = try {
+                vm.stack.index(sp1, 1).asInt(vm.res).value
+            } catch (e: TypeCastException) {
+                throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
+            }
             val s2 = vm.stack.index(sp1, 2).also {
                 if (it.toVal(vm.res) !is ScmClosure) throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
             }.toClosure()

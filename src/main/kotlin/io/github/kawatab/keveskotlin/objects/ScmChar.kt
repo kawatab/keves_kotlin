@@ -142,8 +142,8 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
         }
 
     companion object {
-        fun make(value: Char, res: KevesResources) = ScmChar(value).let { res.add(it) }
-        fun make(high: Char, low: Char, res: KevesResources) = ScmChar(high, low).let { res.add(it) }
-        fun make(value: Int, res: KevesResources) = ScmChar(value).let { res.add(it) }
+        fun make(value: Char, res: KevesResources) = ScmChar(value).let { res.addChar(it) }
+        fun make(high: Char, low: Char, res: KevesResources) = ScmChar(high, low).let { res.addChar(it) }
+        fun make(value: Int, res: KevesResources) = ScmChar(value).let { res.addChar(it) }
     }
 }

@@ -33,17 +33,17 @@ class ScmFloat private constructor(val value: Float) : ScmObject() {
 
     override fun add(other: ScmObject, res: KevesResources): PtrObject =
         when (other) {
-            is ScmInt -> make(this.value + other.value, res)
-            is ScmFloat -> make(this.value + other.value, res)
-            is ScmDouble -> ScmDouble.make(this.value + other.value, res)
+            is ScmInt -> make(this.value + other.value, res).toObject()
+            is ScmFloat -> make(this.value + other.value, res).toObject()
+            is ScmDouble -> ScmDouble.make(this.value + other.value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
     override fun subtract(other: ScmObject, res: KevesResources): PtrObject =
         when (other) {
-            is ScmInt -> make(this.value - other.value, res)
-            is ScmFloat -> make(this.value - other.value, res)
-            is ScmDouble -> ScmDouble.make(this.value - other.value, res)
+            is ScmInt -> make(this.value - other.value, res).toObject()
+            is ScmFloat -> make(this.value - other.value, res).toObject()
+            is ScmDouble -> ScmDouble.make(this.value - other.value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
@@ -56,6 +56,6 @@ class ScmFloat private constructor(val value: Float) : ScmObject() {
         }
 
     companion object {
-        fun make(value: Float, res: KevesResources) = ScmFloat(value).let { res.add(it) }
+        fun make(value: Float, res: KevesResources) = ScmFloat(value).let { res.addFloat(it) }
     }
 }

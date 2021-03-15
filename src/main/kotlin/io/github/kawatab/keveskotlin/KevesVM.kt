@@ -42,8 +42,6 @@ class KevesVM(val res: KevesResources) {
         return vm()
     }
 
-    fun accToProcedure(): ScmProcedure? = acc.toVal(res) as? ScmProcedure
-
     /**
      * Virtual machine
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
@@ -61,10 +59,6 @@ class KevesVM(val res: KevesResources) {
      * into the first vector slot and the free values found on the stack into the remaining slots
      * Cf. R. Kent Dybvig, "Three Implementation Models for Scheme", PhD thesis,
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 97
-     */
-    /*
-    fun closure(body: ScmInstruction, m: Int, n: Int, s: Int): ScmClosure =
-        ScmClosure.make("lambda", body, m, stack.makeArray(s, n), res).toVal(res) as ScmClosure
      */
     fun closure(body: PtrInstruction, m: Int, n: Int, s: Int): PtrClosure =
         ScmClosure.make("lambda", body, m, stack.makeArray(s, n), res)
@@ -115,7 +109,7 @@ class KevesVM(val res: KevesResources) {
     // fun scmProcReturn(result: ScmObject?, n: Int) {
     fun scmProcReturn(result: PtrObject, n: Int) {
         val ret: ScmInstruction = stack.index(sp, n).toInstruction().toVal(res)
-        val f: Int = (stack.index(sp, n + 1).toVal(res) as ScmInt).value
+        val f: Int = stack.index(sp, n + 1).asInt(res).value
         val c = stack.index(sp, n + 2).toClosure()
         acc = result
         x = ret
@@ -123,234 +117,4 @@ class KevesVM(val res: KevesResources) {
         clsr = c
         sp -= n + 3
     }
-    /*
-    fun scmProcReturn(result: ScmObject?, n: Int, proc: ScmProcedure) {
-        val ret: ScmInstruction = stack.index(sp, n) as ScmInstruction
-        val f: Int = (stack.index(sp, n + 1) as? ScmInt)?.value
-            ?: throw IllegalArgumentException("${proc.id} did wrong")
-        val c: ScmClosure? = stack.index(sp, n + 2) as? ScmClosure
-        acc = result
-        x = ret
-        fp = f
-        clsr = c
-        sp -= n + 3
-    }
-     */
-
-    /*
-    private fun patternMatchReferLocal(x: ScmPair?): Pair<Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<REFER_LOCAL> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<REFER_LOCAL> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<REFER_LOCAL> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
-        // val n: Int = (ScmPair.cadr(x) as ScmInt).value
-        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
-        return n to nx
-    }
-
-    private fun patternMatchReferFree(x: ScmPair?): Pair<Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<REFER_LOCAL> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<REFER_LOCAL> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<REFER_LOCAL> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
-        return n to nx
-        // val n: Int = (ScmPair.cadr(x) as ScmInt).value
-        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
-        // return n to nx
-    }
-
-    private fun patternMatchIndirect(x: ScmPair?): ScmPair? =
-        // ScmPair.cadr(x) as? ScmPair
-        try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<INDIRECT> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<INDIRECT> got improper list") }
-
-    private fun patternMatchConstant(x: ScmPair?): Pair<ScmObject?, ScmPair?> {
-        val obj: ScmObject? = try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CONSTANT> got nothing as obj")
-        }
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CONSTANT> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<REFER_LOCAL> got non pair as x") }
-        // val obj: ScmObject? = ScmPair.cadr(x)
-        // val nx: ScmPair? = ScmPair.caddr(x) as? ScmPair
-        return obj to nx
-    }
-
-    private fun patternMatchClose(x: ScmPair?): Triple<Pair<Int, Int>, ScmPair?, ScmPair?> {
-        val m: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CLOSE> got nothing as m")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<CLOSE> got non number value as index")
-        val n: Int = (try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CLOSE> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<CLOSE> got non number value as index")
-        val body: ScmPair? = try {
-            ScmPair.cadddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CLOSE> got nothing as body")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<CLOSE> got non pair as body") }
-        val nx: ScmPair? = try {
-            ScmPair.car(ScmPair.cddddr(x))
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CLOSE> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<CLOSE> got non pair as x") }
-        return Triple(m to n, body, nx)
-    }
-
-    private fun patternMatchBox(x: ScmPair?): Pair<Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<BOX> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<BOX> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<BOX> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<BOX> got non pair as x") }
-        return n to nx
-    }
-
-    private fun patternMatchTest(x: ScmPair?): Pair<ScmPair?, ScmPair?> {
-        val thn: ScmPair? = try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<TEST> got nothing as then")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<TEST> got non number value as then") }
-        val els: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<TEST> got nothing as else")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<TEST> got non pair as else") }
-        return thn to els
-    }
-
-    private fun patternMatchAssignLocal(x: ScmPair?): Pair<Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<ASSIGN_LOCAL> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<ASSIGN_LOCAL> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<ASSIGN_LOCAL> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<ASSIGN_LOCAL> got non pair as x") }
-        return n to nx
-    }
-
-    private fun patternMatchAssignFree(x: ScmPair?): Pair<Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<ASSIGN_FREE> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<ASSIGN_FREE> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<ASSIGN_FREE> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<ASSIGN_FREE> got non pair as x") }
-        return n to nx
-    }
-
-    @Suppress("SpellCheckingInspection")
-    private fun patternMatchConti(x: ScmPair?): ScmPair? =
-        try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<CONTI> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<CONTI> got improper list") }
-
-    @Suppress("SpellCheckingInspection")
-    private fun patternMatchNuate(x: ScmPair?): Pair<ScmVector, ScmPair?> {
-        val stack: ScmVector = try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<NUATE> got nothing as stack")
-        } as? ScmVector ?: throw IllegalArgumentException("<NUATE> did not got stack")
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<NUATE> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<NUATE> got non pair as x") }
-        return stack to nx
-    }
-
-    private fun patternMatchFrame(x: ScmPair?): Pair<ScmPair?, ScmPair?> {
-        val ret: ScmPair? = try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<FRAME> got nothing as ret")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<FRAME> got non pair as ret") }
-        val nx: ScmPair? = try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<FRAME> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<FRAME> got non pair as x") }
-        return ret to nx
-    }
-
-    private fun patternMatchArgument(x: ScmPair?): ScmPair? =
-        try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<ARGUMENT> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<ARGUMENT> got improper list") }
-
-    private fun patternMatchShift(x: ScmPair?): Triple<Int, Int, ScmPair?> {
-        val n: Int = (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<SHIFT> got nothing as n")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<SHIFT> got non number value as index")
-        val m: Int = (try {
-            ScmPair.caddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<SHIFT> got nothing as m")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<SHIFT> got non number value as index")
-        val nx: ScmPair? = try {
-            ScmPair.cadddr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<SHIFT> got nothing as x")
-        }?.let { it as? ScmPair ?: throw IllegalArgumentException("<SHIFT> got non pair as x") }
-        return Triple(n, m, nx)
-    }
-
-    private fun patternMatchApply(x: ScmPair?): Int =
-        (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<APPLY> got nothing as x")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<APPLY> got improper list")
-
-    private fun patternMatchReturn(x: ScmPair?): Int =
-        (try {
-            ScmPair.cadr(x)
-        } catch (e: IllegalArgumentException) {
-            throw IllegalArgumentException("<RETURN> got nothing as x")
-        } as? ScmInt)?.value ?: throw IllegalArgumentException("<RETURN> got improper list")
-
-     */
 }

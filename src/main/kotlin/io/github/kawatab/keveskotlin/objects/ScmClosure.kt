@@ -45,7 +45,6 @@ class ScmClosure private constructor(
                 val sp = vm.sp
                 vm.x = body.toVal(vm.res)
                 vm.fp = sp
-                // vm.clsr = vm.acc as ScmClosure
                 vm.clsr = vm.acc.toClosure()
             }
             numArg < 0 -> {

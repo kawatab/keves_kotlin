@@ -49,10 +49,10 @@ class VMTest {
         indexSetE.isAccessible = true
          */
 
-        val stringABC = ScmString.make("abc", res).toVal(res) as ScmString
-        val stringDEF = ScmString.make("def", res).toVal(res) as ScmString
-        val int123 = ScmInt.make(123, res).toVal(res) as ScmInt
-        val double4p56 = ScmDouble.make(4.56, res).toVal(res) as ScmDouble
+        val stringABC = ScmString.make("abc", res).toObject()
+        val stringDEF = ScmString.make("def", res).toObject()
+        val int123 = ScmInt.make(123, res).toObject()
+        val double4p56 = ScmDouble.make(4.56, res).toObject()
 
         val tests = listOf(
             listOf(1, 0, stringABC, stringDEF),
@@ -60,19 +60,14 @@ class VMTest {
             listOf(4, 1, int123, double4p56),
             listOf(5, 1, double4p56, int123),
             listOf(8, 2, double4p56, stringABC)
-        ).map { (s, i, v, w) -> Triple(Triple(s as Int, i as Int, v as ScmObject?), Pair(s, i), Pair(v, w)) }
+        ).map { (s, i, v, w) -> Triple(Triple(s as Int, i as Int, v as PtrObject), Pair(s, i), Pair(v, w)) }
 
         tests.forEach { (set, _, _) ->
-            set.let { (s, i, v) ->
-                stack.indexSetE(
-                    s,
-                    i,
-                    v?.let { res.add(it) } ?: PtrObject(0))
-            }
+            set.let { (s, i, v) -> stack.indexSetE( s, i, v) }
         }
 
         tests.forEach { (_, refer, v) ->
-            assertEquals(v.first, stack.index(refer.first, refer.second).toVal(res))
+            assertEquals(v.first, stack.index(refer.first, refer.second))
             assertNotEquals(v.second, stack.index(refer.first, refer.second))
         }
     }

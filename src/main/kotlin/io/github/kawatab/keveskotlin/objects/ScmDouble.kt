@@ -33,17 +33,17 @@ class ScmDouble private constructor(val value: Double) : ScmObject() {
 
     override fun add(other: ScmObject, res: KevesResources): PtrObject =
         when (other) {
-            is ScmInt -> make(this.value + other.value, res)
-            is ScmFloat -> make(this.value + other.value, res)
-            is ScmDouble -> make(this.value + other.value, res)
+            is ScmInt -> make(this.value + other.value, res).toObject()
+            is ScmFloat -> make(this.value + other.value, res).toObject()
+            is ScmDouble -> make(this.value + other.value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
     override fun subtract(other: ScmObject, res: KevesResources): PtrObject =
         when (other) {
-            is ScmInt -> make(this.value - other.value, res)
-            is ScmFloat -> make(this.value - other.value, res)
-            is ScmDouble -> make(this.value - other.value, res)
+            is ScmInt -> make(this.value - other.value, res).toObject()
+            is ScmFloat -> make(this.value - other.value, res).toObject()
+            is ScmDouble -> make(this.value - other.value, res).toObject()
             else -> throw IllegalArgumentException("not number")
         }
 
@@ -56,7 +56,7 @@ class ScmDouble private constructor(val value: Double) : ScmObject() {
         }
 
     companion object {
-        fun make(value: Double, res: KevesResources) = ScmDouble(value).let { res.add(it) }
+        fun make(value: Double, res: KevesResources) = ScmDouble(value).let { res.addDouble(it) }
 
         val NaN = ScmDouble(Double.NaN)
         val POSITIVE_INFINITY = ScmDouble(Double.POSITIVE_INFINITY)
