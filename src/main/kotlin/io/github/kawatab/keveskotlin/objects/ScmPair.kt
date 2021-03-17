@@ -46,14 +46,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val car2 = other.car(res)
         when {
             car1.isNull() -> return false
-            car1.isBox(res) -> if (car2.isNotBox(res) || !car1.asBox(res)
-                    .equalQ(car2.toBox(), duplicated, res)
+            car1.isBox(res) -> if (car2.isNotBox(res) || !car1.toBox().equalQ(car2.toBox(), duplicated, res)
             ) return false
-            car1.isPair(res) -> if (car2.isNotPair(res) || !car1.asPair(res)
-                    .equalQ(car2.toPair(), duplicated, res)
+            car1.isPair(res) -> if (car2.isNotPair(res) || !car1.toPair().equalQ(car2.toPair(), duplicated, res)
             ) return false
-            car1.isVector(res) -> if (car2.isNotVector(res) || !car1.asVector(res)
-                    .equalQ(car2.toVector(), duplicated, res)
+            car1.isVector(res) -> if (car2.isNotVector(res) || !car1.toVector().equalQ(car2.toVector(), duplicated, res)
             ) return false
             else -> if (!car1.toVal(res)!!.equalQ(car2, res)) return false
         }
@@ -62,10 +59,10 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val cdr1 = this.cdr
         val cdr2 = other.cdr(res)
         return when {
-            car1.isNull() -> false
-            car1.isBox(res) -> cdr2.isBox(res) && cdr1.asBox(res).equalQ(cdr2.toBox(), duplicated, res)
-            car1.isPair(res) -> cdr2.isPair(res) && cdr1.asPair(res).equalQ(cdr2.toPair(), duplicated, res)
-            car1.isVector(res) -> cdr2.isVector(res) && cdr1.asVector(res).equalQ(cdr2.toVector(), duplicated, res)
+            cdr1.isNull() -> false
+            cdr1.isBox(res) -> cdr2.isBox(res) && cdr1.toBox().equalQ(cdr2.toBox(), duplicated, res)
+            cdr1.isPair(res) -> cdr2.isPair(res) && cdr1.toPair().equalQ(cdr2.toPair(), duplicated, res)
+            cdr1.isVector(res) -> cdr2.isVector(res) && cdr1.toVector().equalQ(cdr2.toVector(), duplicated, res)
             else -> cdr1.toVal(res)!!.equalQ(cdr2, res)
         }
     }
@@ -81,8 +78,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 allPair.addLast(rest)
                 val car = rest.car
                 val cdr = rest.cdr
-                searchCirculation(if (car.isPair(this)) car.asPair(this) else null, allPair, duplicatedPair)
-                searchCirculation(if (cdr.isPair(this)) cdr.asPair(this) else null, allPair, duplicatedPair)
+                searchCirculation(if (car.isPair(this)) car.toPair().toVal(this) else null, allPair, duplicatedPair)
+                searchCirculation(if (cdr.isPair(this)) cdr.toPair().toVal(this) else null, allPair, duplicatedPair)
             } else if (duplicatedPair.indexOfFirst { (pair, _) -> pair == rest } < 0) {
                 duplicatedPair.addLast(rest to false)
             }
@@ -90,45 +87,45 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
     }
 
     private fun writePair(
-        pair: ScmPair,
+        pair: PtrPair,
         duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>,
         isCar: Boolean,
         res: KevesResources
     ): String =
-        duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair }
+        duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair.toVal(res) }
             .let {
                 when {
                     it < 0 -> if (isCar) "(${
-                        pair.writeInner(
+                        pair.toVal(res).writeInner(
                             duplicatedPair,
                             res
                         )
-                    })" else pair.writeInner(duplicatedPair, res)
+                    })" else pair.toVal(res).writeInner(duplicatedPair, res)
                     duplicatedPair[it].second -> if (isCar) "#$it#" else ". #$it#"
                     else -> {
                         duplicatedPair[it] = duplicatedPair[it].first to true
-                        "${if (isCar) "" else ". "}#$it=(${pair.writeInner(duplicatedPair, res)})"
+                        "${if (isCar) "" else ". "}#$it=(${pair.toVal(res).writeInner(duplicatedPair, res)})"
                     }
                 }
             }
 
     private fun displayPair(
-        pair: ScmPair,
+        pair: PtrPair,
         duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>,
         isCar: Boolean,
         res: KevesResources
     ): String =
-        duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair }
+        duplicatedPair.indexOfFirst { (duplicated, _) -> duplicated == pair.toVal(res) }
             .let {
                 when {
-                    it < 0 -> if (isCar) "(${pair.displayInner(duplicatedPair, res)})" else pair.displayInner(
+                    it < 0 -> if (isCar) "(${pair.toVal(res).displayInner(duplicatedPair, res)})" else pair.toVal(res).displayInner(
                         duplicatedPair,
                         res
                     )
                     duplicatedPair[it].second -> if (isCar) "#$it#" else ". #$it#"
                     else -> {
                         duplicatedPair[it] = duplicatedPair[it].first to true
-                        "${if (isCar) "" else ". "}#$it=(${pair.displayInner(duplicatedPair, res)})"
+                        "${if (isCar) "" else ". "}#$it=(${pair.toVal(res).displayInner(duplicatedPair, res)})"
                     }
                 }
             }
@@ -140,7 +137,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
             let {
-                if (car.isPair(res)) writePair(car.asPair(res), duplicatedPair, true, res)
+                if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
                 else getStringForWrite(car.toVal(res), res)
             }
         return when {
@@ -154,7 +151,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                         "#$it="
                     }
                 }
-                val cdrStr = writePair(cdr.asPair(res), duplicatedPair, false, res)
+                val cdrStr = writePair(cdr.toPair(), duplicatedPair, false, res)
                 "$prefix($carStr $cdrStr)"
             }
             else -> "($carStr . ${cdr.toVal(res)!!.toStringForWrite(res)})"
@@ -163,12 +160,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
 
     private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            if (car.isPair(res)) writePair(car.asPair(res), duplicatedPair, true, res)
+            if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
             else getStringForWrite(car.toVal(res), res)
         return when {
             cdr.isNull() -> carStr
             cdr.isPair(res) -> {
-                val cdrStr = writePair(cdr.asPair(res), duplicatedPair, false, res)
+                val cdrStr = writePair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
             else -> "$carStr . ${cdr.toVal(res)!!.toStringForWrite(res)}"
@@ -180,7 +177,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
-            if (car.isPair(res)) displayPair(car.asPair(res), duplicatedPair, true, res)
+            if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
             else getStringForDisplay(car.toVal(res), res)
         return when {
             cdr.isNull() -> "($carStr)"
@@ -193,7 +190,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                         "#$it="
                     }
                 }
-                val cdrStr = displayPair(cdr.asPair(res), duplicatedPair, false, res)
+                val cdrStr = displayPair(cdr.toPair(), duplicatedPair, false, res)
                 "$prefix($carStr $cdrStr)"
             }
             else -> "($carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)})"
@@ -202,12 +199,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
 
     private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            if (car.isPair(res)) displayPair(car.asPair(res), duplicatedPair, true, res)
+            if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
             else getStringForDisplay(car.toVal(res), res)
         return when {
             cdr.isNull() -> carStr
             cdr.isPair(res) -> {
-                val cdrStr = displayPair(cdr.asPair(res), duplicatedPair, false, res)
+                val cdrStr = displayPair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
             else -> "$carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)}"
@@ -238,7 +235,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 obj.isNull() -> true
                 obj.isPair(res) -> isProperList(
                     obj.toPair(),
-                    ArrayDeque<ScmPair>().apply { addLast(obj.asPair(res)) },
+                    ArrayDeque<ScmPair>().apply { addLast(obj.toPair().toVal(res)) },
                     res
                 )
                 else -> false
@@ -249,10 +246,10 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             return when {
                 cdr.isNull() -> true
                 cdr.isPair(res) -> {
-                    if (tracedPair.indexOf(cdr.asPair(res)) >= 0) {
+                    if (tracedPair.indexOf(cdr.toPair().toVal(res)) >= 0) {
                         false
                     } else {
-                        tracedPair.addLast(cdr.asPair(res))
+                        tracedPair.addLast(cdr.toPair().toVal(res))
                         isProperList(cdr.toPair(), tracedPair, res)
                     }
                 }
@@ -410,7 +407,6 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                     if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                     tracedPair.addLast(list)
                     val car = list.toPair().car(res)
-                    val valCar = car.toVal(res)
                     if (car.isNotPair(res)) throw IllegalArgumentException("not association list")
                     if (eqvQ(car.toPair().car(res), obj, res)) car else assv(
                         obj,
@@ -447,7 +443,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         @Suppress("unused")
         fun car(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                obj.asPair(res).car
+                if (obj.isNotPair(res)) throw IllegalArgumentException("'car' required pair, but got other")
+                obj.toPair().car(res)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("'car' required pair, but got other")
             }
@@ -455,7 +452,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         @Suppress("unused")
         fun cdr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                obj.asPair(res).cdr
+                if (obj.isNotPair(res)) throw IllegalArgumentException("'cdr' required pair, but got other")
+                obj.toPair().cdr(res)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("'cdr' required pair, but got other")
             }

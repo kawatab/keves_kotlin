@@ -27,7 +27,7 @@ import io.github.kawatab.keveskotlin.objects.*
 class R7rsString(private val res: KevesResources) {
     /** procedure: string? */
     val procStringQ: PtrProcedure by lazy {
-        res.addProcedure(object : ScmProcedure("string?", null) {
+        res.addProcedure(object : ScmProcedure("string?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -45,7 +45,7 @@ class R7rsString(private val res: KevesResources) {
 
     /** procedure: string=? */
     val procStringEqualQ by lazy {
-        res.addProcedure(object : ScmProcedure("string=?", null) {
+        res.addProcedure(object : ScmProcedure("string=?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -53,7 +53,7 @@ class R7rsString(private val res: KevesResources) {
                     else -> {
                         try {
                             val sp = vm.sp
-                            val first = vm.stack.index(sp, 0).asString(res)
+                            val first = vm.stack.index(sp, 0).toString2()
                             for (i in 1 until n) {
                                 val obj = vm.stack.index(sp, i)
                                 if (!first.equalQ(obj, res)) return vm.scmProcReturn(res.constFalse, n)

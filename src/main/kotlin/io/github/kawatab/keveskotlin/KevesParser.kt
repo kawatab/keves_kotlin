@@ -654,7 +654,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         )
                     }
 
-            if (last.isPair(res) && last.asPair(res).cdr.isNotNull()) {
+            if (last.isPair(res) && last.toPair().cdr(res).isNotNull()) {
                 errorList.add(
                     ScmError.make(
                         "parser",
@@ -665,7 +665,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                 return null
             }
 
-            var result: PtrObject = if (last.isPair(res)) last.asPair(res).car else PtrObject(0)
+            var result: PtrObject = if (last.isPair(res)) last.toPair().car(res) else PtrObject(0)
             while (stack.isNotEmpty()) {
                 val value = stack.removeLast()
                 result = ScmPair.make(value, result, res).toObject()

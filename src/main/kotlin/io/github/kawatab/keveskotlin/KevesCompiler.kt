@@ -148,7 +148,7 @@ class KevesCompiler(private val res: KevesResources) {
                     car.isPair(res) -> ScmPair.make(transformWithMacro(car), transformWithMacro(x.toPair().cdr(res)), res).toObject()
                     car.isSymbol(res) -> {
                         val obj: PtrObject = findBind(car.toSymbol())?.second ?: PtrObject(0)
-                        if (obj.isMacro(res)) transformWithMacro(x = obj.asMacro(res).transform(x.toPair(), this))
+                        if (obj.isMacro(res)) transformWithMacro(x = obj.toMacro().transform(x.toPair(), this, res))
                         else ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
                     }
                     else -> ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
@@ -191,10 +191,10 @@ class KevesCompiler(private val res: KevesResources) {
                 val obj: PtrObject = bind?.second ?: PtrObject(0)
                 when {
                     obj.isSyntax(res) -> {
-                        obj.asSyntax(res).compile(x.toPair(), e, s, next, this)
+                        obj.toSyntax().compile(x.toPair(), e, s, next, this, res)
                     }
-                    obj.isProcedure(res) && obj.asProcedure(res).syntax != null -> {
-                        obj.asProcedure(res).syntax!!.compile(x.toPair(), e, s, next, this)
+                    obj.isProcedure(res) && obj.toProcedure().hasSyntax(res) -> {
+                        obj.toProcedure().getSyntax(res).toSyntaxNonNull().compile(x.toPair(), e, s, next, this, res)
                     }
                     else -> {
                         val ptrInstApply = ScmInstruction.Apply.make(0, res)
@@ -220,7 +220,7 @@ class KevesCompiler(private val res: KevesResources) {
                         loop(
                             x.toPair().cdr(res).also {
                                 if (it.isNeitherNullNorPair(res))
-                                    throw IllegalArgumentException(KevesExceptions.badSyntax(x.asPair(res).toStringForWrite(res)))
+                                    throw IllegalArgumentException(KevesExceptions.badSyntax(x.toPair().toStringForWrite(res)))
                             }.toPairOrNull(),
                             compile(
                                 x.toPair().car(res),
@@ -262,9 +262,9 @@ class KevesCompiler(private val res: KevesResources) {
                 val second = bind?.second ?: PtrObject(0)
                 when {
                     second.isSyntax(res) ->
-                        second.asSyntax(res).findSets(x.toPair(), v, this)
-                    second.isProcedure(res) && second.asProcedure(res).syntax != null ->
-                        second.asProcedure(res).syntax!!.findSets(x.toPair(), v, this)
+                        second.toSyntax().findSets(x.toPair(), v, this, res)
+                    second.isProcedure(res) && second.toProcedure().hasSyntax(res) ->
+                        second.toProcedure().getSyntax(res).toSyntaxNonNull().findSets(x.toPair(), v, this, res)
                     else -> {
                         fun next(x: PtrPairOrNull): PtrPairOrNull =
                             if (x.isNull()) PtrPairOrNull(0)
@@ -307,9 +307,9 @@ class KevesCompiler(private val res: KevesResources) {
                 val second = bind?.second ?: PtrObject(0)
                 when {
                     second.isSyntax(res) ->
-                        second.asSyntax(res).findFree(x.toPair(), b, this)
-                    second.isProcedure(res) && second.asProcedure(res).syntax != null ->
-                        second.asProcedure(res).syntax!!.findFree(x.toPair(), b, this)
+                        second.toSyntax().findFree(x.toPair(), b, this, res)
+                    second.isProcedure(res) && second.toProcedure().hasSyntax(res) ->
+                        second.toProcedure().getSyntax(res).toSyntaxNonNull().findFree(x.toPair(), b, this, res)
                     else -> {
                         fun next(x: PtrPairOrNull): PtrPairOrNull =
                             if (x.isNull()) PtrPairOrNull(0)

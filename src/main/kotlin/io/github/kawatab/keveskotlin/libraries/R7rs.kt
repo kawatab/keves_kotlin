@@ -145,7 +145,7 @@ class R7rs(private val res: KevesResources) {
     val symbolBegin = ScmSymbol.get("begin", res)
 
     /** syntax: begin */
-    private val syntaxBegin = res.addSyntax(object : ScmSyntax("begin") {
+    private val syntaxBegin: PtrSyntaxOrNull = res.addSyntaxOrNull(object : ScmSyntax("begin") {
         override fun compile(
             x: PtrPair,
             e: PtrPairOrNull,
@@ -190,7 +190,7 @@ class R7rs(private val res: KevesResources) {
         }.toPairOrNull()
 
     /** syntax: quote */
-    private val syntaxQuote = res.addSyntax(object : ScmSyntax("quote") {
+    private val syntaxQuote = res.addSyntaxOrNull(object : ScmSyntax("quote") {
         override fun compile(
             x: PtrPair,
             e: PtrPairOrNull,
@@ -224,7 +224,7 @@ class R7rs(private val res: KevesResources) {
         }
 
     /** syntax: lambda */
-    private val syntaxLambda = res.addSyntax(object : ScmSyntax("lambda") {
+    private val syntaxLambda = res.addSyntaxOrNull(object : ScmSyntax("lambda") {
         override fun compile(
             x: PtrPair,
             e: PtrPairOrNull,
@@ -295,7 +295,7 @@ class R7rs(private val res: KevesResources) {
     }
 
     /** syntax: if */
-    private val syntaxIf = res.addSyntax(object : ScmSyntax("if") {
+    private val syntaxIf = res.addSyntaxOrNull(object : ScmSyntax("if") {
         override fun compile(
             x: PtrPair,
             e: PtrPairOrNull,
@@ -352,7 +352,7 @@ class R7rs(private val res: KevesResources) {
     }
 
     /** syntax: set! */
-    private val syntaxSetE = res.addSyntax(object : ScmSyntax("set!") {
+    private val syntaxSetE = res.addSyntaxOrNull(object : ScmSyntax("set!") {
         override fun compile(
             x: PtrPair,
             e: PtrPairOrNull,
@@ -813,7 +813,7 @@ class R7rs(private val res: KevesResources) {
     /** procedure: call/cc, call-with-current-continuation */
     private val procCallWithCC = res.addProcedure(object : ScmProcedure(
         "call/cc",
-        res.addSyntax(object : ScmSyntax(id = "call/cc") {
+        res.addSyntaxOrNull(object : ScmSyntax(id = "call/cc") {
             override fun compile(
                 x: PtrPair,
                 e: PtrPairOrNull,
@@ -854,7 +854,7 @@ class R7rs(private val res: KevesResources) {
                 val exp = patternMatchCallCC(x)
                 return compiler.findFree(exp.toObject(), b)
             }
-        }).toVal(res)
+        })
     ) {
         override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
         override fun normalProc(n: Int, vm: KevesVM) {}
@@ -874,7 +874,7 @@ class R7rs(private val res: KevesResources) {
     private val procDisplay: PtrProcedure by lazy {
         res.addProcedure(object : ScmProcedure(
             "display",
-            res.addSyntax(object : ScmSyntax("display") {
+            res.addSyntaxOrNull(object : ScmSyntax("display") {
                 override fun compile(
                     x: PtrPair,
                     e: PtrPairOrNull,
@@ -912,13 +912,13 @@ class R7rs(private val res: KevesResources) {
                     val exp = patternMatchCallCC(x)
                     return compiler.findFree(exp.toObject(), b)
                 }
-            }).toVal(res)
+            })
         ) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {
                 print(getStringForDisplay(acc.toVal(res), res))
-                val ret: ScmInstruction = vm.stack.index(sp, 0).asInstruction(res)
+                val ret: PtrInstruction = vm.stack.index(sp, 0).toInstruction()
                 val f: Int = try {
-                    vm.stack.index(sp, 1).asInt(res).value
+                    vm.stack.index(sp, 1).toInt().value(res)
                 } catch (e: TypeCastException) {
                     throw IllegalArgumentException("$id did wrong")
                 }
@@ -944,14 +944,14 @@ class R7rs(private val res: KevesResources) {
 
     /** procedure: make-vector */
     private val procMakeVector by lazy {
-        res.addProcedure(object : ScmProcedure("make-vector", null) {
+        res.addProcedure(object : ScmProcedure("make-vector", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val result = when (n) {
                     0 -> throw IllegalArgumentException("$id expected two or more object, but got nothing")
                     1 -> {
                         val k = try {
-                            vm.stack.index(vm.sp, 0).asInt(res).value
+                            vm.stack.index(vm.sp, 0).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw IllegalArgumentException("$id expected int but got other")
                         }
@@ -961,7 +961,7 @@ class R7rs(private val res: KevesResources) {
                     2 -> {
                         val sp = vm.sp
                         val k = try {
-                            vm.stack.index(sp, 0).asInt(res).value
+                            vm.stack.index(sp, 0).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw IllegalArgumentException("$id expected int but got other")
                         }
@@ -978,7 +978,7 @@ class R7rs(private val res: KevesResources) {
 
     /** procedure: eq? */
     private val procEqQ by lazy {
-        res.addProcedure(object : ScmProcedure("eq?", null) {
+        res.addProcedure(object : ScmProcedure("eq?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1000,7 +1000,7 @@ class R7rs(private val res: KevesResources) {
 
     /** procedure: eqv? */
     private val procEqvQ by lazy {
-        res.addProcedure(object : ScmProcedure("eqv?", null) {
+        res.addProcedure(object : ScmProcedure("eqv?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1021,7 +1021,7 @@ class R7rs(private val res: KevesResources) {
 
     /** procedure: equal? */
     private val procEqualQ by lazy {
-        res.addProcedure(object : ScmProcedure("equal?", null) {
+        res.addProcedure(object : ScmProcedure("equal?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {

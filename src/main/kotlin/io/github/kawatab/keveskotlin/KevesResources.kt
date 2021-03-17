@@ -86,7 +86,7 @@ class KevesResources {
 
     fun addMacro(macro: ScmMacro) = add(macro)
     fun addProcedure(proc: ScmProcedure) = PtrProcedure(add(proc).ptr)
-    fun addSyntax(syntax: ScmSyntax) = PtrSyntax(add(syntax).ptr)
+    fun addSyntaxOrNull(syntax: ScmSyntax) = PtrSyntaxOrNull(add(syntax).ptr)
 
     fun isScmObject(id: PtrObject) = (id.ptr and 3) == 0
     fun isInt(id: PtrObject) = (id.ptr and 3) == 1
@@ -218,6 +218,12 @@ class KevesResources {
         else allObjectList[i] as? ScmSyntax ?: throw KevesExceptions.typeCastFailedToSyntax
     }
 
+    internal fun getSyntaxOrNull(id: PtrSyntaxOrNull): ScmSyntax? {
+        val i = id.ptr shr 2
+        return if (i >= objectCnt) throw RuntimeException("cannot find such object")
+        else allObjectList[i]?.let { it as? ScmSyntax ?: throw KevesExceptions.typeCastFailedToSyntax }
+    }
+
     internal fun getVector(id: PtrVector): ScmVector {
         val i = id.ptr shr 2
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
@@ -232,23 +238,6 @@ class KevesResources {
  * int:  xxxxxxxx xxxxxxxx xxxxxxxx xxxxxx01
  */
 inline class PtrObject(val ptr: Int) {
-    fun asBox(res: KevesResources): ScmBox = res.getBox(this.toBox())
-    fun asByteVector(res: KevesResources): ScmByteVector = res.getByteVector(this.toByteVector())
-    fun asChar(res: KevesResources): ScmChar = res.getChar(this.toChar())
-    fun asDouble(res: KevesResources): ScmDouble = res.getDouble(this.toDouble())
-    fun asFloat(res: KevesResources): ScmFloat = res.getFloat(this.toFloat())
-    fun asInstruction(res: KevesResources): ScmInstruction = res.getInstruction(this.toInstruction())
-    fun asInt(res: KevesResources): ScmInt = res.getInt(this.toInt())
-    fun asMacro(res: KevesResources): ScmMacro = res.getMacro(this.toMacro())
-    fun asMutablePair(res: KevesResources): ScmMutablePair = res.getMutablePair(this.toMutablePair())
-    fun asPair(res: KevesResources): ScmPair = res.getPair(this.toPair())
-    fun asPairOrNull(res: KevesResources): ScmPair? = res.getPairOrNull(this.toPairOrNull())
-    fun asProcedure(res: KevesResources): ScmProcedure = res.getProcedure(this.toProcedure())
-    fun asString(res: KevesResources): ScmString = res.getString(this.toString2())
-    fun asSymbol(res: KevesResources): ScmSymbol = res.getSymbol(this.toSymbol())
-    fun asSyntax(res: KevesResources): ScmSyntax = res.getSyntax(this.toSyntax())
-    fun asVector(res: KevesResources): ScmVector = res.getVector(this.toVector())
-
     fun isNull() = ptr == 0
     fun isNotNull() = ptr != 0
     fun isBox(res: KevesResources) = toVal(res) is ScmBox
@@ -298,10 +287,11 @@ inline class PtrObject(val ptr: Int) {
     fun toPair() = PtrPair(ptr)
     fun toPairOrNull() = PtrPairOrNull(ptr)
     fun toMutablePair() = PtrMutablePair(ptr)
-    private fun toProcedure() = PtrProcedure(ptr)
+    fun toProcedure() = PtrProcedure(ptr)
     fun toString2() = PtrString(ptr)
     fun toSymbol() = PtrSymbol(ptr)
     fun toSyntax() = PtrSyntax(ptr)
+    fun toSyntaxOrNull() = PtrSyntaxOrNull(ptr)
     fun toVector() = PtrVector(ptr)
 }
 
@@ -314,16 +304,34 @@ inline class PtrObjectNonNull(val ptr: Int) {
 inline class PtrBox(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getBox(this)
     fun toObject() = PtrObject(ptr)
+    fun equalQ(other: PtrBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean =
+        res.getBox(this).equalQ(other, duplicated, res)
+
+    fun getValue(res: KevesResources): PtrObject = res.getBox(this).value
+    fun setValue(value: PtrObject, res: KevesResources) {
+        res.getBox(this).value = value
+    }
 }
 
 inline class PtrByteVector(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getByteVector(this)
     fun toObject() = PtrObject(ptr)
+    fun getArray(res: KevesResources) = res.getByteVector(this).array
 }
 
 inline class PtrChar(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getChar(this)
     fun toObject() = PtrObject(ptr)
+    fun digitToInt(res: KevesResources) = res.getChar(this).digitToInt()
+    fun isAlphabetic(res: KevesResources) = res.getChar(this).isAlphabetic()
+    fun isLowerCase(res: KevesResources) = res.getChar(this).isLowerCase()
+    fun isNumeric(res: KevesResources) = res.getChar(this).isNumeric()
+    fun isUpperCase(res: KevesResources) = res.getChar(this).isUpperCase()
+    fun isWhitespace(res: KevesResources) = res.getChar(this).isWhitespace()
+    fun toFoldCase(res: KevesResources) = res.getChar(this).toFoldCase()
+    fun toLowerCase(res: KevesResources) = res.getChar(this).toLowerCase()
+    fun toUpperCase(res: KevesResources) = res.getChar(this).toUpperCase()
+    fun toUtf32(res: KevesResources) = res.getChar(this).toUtf32()
 }
 
 inline class PtrClosure(val ptr: Int) {
@@ -335,6 +343,7 @@ inline class PtrDouble(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getDouble(this)
     fun toObject() = PtrObject(ptr)
     fun toObjectNonNull() = PtrObjectNonNull(ptr)
+    fun value(res: KevesResources): Double = toVal(res).value
 }
 
 inline class PtrError(val ptr: Int) {
@@ -346,6 +355,7 @@ inline class PtrFloat(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getFloat(this)
     fun toObject() = PtrObject(ptr)
     fun toObjectNonNull() = PtrObjectNonNull(ptr)
+    fun value(res: KevesResources): Float = toVal(res).value
 }
 
 inline class PtrInstruction(val ptr: Int) {
@@ -353,6 +363,9 @@ inline class PtrInstruction(val ptr: Int) {
     fun toObject() = PtrObject(ptr)
     fun isInstructionReturn(res: KevesResources) = toVal(res) is ScmInstruction.Return
     fun asInstructionReturn(res: KevesResources) = res.getInstructionReturn(PtrInstructionReturn(ptr))
+    fun exec(vm: KevesVM) {
+        vm.res.getInstruction(this).exec(vm)
+    }
 }
 
 inline class PtrInstructionApply(val ptr: Int) {
@@ -371,29 +384,13 @@ inline class PtrInt(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getInt(this)
     fun toObject() = PtrObject(ptr)
     fun toObjectNonNull() = PtrObjectNonNull(ptr)
-}
-
-inline class PtrPair(val ptr: Int) {
-    fun car(res: KevesResources): PtrObject = toVal(res).car
-    fun cdr(res: KevesResources): PtrObject = toVal(res).cdr
-    fun toVal(res: KevesResources) = res.getPair(this)
-    fun toObject() = PtrObject(ptr)
-}
-
-inline class PtrPairOrNull(val ptr: Int) {
-    fun isNull() = ptr == 0
-    fun isNotNull() = ptr != 0
-    fun car(res: KevesResources): PtrObject = toVal(res)?.car ?: throw KevesExceptions.typeCastFailedToPair
-    fun cdr(res: KevesResources): PtrObject = toVal(res)?.cdr ?: throw KevesExceptions.typeCastFailedToPair
-    fun toVal(res: KevesResources) = res.getPairOrNull(this)
-    fun toObject() = PtrObject(ptr)
-    fun toPairNonNull() = PtrPair(ptr)
+    fun value(res: KevesResources): Int = toVal(res).value
 }
 
 inline class PtrMacro(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getMacro(this)
     fun toObject() = PtrObject(ptr)
-    fun toPair() = PtrPairOrNull(ptr)
+    fun transform(x: PtrPair, compiler: KevesCompiler, res: KevesResources) = res.getMacro(this).transform(x, compiler)
 }
 
 inline class PtrMutablePair(val ptr: Int) {
@@ -402,29 +399,92 @@ inline class PtrMutablePair(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getMutablePair(this)
     fun toObject() = PtrObject(ptr)
     fun toPair() = PtrPairOrNull(ptr)
+    fun assignCar(obj: PtrObject, res: KevesResources) {
+        toVal(res).assignCar(obj)
+    }
+
+    fun assignCdr(obj: PtrObject, res: KevesResources) {
+        toVal(res).assignCdr(obj)
+    }
+}
+
+inline class PtrPair(val ptr: Int) {
+    fun car(res: KevesResources): PtrObject = toVal(res).car
+    fun cdr(res: KevesResources): PtrObject = toVal(res).cdr
+    fun toVal(res: KevesResources) = res.getPair(this)
+    fun toObject() = PtrObject(ptr)
+    fun equalQ(other: PtrPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean =
+        res.getPair(this).equalQ(other, duplicated, res)
+    fun toStringForWrite(res: KevesResources) = res.getPair(this).toStringForWrite(res)
+}
+
+inline class PtrPairOrNull(val ptr: Int) {
+    fun isNull() = ptr == 0
+    fun isNotNull() = ptr != 0
+    fun isMutable(res: KevesResources) = toVal(res) is ScmMutablePair
+    fun isNotMutable(res: KevesResources) = toVal(res) !is ScmMutablePair
+    fun car(res: KevesResources): PtrObject = toVal(res)?.car ?: throw KevesExceptions.typeCastFailedToPair
+    fun cdr(res: KevesResources): PtrObject = toVal(res)?.cdr ?: throw KevesExceptions.typeCastFailedToPair
+    fun toVal(res: KevesResources) = res.getPairOrNull(this)
+    fun toObject() = PtrObject(ptr)
+    fun toPairNonNull() = PtrPair(ptr)
+    fun toMutable() = PtrMutablePair(ptr)
 }
 
 inline class PtrProcedure(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getProcedure(this)
     fun toObject() = PtrObject(ptr)
+    fun normalProc(n: Int, vm: KevesVM) {
+        vm.res.getProcedure(this).normalProc(n, vm)
+    }
+
+    fun hasSyntax(res: KevesResources): Boolean = getSyntax(res).isNotNull()
+    fun getSyntax(res: KevesResources) = res.getProcedure(this).syntax
 }
 
 inline class PtrString(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getString(this)
     fun toObject() = PtrObject(ptr)
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean = res.getString(this).equalQ(other, res)
+    fun toStringForDisplay(res: KevesResources) = res.getString(this).toStringForDisplay(res)
 }
 
 inline class PtrSymbol(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getSymbol(this)
     fun toObject() = PtrObject(ptr)
+    fun getRawString(res: KevesResources) = res.getSymbol(this).rawString
 }
 
 inline class PtrSyntax(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getSyntax(this)
     fun toObject() = PtrObject(ptr)
+    fun compile(
+        x: PtrPair,
+        e: PtrPairOrNull,
+        s: PtrPairOrNull,
+        next: PtrInstruction,
+        compiler: KevesCompiler,
+        res: KevesResources
+    ) = res.getSyntax(this).compile(x, e, s, next, compiler)
+
+    fun findSets(x: PtrPair, v: PtrPairOrNull, compiler: KevesCompiler, res: KevesResources) =
+        res.getSyntax(this).findSets(x, v, compiler)
+
+    fun findFree(x: PtrPair, b: PtrPairOrNull, compiler: KevesCompiler, res: KevesResources) =
+        res.getSyntax(this).findFree(x, b, compiler)
+}
+
+inline class PtrSyntaxOrNull(val ptr: Int) {
+    fun isNull() = ptr == 0
+    fun isNotNull() = ptr != 0
+    fun toVal(res: KevesResources) = res.getSyntaxOrNull(this)
+    fun toObject() = PtrObject(ptr)
+    fun toSyntaxNonNull() = PtrSyntax(ptr)
 }
 
 inline class PtrVector(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getVector(this)
     fun toObject() = PtrObject(ptr)
+    fun equalQ(other: PtrVector, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean =
+        res.getVector(this).equalQ(other, duplicated, res)
 }

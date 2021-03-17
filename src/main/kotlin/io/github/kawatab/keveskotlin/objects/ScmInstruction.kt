@@ -41,7 +41,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
 
         override fun exec(vm: KevesVM) {
             vm.acc = vm.stack.index(vm.fp, n)
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -56,7 +56,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
 
         override fun exec(vm: KevesVM) {
             vm.acc = vm.clsr.toVal(vm.res).indexClosure(n)
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -70,13 +70,9 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<INDIRECT ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            val unboxedA = try {
-                ScmBox.unbox(vm.acc, vm.res)
-            } catch (e: IllegalArgumentException) {
-                throw IllegalArgumentException("<INDIRECT> required box, but got other")
-            }
-            vm.acc = unboxedA
-            vm.x = next.toVal(vm.res)
+            if (vm.acc.isNotBox(vm.res)) throw IllegalArgumentException("<INDIRECT> required box, but got other")
+            vm.acc = vm.acc.toBox().getValue(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -93,7 +89,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun exec(vm: KevesVM) {
             // vm.acc = obj
             vm.acc = ptr
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -115,7 +111,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
 
         override fun exec(vm: KevesVM) {
             vm.acc = vm.closure(body, numArg, n, vm.sp).toObject()
-            vm.x = next.toVal(vm.res)
+            vm.x = next
             vm.sp -= n
         }
 
@@ -129,7 +125,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun toStringForWrite(res: KevesResources): String = "<BOX $n ${next.toVal(res).toStringForWrite(res)}>"
         override fun exec(vm: KevesVM) {
             vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res).toObject())
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -143,7 +139,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
 
         override fun exec(vm: KevesVM) {
             vm.stack.indexSetE(vm.sp, n, ScmBox.make(vm.stack.index(vm.sp, n), vm.res).toObject())
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -158,8 +154,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<TEST ${thn.toVal(res).toStringForWrite(res)} ${els.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            // vm.x = if (vm.acc != ScmConstant.FALSE) thn else els
-            vm.x = (if (vm.acc != vm.res.constFalse) thn else els).toVal(vm.res)
+            vm.x = if (vm.acc != vm.res.constFalse) thn else els
         }
 
         companion object {
@@ -173,19 +168,21 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<ASSIGN_LOCAL $n ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            val box: ScmBox = try {
-                vm.stack.index(vm.fp, n).asBox(vm.res)
+            try {
+                val box: PtrBox =
+                    vm.stack.index(vm.fp, n)
+                        .also {
+                            if (it.isNotBox(vm.res)) throw IllegalArgumentException(
+                                "<ASSIGN_LOCAL> expected box but got other ${
+                                    vm.stack.index(vm.fp, n).toVal(vm.res)?.toStringForWrite(vm.res)
+                                }, ${vm.acc.toVal(vm.res)?.toStringForWrite(vm.res)}"
+                            )
+                        }.toBox()
+                box.setValue(vm.acc, vm.res)
+                vm.x = next
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("<ASSIGN_LOCAL> expected box but got other")
-            } catch (e: TypeCastException) {
-                throw IllegalArgumentException(
-                    "<ASSIGN_LOCAL> expected box but got other ${
-                        vm.stack.index(vm.fp, n).toVal(vm.res)?.toStringForWrite(vm.res)
-                    }, ${vm.acc.toVal(vm.res)?.toStringForWrite(vm.res)}"
-                )
             }
-            box.obj = vm.acc
-            vm.x = next.toVal(vm.res)
         }
 
         companion object {
@@ -199,15 +196,17 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<ASSIGN_FREE $n ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            val box: ScmBox = try {
-                vm.clsr.toVal(vm.res).indexClosure(n).asBox(vm.res)
+            try {
+                val box: PtrBox =
+                    vm.clsr.toVal(vm.res).indexClosure(n)
+                        .also {
+                            if (it.isNotBox(vm.res)) throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
+                        }.toBox()
+                box.setValue(vm.acc, vm.res)
+                vm.x = next
             } catch (e: IllegalArgumentException) {
                 throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
-            } catch (e: TypeCastException) {
-                throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
             }
-            box.obj = vm.acc
-            vm.x = next.toVal(vm.res)
         }
 
         companion object {
@@ -219,7 +218,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun toStringForWrite(res: KevesResources): String = "<CONTI ${next.toVal(res).toStringForWrite(res)}>"
         override fun exec(vm: KevesVM) {
             vm.acc = vm.continuation(vm.sp).toObject()
-            vm.x = next.toVal(vm.res)
+            vm.x = next
         }
 
         companion object {
@@ -232,7 +231,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<NUATE ${s.toStringForWrite(res)} ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            vm.x = next.toVal(vm.res)
+            vm.x = next
             vm.sp = vm.stack.restoreStack(s)
         }
 
@@ -247,7 +246,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<FRAME ${ret.toVal(res).toStringForWrite(res)} ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            vm.x = next.toVal(vm.res)
+            vm.x = next
             vm.sp = vm.stack.push(
                 ret.toObject(),
                 vm.stack.push(ScmInt.make(vm.fp, vm.res).toObject(), vm.stack.push(vm.clsr.toObject(), vm.sp))
@@ -265,7 +264,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<ARGUMENT ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            vm.x = next.toVal(vm.res)
+            vm.x = next
             vm.sp = vm.stack.push(vm.acc, vm.sp)
         }
 
@@ -280,7 +279,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<SHIFT $n $m ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            vm.x = next.toVal(vm.res)
+            vm.x = next
             vm.shiftArgs(n, m, vm.sp)
         }
 
@@ -294,7 +293,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun toStringForWrite(res: KevesResources): String = "<APPLY $n>"
         override fun exec(vm: KevesVM) {
             try {
-                vm.acc.asProcedure(vm.res).normalProc(n, vm)
+                vm.acc.toProcedure().normalProc(n, vm)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("<APPLY> got non procedure")
             }
@@ -322,13 +321,13 @@ abstract class ScmInstruction private constructor() : ScmObject() {
         override fun toStringForWrite(res: KevesResources): String = "<RETURN $n>"
         override fun exec(vm: KevesVM) {
             val sp1 = vm.sp - n
-            val s0: ScmInstruction = try {
-                vm.stack.index(sp1, 0).asInstruction(vm.res)
+            val s0: PtrInstruction = try {
+                vm.stack.index(sp1, 0).toInstruction()
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("SP pointed by <RETURN> did not include pair")
             }
             val s1: Int = try {
-                vm.stack.index(sp1, 1).asInt(vm.res).value
+                vm.stack.index(sp1, 1).toInt().value(vm.res)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
             }

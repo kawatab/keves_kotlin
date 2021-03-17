@@ -24,7 +24,8 @@ package io.github.kawatab.keveskotlin.objects
 import io.github.kawatab.keveskotlin.KevesResources
 import io.github.kawatab.keveskotlin.PtrObject
 
-class ScmByteVector private constructor(private var array: ByteArray) : ScmObject() {
+class ScmByteVector private constructor(var array: ByteArray) : ScmObject() {
+    val size get() = array.size
     fun set(i: Int, byte: Byte) {
         array[i] = byte
     }
@@ -36,12 +37,18 @@ class ScmByteVector private constructor(private var array: ByteArray) : ScmObjec
     override fun toString(): String = "#u8(${array.joinToString(" ")})"
 
     override fun equalQ(other: PtrObject, res: KevesResources): Boolean {
-        if (this === other.toVal(res)) return true
-        if (other.isNotByteVector(res) || this.array.size != other.asByteVector(res).array.size) return false
-        for (i in this.array.indices) {
-            if (this.array[i] != other.asByteVector(res).array[i]) return false
+        when {
+            this === other.toVal(res) -> return true
+            other.isNotByteVector(res) -> return false
+            else -> {
+                val otherArray = other.toByteVector().getArray(res)
+                if (this.array.size != otherArray.size) return false
+                for (i in this.array.indices) {
+                    if (this.array[i] != otherArray[i]) return false
+                }
+                return true
+            }
         }
-        return true
     }
 
     companion object {

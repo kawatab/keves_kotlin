@@ -21,10 +21,7 @@
 
 package io.github.kawatab.keveskotlin.objects
 
-import io.github.kawatab.keveskotlin.KevesResources
-import io.github.kawatab.keveskotlin.KevesVM
-import io.github.kawatab.keveskotlin.PtrInstruction
-import io.github.kawatab.keveskotlin.PtrObject
+import io.github.kawatab.keveskotlin.*
 import java.lang.IllegalArgumentException
 
 class ScmClosure private constructor(
@@ -32,7 +29,7 @@ class ScmClosure private constructor(
     private val body: PtrInstruction,
     private val numArg: Int,
     private var closure: IntArray
-) : ScmProcedure(id, null) {
+) : ScmProcedure(id, PtrSyntaxOrNull(0)) {
     override fun toStringForWrite(res: KevesResources): String = "#<procedure $id>"
     override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
     override fun toString(): String = "#<procedure $id>"
@@ -43,7 +40,7 @@ class ScmClosure private constructor(
         when {
             numArg == n -> {
                 val sp = vm.sp
-                vm.x = body.toVal(vm.res)
+                vm.x = body
                 vm.fp = sp
                 vm.clsr = vm.acc.toClosure()
             }
@@ -53,7 +50,7 @@ class ScmClosure private constructor(
                 when {
                     shift >= 0 -> {
                         vm.shrinkArgs(sp, n, shift)
-                        vm.x = body.toVal(vm.res)
+                        vm.x = body
                         vm.fp = sp - shift
                         vm.clsr = vm.acc.toClosure()
                         vm.sp = sp - shift
@@ -61,7 +58,7 @@ class ScmClosure private constructor(
                     shift == -1 -> {
                         vm.addNullAtEndOfArgs(sp, n)
                         // vm.acc = acc
-                        vm.x = body.toVal(vm.res)
+                        vm.x = body
                         vm.fp = sp + 1
                         vm.clsr = vm.acc.toClosure()
                         vm.sp = sp + 1

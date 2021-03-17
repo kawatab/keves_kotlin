@@ -27,7 +27,7 @@ import io.github.kawatab.keveskotlin.objects.*
 class R7rsList(private val res: KevesResources) {
     /** procedure: pair? */
     val procPairQ by lazy {
-        res.addProcedure(object : ScmProcedure("pair?", null) {
+        res.addProcedure(object : ScmProcedure("pair?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -46,7 +46,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cons */
     val procCons by lazy {
-        res.addProcedure(object : ScmProcedure("cons", null) {
+        res.addProcedure(object : ScmProcedure("cons", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -66,15 +66,17 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: car */
     val procCar by lazy {
-        res.addProcedure(object : ScmProcedure("car", null) {
+        res.addProcedure(object : ScmProcedure("car", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 ->
                         try {
-                            val pair = vm.stack.index(vm.sp, 0).asPair(res)
-                            vm.scmProcReturn(pair.car, n)
+                            val pair = vm.stack.index(vm.sp, 0)
+                                .also { if (it.isNotPair(res)) throw KevesExceptions.expectedPair(id) }
+                                .toPair()
+                            vm.scmProcReturn(pair.car(res), n)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedPair(id)
                         }
@@ -86,15 +88,17 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdr */
     val procCdr by lazy {
-        res.addProcedure(object : ScmProcedure("cdr", null) {
+        res.addProcedure(object : ScmProcedure("cdr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 ->
                         try {
-                            val pair = vm.stack.index(vm.sp, 0).asPair(res)
-                            vm.scmProcReturn(pair.cdr, n)
+                            val pair = vm.stack.index(vm.sp, 0)
+                                .also { if (it.isNotPair(res)) throw KevesExceptions.expectedPair(id) }
+                                .toPair()
+                            vm.scmProcReturn(pair.cdr(res), n)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedPair(id)
                         }
@@ -106,7 +110,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: set-car! */
     val procSetCarE by lazy {
-        res.addProcedure(object : ScmProcedure("set-car!", null) {
+        res.addProcedure(object : ScmProcedure("set-car!", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -128,7 +132,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: set-cdr! */
     val procSetCdrE by lazy {
-        res.addProcedure(object : ScmProcedure("set-cdr!", null) {
+        res.addProcedure(object : ScmProcedure("set-cdr!", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -149,7 +153,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caar */
     val procCaar by lazy {
-        res.addProcedure(object : ScmProcedure("caar", null) {
+        res.addProcedure(object : ScmProcedure("caar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -170,7 +174,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cadr */
     val procCadr by lazy {
-        res.addProcedure(object : ScmProcedure("cadr", null) {
+        res.addProcedure(object : ScmProcedure("cadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -191,7 +195,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdar */
     val procCdar by lazy {
-        res.addProcedure(object : ScmProcedure("cdar", null) {
+        res.addProcedure(object : ScmProcedure("cdar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -212,7 +216,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cddr */
     val procCddr by lazy {
-        res.addProcedure(object : ScmProcedure("cddr", null) {
+        res.addProcedure(object : ScmProcedure("cddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -233,7 +237,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caaar */
     val procCaaar by lazy {
-        res.addProcedure(object : ScmProcedure("caaar", null) {
+        res.addProcedure(object : ScmProcedure("caaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -254,7 +258,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caadr */
     val procCaadr by lazy {
-        res.addProcedure(object : ScmProcedure("caadr", null) {
+        res.addProcedure(object : ScmProcedure("caadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -275,7 +279,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cadar */
     val procCadar by lazy {
-        res.addProcedure(object : ScmProcedure("cadar", null) {
+        res.addProcedure(object : ScmProcedure("cadar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -296,7 +300,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caddr */
     val procCaddr by lazy {
-        res.addProcedure(object : ScmProcedure("caddr", null) {
+        res.addProcedure(object : ScmProcedure("caddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -317,7 +321,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdaar */
     val procCdaar by lazy {
-        res.addProcedure(object : ScmProcedure("cdaar", null) {
+        res.addProcedure(object : ScmProcedure("cdaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -338,7 +342,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdadr */
     val procCdadr by lazy {
-        res.addProcedure(object : ScmProcedure("cdadr", null) {
+        res.addProcedure(object : ScmProcedure("cdadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -359,7 +363,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cddar */
     val procCddar by lazy {
-        res.addProcedure(object : ScmProcedure("cddar", null) {
+        res.addProcedure(object : ScmProcedure("cddar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -380,7 +384,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdddr */
     val procCdddr by lazy {
-        res.addProcedure(object : ScmProcedure("cdddr", null) {
+        res.addProcedure(object : ScmProcedure("cdddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -401,7 +405,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caaaar */
     val procCaaaar by lazy {
-        res.addProcedure(object : ScmProcedure("caaaar", null) {
+        res.addProcedure(object : ScmProcedure("caaaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -422,7 +426,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caaadr */
     val procCaaadr by lazy {
-        res.addProcedure(object : ScmProcedure("caaadr", null) {
+        res.addProcedure(object : ScmProcedure("caaadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -443,7 +447,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caadar */
     val procCaadar by lazy {
-        res.addProcedure(object : ScmProcedure("caadar", null) {
+        res.addProcedure(object : ScmProcedure("caadar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -464,7 +468,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caaddr */
     val procCaaddr by lazy {
-        res.addProcedure(object : ScmProcedure("caaddr", null) {
+        res.addProcedure(object : ScmProcedure("caaddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -485,7 +489,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cadaar */
     val procCadaar by lazy {
-        res.addProcedure(object : ScmProcedure("cadaar", null) {
+        res.addProcedure(object : ScmProcedure("cadaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -506,7 +510,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cadadr */
     val procCadadr by lazy {
-        res.addProcedure(object : ScmProcedure("cadadr", null) {
+        res.addProcedure(object : ScmProcedure("cadadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -527,7 +531,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: caddar */
     val procCaddar by lazy {
-        res.addProcedure(object : ScmProcedure("caddar", null) {
+        res.addProcedure(object : ScmProcedure("caddar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -548,7 +552,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cadddr */
     val procCadddr by lazy {
-        res.addProcedure(object : ScmProcedure("cadddr", null) {
+        res.addProcedure(object : ScmProcedure("cadddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -569,7 +573,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdaaar */
     val procCdaaar by lazy {
-        res.addProcedure(object : ScmProcedure("cdaaar", null) {
+        res.addProcedure(object : ScmProcedure("cdaaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -590,7 +594,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdaadr */
     val procCdaadr by lazy {
-        res.addProcedure(object : ScmProcedure("cdaadr", null) {
+        res.addProcedure(object : ScmProcedure("cdaadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -611,7 +615,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdadar */
     val procCdadar by lazy {
-        res.addProcedure(object : ScmProcedure("cdadar", null) {
+        res.addProcedure(object : ScmProcedure("cdadar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -632,7 +636,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdaddr */
     val procCdaddr by lazy {
-        res.addProcedure(object : ScmProcedure("cdaddr", null) {
+        res.addProcedure(object : ScmProcedure("cdaddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -653,7 +657,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cddaar */
     val procCddaar by lazy {
-        res.addProcedure(object : ScmProcedure("cddaar", null) {
+        res.addProcedure(object : ScmProcedure("cddaar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -674,7 +678,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cddadr */
     val procCddadr by lazy {
-        res.addProcedure(object : ScmProcedure("cddadr", null) {
+        res.addProcedure(object : ScmProcedure("cddadr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -695,7 +699,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cdddar */
     val procCdddar by lazy {
-        res.addProcedure(object : ScmProcedure("cdddar", null) {
+        res.addProcedure(object : ScmProcedure("cdddar", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -716,7 +720,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: cddddr */
     val procCddddr by lazy {
-        res.addProcedure(object : ScmProcedure("cddddr", null) {
+        res.addProcedure(object : ScmProcedure("cddddr", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -737,7 +741,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: null? */
     val procNullQ by lazy {
-        res.addProcedure(object : ScmProcedure("null?", null) {
+        res.addProcedure(object : ScmProcedure("null?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -756,7 +760,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list? */
     val procListQ by lazy {
-        res.addProcedure(object : ScmProcedure("list?", null) {
+        res.addProcedure(object : ScmProcedure("list?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -778,14 +782,14 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: make-list */
     val procMakeList by lazy {
-        res.addProcedure(object : ScmProcedure("make-list", null) {
+        res.addProcedure(object : ScmProcedure("make-list", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val result = when (n) {
                     0 -> throw KevesExceptions.expected1Or2DatumGot0(id)
                     1 -> {
                         val k = try {
-                            vm.stack.index(vm.sp, 0).asInt(res).value
+                            vm.stack.index(vm.sp, 0).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
                         }
@@ -795,7 +799,7 @@ class R7rsList(private val res: KevesResources) {
                     2 -> {
                         val sp = vm.sp
                         val k = try {
-                            vm.stack.index(sp, 0).asInt(res).value
+                            vm.stack.index(sp, 0).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
                         }
@@ -812,7 +816,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list */
     val procList by lazy {
-        res.addProcedure(object : ScmProcedure("list", null) {
+        res.addProcedure(object : ScmProcedure("list", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 val sp = vm.sp
@@ -832,7 +836,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: length */
     val procLength by lazy {
-        res.addProcedure(object : ScmProcedure("length", null) {
+        res.addProcedure(object : ScmProcedure("length", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -854,7 +858,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: append */
     val procAppend by lazy {
-        res.addProcedure(object : ScmProcedure("append", null) {
+        res.addProcedure(object : ScmProcedure("append", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -890,7 +894,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: reverse */
     val procReverse by lazy {
-        res.addProcedure(object : ScmProcedure("reverse", null) {
+        res.addProcedure(object : ScmProcedure("reverse", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -917,7 +921,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list-tail */
     val procListTail by lazy {
-        res.addProcedure(object : ScmProcedure("list-tail", null) {
+        res.addProcedure(object : ScmProcedure("list-tail", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -925,7 +929,7 @@ class R7rsList(private val res: KevesResources) {
                     2 -> {
                         val sp = vm.sp
                         val k = try {
-                            vm.stack.index(sp, 1).asInt(res).value
+                            vm.stack.index(sp, 1).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
                         }
@@ -949,7 +953,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list-set! */
     val procListSetE by lazy {
-        res.addProcedure(object : ScmProcedure("list-set!", null) {
+        res.addProcedure(object : ScmProcedure("list-set!", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -958,7 +962,7 @@ class R7rsList(private val res: KevesResources) {
                         val sp = vm.sp
                         val obj = vm.stack.index(sp, 2)
                         val k = try {
-                            vm.stack.index(sp, 1).asInt(res).value
+                            vm.stack.index(sp, 1).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
                         }
@@ -972,7 +976,8 @@ class R7rsList(private val res: KevesResources) {
                             throw KevesExceptions.tooShortList(id)
                         }
                         try {
-                            listTail.toObject().asMutablePair(res).assignCar(obj)
+                            if (listTail.isNotMutable(res)) throw KevesExceptions.expectedMutablePair(id)
+                            listTail.toMutable().assignCar(obj, res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedMutablePair(id)
                         }
@@ -986,7 +991,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list-ref */
     val procListRef: PtrProcedure by lazy {
-        res.addProcedure(object : ScmProcedure("list-ref", null) {
+        res.addProcedure(object : ScmProcedure("list-ref", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -994,7 +999,7 @@ class R7rsList(private val res: KevesResources) {
                     2 -> {
                         val sp = vm.sp
                         val k = try {
-                            vm.stack.index(sp, 1).asInt(res).value
+                            vm.stack.index(sp, 1).toInt().value(res)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
                         }
@@ -1018,7 +1023,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: memq */
     val procMemq by lazy {
-        res.addProcedure(object : ScmProcedure("memq", null) {
+        res.addProcedure(object : ScmProcedure("memq", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1045,7 +1050,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: memv */
     val procMemv by lazy {
-        res.addProcedure(object : ScmProcedure("memv", null) {
+        res.addProcedure(object : ScmProcedure("memv", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1072,7 +1077,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: member */
     val procMember by lazy {
-        res.addProcedure(object : ScmProcedure("member", null) {
+        res.addProcedure(object : ScmProcedure("member", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1097,7 +1102,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: assq */
     val procAssq by lazy {
-        res.addProcedure(object : ScmProcedure("assq", null) {
+        res.addProcedure(object : ScmProcedure("assq", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1122,7 +1127,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: assv */
     val procAssv by lazy {
-        res.addProcedure(object : ScmProcedure("assv", null) {
+        res.addProcedure(object : ScmProcedure("assv", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1147,7 +1152,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: assoc */
     val procAssoc by lazy {
-        res.addProcedure(object : ScmProcedure("assoc", null) {
+        res.addProcedure(object : ScmProcedure("assoc", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -1172,7 +1177,7 @@ class R7rsList(private val res: KevesResources) {
 
     /** procedure: list-copy */
     val procListCopy by lazy {
-        res.addProcedure(object : ScmProcedure("list-copy", null) {
+        res.addProcedure(object : ScmProcedure("list-copy", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {

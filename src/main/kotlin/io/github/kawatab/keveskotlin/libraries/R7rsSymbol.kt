@@ -28,7 +28,7 @@ import java.lang.IllegalArgumentException
 class R7rsSymbol(private val res: KevesResources) {
     /** procedure: symbol? */
     val procSymbolQ: PtrProcedure by lazy {
-        res.addProcedure(object : ScmProcedure("symbol?", null) {
+        res.addProcedure(object : ScmProcedure("symbol?", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -46,7 +46,7 @@ class R7rsSymbol(private val res: KevesResources) {
 
     /** procedure: symbol=? */
     val procSymbolEqualQ by lazy {
-        res.addProcedure(object : ScmProcedure("symbol=", null) {
+        res.addProcedure(object : ScmProcedure("symbol=", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
@@ -54,10 +54,12 @@ class R7rsSymbol(private val res: KevesResources) {
                     else -> {
                         try {
                             val sp = vm.sp
-                            val first = vm.stack.index(sp, 0).asSymbol(res)
+                            val first = vm.stack.index(sp, 0)
+                            if (first.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
                             for (i in 1 until n) {
-                                val obj = vm.stack.index(sp, i).asSymbol(res)
-                                if (first !== obj) return vm.scmProcReturn(res.constFalse, n)
+                                val obj = vm.stack.index(sp, i)
+                                if (obj.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
+                                if (first != obj) return vm.scmProcReturn(res.constFalse, n)
                             }
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedSymbol(id)
@@ -71,15 +73,16 @@ class R7rsSymbol(private val res: KevesResources) {
 
     /** procedure: symbol->string */
     val procSymbolToString by lazy {
-        res.addProcedure(object : ScmProcedure("symbol->string", null) {
+        res.addProcedure(object : ScmProcedure("symbol->string", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         try {
-                            val obj = vm.stack.index(vm.sp, 0).asSymbol(res)
-                            val result = ScmString.make(obj.rawString, vm.res).toObject()
+                            val obj = vm.stack.index(vm.sp, 0)
+                            if (obj.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
+                            val result = ScmString.make(obj.toSymbol().getRawString(res), vm.res).toObject()
                             vm.scmProcReturn(result, n)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedSymbol(id)
@@ -93,14 +96,14 @@ class R7rsSymbol(private val res: KevesResources) {
 
     /** procedure: string->symbol */
     val procStringToSymbol by lazy {
-        res.addProcedure(object : ScmProcedure("string->symbol", null) {
+        res.addProcedure(object : ScmProcedure("string->symbol", PtrSyntaxOrNull(0)) {
             override fun directProc(acc: PtrObject, sp: Int, vm: KevesVM) {}
             override fun normalProc(n: Int, vm: KevesVM) {
                 when (n) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         val obj = try {
-                            vm.stack.index(vm.sp, 0).asString(res)
+                            vm.stack.index(vm.sp, 0).toString2()
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedSymbol(id)
                         }

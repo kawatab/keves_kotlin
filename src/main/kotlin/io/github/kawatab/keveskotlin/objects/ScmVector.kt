@@ -59,9 +59,9 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
             if (!res.isScmObject(obj1) || !res.isScmObject(obj2)) return false
             when {
                 obj1.isNull() -> obj2.isNull()
-                obj1.isBox(res) -> if (obj2.isBox(res) || !obj1.asBox(res).equalQ(obj2.toBox(), duplicated, res)) return false
-                obj1.isPair(res) -> if (obj2.isPair(res) || !obj1.asPair(res).equalQ(obj2.toPair(), duplicated, res)) return false
-                obj1.isVector(res) -> if (obj2.isVector(res) || !obj1.asVector(res).equalQ(obj2.toVector(), duplicated, res)) return false
+                obj1.isBox(res) -> if (obj2.isBox(res) || !obj1.toBox().equalQ(obj2.toBox(), duplicated, res)) return false
+                obj1.isPair(res) -> if (obj2.isPair(res) || !obj1.toPair().equalQ(obj2.toPair(), duplicated, res)) return false
+                obj1.isVector(res) -> if (obj2.isVector(res) || !obj1.toVector().equalQ(obj2.toVector(), duplicated, res)) return false
                 else -> if (!obj1.toVal(res)!!.equalQ(obj2, res)) return false
             }
         }
@@ -82,12 +82,12 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
 
         fun PtrPairOrNull.toVector(res: KevesResources) =
             make(ScmPair.length(this.toObject(), res), res).also { vector ->
-                tailrec fun loop(rest: ScmPair?, i: Int) {
-                    if (rest == null) return
-                    vector.toVal(res).set(i, rest.car)
-                    loop(rest.cdr.asPairOrNull(res), i + 1)
+                tailrec fun loop(rest: PtrPairOrNull, i: Int) {
+                    if (rest.isNull()) return
+                    vector.toVal(res).set(i, rest.car(res))
+                    loop(rest.cdr(res).toPairOrNull(), i + 1)
                 }
-                loop(rest = this.toVal(res), i = 0)
+                loop(rest = this, i = 0)
             }
     }
 }

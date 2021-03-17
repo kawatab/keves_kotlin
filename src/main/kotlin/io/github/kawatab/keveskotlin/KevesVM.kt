@@ -28,14 +28,14 @@ class KevesVM(val res: KevesResources) {
 
     // var acc: ScmObject? = null
     var acc = PtrObject(0)
-    var x: ScmInstruction = res.constHalt.toInstruction().toVal(res)
+    var x: PtrInstruction = res.constHalt.toInstruction()
     var fp: Int = 0
     var clsr: PtrClosure = ScmClosure.make("dummy lambda", res.constHalt.toInstruction(), 0, intArrayOf(), res)
     var sp: Int = 0
 
     fun evaluate(code: PtrInstruction): PtrObject {
         acc = PtrObject(0)
-        x = code.toVal(res)
+        x = code
         fp = 0
         clsr = ScmClosure.make("dummy lambda", res.constHalt.toInstruction(), 0, intArrayOf(), res)
         sp = 0
@@ -48,7 +48,7 @@ class KevesVM(val res: KevesResources) {
      * University of North Carolina at Chapel Hill, TR87-011, (1987), pp. 112
      */
     private fun vm(): PtrObject {
-        while (x != res.constHalt.toInstruction().toVal(res)) {
+        while (x != res.constHalt.toInstruction()) {
             x.exec(this)
         }
         return if (acc.isNotNull()) acc else PtrObject(0)
@@ -108,8 +108,8 @@ class KevesVM(val res: KevesResources) {
 
     // fun scmProcReturn(result: ScmObject?, n: Int) {
     fun scmProcReturn(result: PtrObject, n: Int) {
-        val ret: ScmInstruction = stack.index(sp, n).toInstruction().toVal(res)
-        val f: Int = stack.index(sp, n + 1).asInt(res).value
+        val ret: PtrInstruction = stack.index(sp, n).toInstruction()
+        val f: Int = stack.index(sp, n + 1).toInt().value(res)
         val c = stack.index(sp, n + 2).toClosure()
         acc = result
         x = ret
