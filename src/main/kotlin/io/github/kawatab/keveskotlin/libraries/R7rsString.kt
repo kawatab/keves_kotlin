@@ -34,7 +34,7 @@ class R7rsString(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj.isString(res)) res.constTrue else res.constFalse
+                        val result = if (obj.isString()) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)

@@ -35,7 +35,7 @@ class R7rsSymbol(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGot0(id)
                     1 -> {
                         val obj = vm.stack.index(vm.sp, 0)
-                        val result = if (obj.isSymbol(res)) res.constTrue else res.constFalse
+                        val result = if (obj.isSymbol()) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -55,10 +55,10 @@ class R7rsSymbol(private val res: KevesResources) {
                         try {
                             val sp = vm.sp
                             val first = vm.stack.index(sp, 0)
-                            if (first.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
+                            if (first.isNotSymbol()) throw KevesExceptions.expectedSymbol(id)
                             for (i in 1 until n) {
                                 val obj = vm.stack.index(sp, i)
-                                if (obj.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
+                                if (obj.isNotSymbol()) throw KevesExceptions.expectedSymbol(id)
                                 if (first != obj) return vm.scmProcReturn(res.constFalse, n)
                             }
                         } catch (e: TypeCastException) {
@@ -81,7 +81,7 @@ class R7rsSymbol(private val res: KevesResources) {
                     1 -> {
                         try {
                             val obj = vm.stack.index(vm.sp, 0)
-                            if (obj.isNotSymbol(res)) throw KevesExceptions.expectedSymbol(id)
+                            if (obj.isNotSymbol()) throw KevesExceptions.expectedSymbol(id)
                             val result = ScmString.make(obj.toSymbol().getRawString(res), vm.res).toObject()
                             vm.scmProcReturn(result, n)
                         } catch (e: TypeCastException) {

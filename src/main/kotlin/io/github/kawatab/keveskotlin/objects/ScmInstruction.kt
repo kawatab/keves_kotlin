@@ -70,7 +70,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             "<INDIRECT ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
-            if (vm.acc.isNotBox(vm.res)) throw IllegalArgumentException("<INDIRECT> required box, but got other")
+            if (vm.acc.isNotBox()) throw IllegalArgumentException("<INDIRECT> required box, but got other")
             vm.acc = vm.acc.toBox().getValue(vm.res)
             vm.x = next
         }
@@ -172,7 +172,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
                 val box: PtrBox =
                     vm.stack.index(vm.fp, n)
                         .also {
-                            if (it.isNotBox(vm.res)) throw IllegalArgumentException(
+                            if (it.isNotBox()) throw IllegalArgumentException(
                                 "<ASSIGN_LOCAL> expected box but got other ${
                                     getStringForWrite(vm.stack.index(vm.fp, n), vm.res)
                                 }, ${getStringForWrite(vm.acc, vm.res)}"
@@ -200,7 +200,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
                 val box: PtrBox =
                     vm.clsr.toVal(vm.res).indexClosure(n)
                         .also {
-                            if (it.isNotBox(vm.res)) throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
+                            if (it.isNotBox()) throw IllegalArgumentException("<ASSIGN_FREE> expected box but got other")
                         }.toBox()
                 box.setValue(vm.acc, vm.res)
                 vm.x = next
@@ -249,7 +249,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
             vm.x = next
             vm.sp = vm.stack.push(
                 ret.toObject(),
-                vm.stack.push(ScmInt.make(vm.fp, vm.res).toObject(), vm.stack.push(vm.clsr.toObject(), vm.sp))
+                vm.stack.push(KevesResources.makeInt(vm.fp), vm.stack.push(vm.clsr.toObject(), vm.sp))
             )
         }
 
@@ -327,12 +327,12 @@ abstract class ScmInstruction private constructor() : ScmObject() {
                 throw IllegalArgumentException("SP pointed by <RETURN> did not include pair")
             }
             val s1: Int = try {
-                vm.stack.index(sp1, 1).toInt().value(vm.res)
+                vm.stack.index(sp1, 1).toInt().value
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("SP pointed by <RETURN> did not include Int")
             }
             val s2 = vm.stack.index(sp1, 2).also {
-                if (it.isNotClosure(vm.res)) throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
+                if (it.isNotClosure()) throw IllegalArgumentException("SP pointed by <RETURN> did not include vector")
             }.toClosure()
             // acc = acc
             vm.x = s0

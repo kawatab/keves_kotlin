@@ -109,7 +109,7 @@ class KevesVM(val res: KevesResources) {
     // fun scmProcReturn(result: ScmObject?, n: Int) {
     fun scmProcReturn(result: PtrObject, n: Int) {
         val ret: PtrInstruction = stack.index(sp, n).toInstruction()
-        val f: Int = stack.index(sp, n + 1).toInt().value(res)
+        val f: Int = stack.index(sp, n + 1).toInt().value
         val c = stack.index(sp, n + 2).toClosure()
         acc = result
         x = ret

@@ -158,7 +158,7 @@ class R7rs(private val res: KevesResources) {
                     c
                 } else {
                     val expsCdr = exps.cdr(res).also {
-                        if (it.isNotNull() && it.isNotPair(res))
+                        if (it.isNotNull() && it.isNotPair())
                             throw IllegalArgumentException(
                                 KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
                             )
@@ -185,7 +185,7 @@ class R7rs(private val res: KevesResources) {
 
     private fun patternMatchBegin(x: ScmPair): PtrPairOrNull =
         x.cdr.also {
-            if (it.isNeitherNullNorPair(res))
+            if (it.isNeitherNullNorPair())
                 throw IllegalArgumentException(KevesExceptions.badSyntax(x.toStringForWrite(res)))
         }.toPairOrNull()
 
@@ -275,7 +275,7 @@ class R7rs(private val res: KevesResources) {
     private fun patternMatchLambda(x: PtrPair): Pair<PtrObject, PtrPair> {
         val vars: PtrObject = try {
             ScmPair.cadr(x.toObject(), res).also {
-                if (it.isNeitherNullNorPair(res) && it.isNotSymbol(res)) throw KevesExceptions.badSyntax(
+                if (it.isNeitherNullNorPair() && it.isNotSymbol()) throw KevesExceptions.badSyntax(
                     x.toVal(res).toStringForWrite(
                         res
                     )
@@ -286,7 +286,7 @@ class R7rs(private val res: KevesResources) {
         }
         val body: PtrPair = try {
             ScmPair.cddr(x.toObject(), res).also { // original is caddr instead of cddr
-                if (it.isNotPair(res)) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
+                if (it.isNotPair()) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
             }.toPair()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2OrMoreDatumGotLess("lambda")
@@ -403,7 +403,7 @@ class R7rs(private val res: KevesResources) {
     private fun patternMatchSetE(x: PtrPair): Pair<PtrSymbol, PtrObject> {
         val variable: PtrSymbol = try {
             ScmPair.cadr(x.toObject(), res)
-                .also { if (it.isNotSymbol(res)) throw KevesExceptions.expectedSymbol("set!") }
+                .also { if (it.isNotSymbol()) throw KevesExceptions.expectedSymbol("set!") }
                 .toSymbol()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("set!")
@@ -446,7 +446,7 @@ class R7rs(private val res: KevesResources) {
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let")
         }.also {
-            if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("let")
+            if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("let")
         }.toPairOrNull()
 
         val body: PtrPairOrNull = try {
@@ -454,7 +454,7 @@ class R7rs(private val res: KevesResources) {
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let")
         }.also {
-            if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("let")
+            if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("let")
         }.toPairOrNull()
 
         return bindings to body
@@ -494,7 +494,7 @@ class R7rs(private val res: KevesResources) {
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let*")
         }.also {
-            if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("let*")
+            if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("let*")
         }.toPairOrNull()
 
         val body: PtrPairOrNull = try {
@@ -502,7 +502,7 @@ class R7rs(private val res: KevesResources) {
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("let*")
         }.also {
-            if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("let*")
+            if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("let*")
         }.toPairOrNull()
 
         return bindings to body
@@ -576,7 +576,7 @@ class R7rs(private val res: KevesResources) {
     private fun patternMatchLetrec(x: PtrPair): Pair<PtrPairOrNull, PtrPairOrNull> {
         val bindings: PtrPairOrNull = try {
             ScmPair.cadr(x.toObject(), res)
-                .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec") }
+                .also { if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("letrec") }
                 .toPairOrNull()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("letrec")
@@ -584,7 +584,7 @@ class R7rs(private val res: KevesResources) {
 
         val body: PtrPairOrNull = try {
             ScmPair.cddr(x.toObject(), res)
-                .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec") }
+                .also { if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("letrec") }
                 .toPairOrNull()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("letrec")
@@ -639,7 +639,7 @@ class R7rs(private val res: KevesResources) {
     private fun patternMatchLetrecStar(x: PtrPair): Pair<PtrPairOrNull, PtrPairOrNull> {
         val bindings: PtrPairOrNull = try {
             ScmPair.cadr(x.toObject(), res)
-                .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec*") }
+                .also { if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("letrec*") }
                 .toPairOrNull()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("letrec*")
@@ -647,7 +647,7 @@ class R7rs(private val res: KevesResources) {
 
         val body: PtrPairOrNull = try {
             ScmPair.cddr(x.toObject(), res)
-                .also { if (it.isNeitherNullNorPair(res)) throw KevesExceptions.expectedSymbol("letrec*") }
+                .also { if (it.isNeitherNullNorPair()) throw KevesExceptions.expectedSymbol("letrec*") }
                 .toPairOrNull()
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("letrec*")
@@ -677,7 +677,7 @@ class R7rs(private val res: KevesResources) {
                 }
 
             val clause = x.cdr(res).let {
-                if (it.isPair(res)) it.toPairOrNull() else throw IllegalArgumentException("'cond' had no clause")
+                if (it.isPair()) it.toPairOrNull() else throw IllegalArgumentException("'cond' had no clause")
             }
             val converted = addBeginToExpressions(rest = clause, result = PtrPairOrNull(0))
             val first = converted.toVal(res)?.car ?: throw IllegalArgumentException("'cond' was malformed")
@@ -704,11 +704,11 @@ class R7rs(private val res: KevesResources) {
             result
         } else {
             val car = rest.car(res).also {
-                if (it.isNotPair(res)) throw IllegalArgumentException("clause must be list but got other in 'cond'")
+                if (it.isNotPair()) throw IllegalArgumentException("clause must be list but got other in 'cond'")
             }.toPairOrNull()
             val test = car.car(res)
             val expressions = car.cdr(res).also {
-                if (it.isNotPair(res)) throw IllegalArgumentException("expression must be list but got other in 'cond'")
+                if (it.isNotPair()) throw IllegalArgumentException("expression must be list but got other in 'cond'")
             }.toPairOrNull()
             addBeginToExpressions(
                 rest.cdr(res).toPairOrNull(),
@@ -757,13 +757,13 @@ class R7rs(private val res: KevesResources) {
             ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("when")
-        }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("when") }.toPair()
+        }.also { if (it.isNotPair()) throw KevesExceptions.expectedSymbol("when") }.toPair()
 
         val expressions: PtrPair = try {
             ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("when")
-        }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("when") }.toPair()
+        }.also { if (it.isNotPair()) throw KevesExceptions.expectedSymbol("when") }.toPair()
 
         return test to expressions
     }
@@ -799,13 +799,13 @@ class R7rs(private val res: KevesResources) {
             ScmPair.cadr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("until")
-        }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("until") }.toPair()
+        }.also { if (it.isNotPair()) throw KevesExceptions.expectedSymbol("until") }.toPair()
 
         val expressions: PtrPair = try {
             ScmPair.cddr(x.toObject(), res)
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected2DatumGotLess("until")
-        }.also { if (it.isNotPair(res)) throw KevesExceptions.expectedSymbol("until") }.toPair()
+        }.also { if (it.isNotPair()) throw KevesExceptions.expectedSymbol("until") }.toPair()
 
         return test to expressions
     }
@@ -866,7 +866,7 @@ class R7rs(private val res: KevesResources) {
         } catch (e: IllegalArgumentException) {
             throw KevesExceptions.expected1DatumGot0("call/cc")
         }.also {
-            if (it.isNotPair(res)) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
+            if (it.isNotPair()) throw KevesExceptions.badSyntax(x.toVal(res).toStringForWrite(res))
             if (ScmPair.cddr(x.toObject(), res).isNotNull()) throw KevesExceptions.expected1DatumGotMore("call/cc")
         }.toPairOrNull()
 
@@ -918,7 +918,7 @@ class R7rs(private val res: KevesResources) {
                 print(getStringForDisplay(acc, res))
                 val ret: PtrInstruction = vm.stack.index(sp, 0).toInstruction()
                 val f: Int = try {
-                    vm.stack.index(sp, 1).toInt().value(res)
+                    vm.stack.index(sp, 1).toInt().value
                 } catch (e: TypeCastException) {
                     throw IllegalArgumentException("$id did wrong")
                 }
@@ -951,7 +951,7 @@ class R7rs(private val res: KevesResources) {
                     0 -> throw IllegalArgumentException("$id expected two or more object, but got nothing")
                     1 -> {
                         val k = try {
-                            vm.stack.index(vm.sp, 0).toInt().value(res)
+                            vm.stack.index(vm.sp, 0).toInt().value
                         } catch (e: TypeCastException) {
                             throw IllegalArgumentException("$id expected int but got other")
                         }
@@ -961,7 +961,7 @@ class R7rs(private val res: KevesResources) {
                     2 -> {
                         val sp = vm.sp
                         val k = try {
-                            vm.stack.index(sp, 0).toInt().value(res)
+                            vm.stack.index(sp, 0).toInt().value
                         } catch (e: TypeCastException) {
                             throw IllegalArgumentException("$id expected int but got other")
                         }
@@ -988,8 +988,7 @@ class R7rs(private val res: KevesResources) {
                         val sp = vm.sp
                         val ptr1 = vm.stack.index(sp, 1)
                         val ptr2 = vm.stack.index(sp, 0)
-                        val result =
-                            if (ptr1 == ptr2) res.constTrue else res.constFalse // ScmConstant.TRUE else ScmConstant.FALSE
+                        val result = if (ptr1 == ptr2) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw IllegalArgumentException("$id expected 2 object, but got more")

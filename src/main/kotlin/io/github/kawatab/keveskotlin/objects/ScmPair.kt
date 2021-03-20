@@ -34,7 +34,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         protected set
 
     fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        if (this === other.toPair().toVal(res)) true else (other.isPair(res) && equalQ(other.toPair(), ArrayDeque(), res))
+        if (this === other.toPair().toVal(res)) true else (other.isPair() && equalQ(other.toPair(), ArrayDeque(), res))
 
     fun equalQ(other: PtrPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) ->
@@ -46,11 +46,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val car2 = other.car(res)
         when {
             car1.isNull() -> return false
-            car1.isBox(res) -> if (car2.isNotBox(res) || !car1.toBox().equalQ(car2.toBox(), duplicated, res)
+            car1.isBox() -> if (car2.isNotBox() || !car1.toBox().equalQ(car2.toBox(), duplicated, res)
             ) return false
-            car1.isPair(res) -> if (car2.isNotPair(res) || !car1.toPair().equalQ(car2.toPair(), duplicated, res)
+            car1.isPair() -> if (car2.isNotPair() || !car1.toPair().equalQ(car2.toPair(), duplicated, res)
             ) return false
-            car1.isVector(res) -> if (car2.isNotVector(res) || !car1.toVector().equalQ(car2.toVector(), duplicated, res)
+            car1.isVector() -> if (car2.isNotVector() || !car1.toVector().equalQ(car2.toVector(), duplicated, res)
             ) return false
             else -> if (!res.equalQ(car1, car2, duplicated)) return false
         }
@@ -60,9 +60,9 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val cdr2 = other.cdr(res)
         return when {
             cdr1.isNull() -> false
-            cdr1.isBox(res) -> cdr2.isBox(res) && cdr1.toBox().equalQ(cdr2.toBox(), duplicated, res)
-            cdr1.isPair(res) -> cdr2.isPair(res) && cdr1.toPair().equalQ(cdr2.toPair(), duplicated, res)
-            cdr1.isVector(res) -> cdr2.isVector(res) && cdr1.toVector().equalQ(cdr2.toVector(), duplicated, res)
+            cdr1.isBox() -> cdr2.isBox() && cdr1.toBox().equalQ(cdr2.toBox(), duplicated, res)
+            cdr1.isPair() -> cdr2.isPair() && cdr1.toPair().equalQ(cdr2.toPair(), duplicated, res)
+            cdr1.isVector() -> cdr2.isVector() && cdr1.toVector().equalQ(cdr2.toVector(), duplicated, res)
             else -> res.equalQ(cdr1, cdr2, duplicated)
         }
     }
@@ -78,8 +78,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 allPair.addLast(rest)
                 val car = rest.car
                 val cdr = rest.cdr
-                searchCirculation(if (car.isPair(this)) car.toPair().toVal(this) else null, allPair, duplicatedPair)
-                searchCirculation(if (cdr.isPair(this)) cdr.toPair().toVal(this) else null, allPair, duplicatedPair)
+                searchCirculation(if (car.isPair()) car.toPair().toVal(this) else null, allPair, duplicatedPair)
+                searchCirculation(if (cdr.isPair()) cdr.toPair().toVal(this) else null, allPair, duplicatedPair)
             } else if (duplicatedPair.indexOfFirst { (pair, _) -> pair == rest } < 0) {
                 duplicatedPair.addLast(rest to false)
             }
@@ -137,12 +137,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
             let {
-                if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
+                if (car.isPair()) writePair(car.toPair(), duplicatedPair, true, res)
                 else getStringForWrite(car, res)
             }
         return when {
             cdr.isNull() -> "($carStr)"
-            cdr.isPair(res) -> {
+            cdr.isPair() -> {
                 val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
                     if (it < 0) {
                         ""
@@ -160,11 +160,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
 
     private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
+            if (car.isPair()) writePair(car.toPair(), duplicatedPair, true, res)
             else getStringForWrite(car, res)
         return when {
             cdr.isNull() -> carStr
-            cdr.isPair(res) -> {
+            cdr.isPair() -> {
                 val cdrStr = writePair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
@@ -177,11 +177,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val duplicatedPair = ArrayDeque<Pair<ScmPair, Boolean>>()
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
-            if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
+            if (car.isPair()) displayPair(car.toPair(), duplicatedPair, true, res)
             else getStringForDisplay(car, res)
         return when {
             cdr.isNull() -> "($carStr)"
-            cdr.isPair(res) -> {
+            cdr.isPair() -> {
                 val prefix = duplicatedPair.indexOfFirst { (pair, _) -> pair == this }.let {
                     if (it < 0) {
                         ""
@@ -199,11 +199,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
 
     private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
-            if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
+            if (car.isPair()) displayPair(car.toPair(), duplicatedPair, true, res)
             else getStringForDisplay(car, res)
         return when {
             cdr.isNull() -> carStr
-            cdr.isPair(res) -> {
+            cdr.isPair() -> {
                 val cdrStr = displayPair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
@@ -222,7 +222,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             tracedPair: ArrayDeque<ScmObject>
         ): Int = when {
             rest.isNull() -> n
-            rest.isPair(this) -> {
+            rest.isPair() -> {
                 if (tracedPair.indexOf(rest.toPair().toVal(this)) > 0) throw IllegalArgumentException("cannot get the length of improper list")
                 tracedPair.addLast(rest.toPair().toVal(this))
                 length(rest = rest.toPairOrNull().cdr(this), n = n + 1, tracedPair = tracedPair)
@@ -233,7 +233,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         fun isProperList(obj: PtrObject, res: KevesResources): Boolean =
             when {
                 obj.isNull() -> true
-                obj.isPair(res) -> isProperList(
+                obj.isPair() -> isProperList(
                     obj.toPair(),
                     ArrayDeque<ScmPair>().apply { addLast(obj.toPair().toVal(res)) },
                     res
@@ -245,7 +245,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             val cdr = pair.cdr(res)
             return when {
                 cdr.isNull() -> true
-                cdr.isPair(res) -> {
+                cdr.isPair() -> {
                     if (tracedPair.indexOf(cdr.toPair().toVal(res)) >= 0) {
                         false
                     } else {
@@ -270,7 +270,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                     result.toPairNonNull(),
                     this
                 ) else PtrPairOrNull(0)) to n
-                rest.isPair(this) -> toProperList(
+                rest.isPair() -> toProperList(
                     rest = rest.toPair().cdr(this),
                     result = make(rest.toPair().car(this), result.toObject(), this),
                     n = n + 1
@@ -291,7 +291,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             tracedPair: ArrayDeque<PtrObject>
         ): PtrPairOrNull = when {
             rest.isNull() -> result
-            rest.isPair(this) -> {
+            rest.isPair() -> {
                 if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
                 tracedPair.addLast(rest)
                 reverse(
@@ -308,7 +308,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 if (list.isNull()) throw IllegalArgumentException("length not enough")
                 else listTail(
                     list.cdr(res)
-                        .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("not proper list") }
+                        .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("not proper list") }
                         .toPairOrNull(),
                     k - 1,
                     res
@@ -326,7 +326,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             res: KevesResources
         ): PtrObject = when {
             list.isNull() -> res.constFalse
-            list.isPair(res) -> {
+            list.isPair() -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
                 if (list.toPair().car(res) == obj) list else memq(obj, list.toPair().cdr(res), tracedPair, res)
@@ -343,7 +343,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             res: KevesResources
         ): PtrObject = when {
             list.isNull() -> res.constFalse
-            list.isPair(res) -> {
+            list.isPair() -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
                 if (eqvQ(list.toPair().car(res), obj, res)) list else memv(obj, list.toPair().cdr(res), tracedPair, res)
@@ -361,7 +361,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             res: KevesResources
         ): PtrObject = when {
             list.isNull() -> res.constFalse
-            list.isPair(res) -> {
+            list.isPair() -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
                 if (equalQ(list.toPair().car(res), obj, res)) list else member(
@@ -383,11 +383,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             res: KevesResources
         ): PtrObject = when {
             list.isNull() -> res.constFalse
-            list.isPair(res) -> {
+            list.isPair() -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
                 val car = list.toPair().car(res)
-                if (car.isNotPair(res)) throw IllegalArgumentException("not association list")
+                if (car.isNotPair()) throw IllegalArgumentException("not association list")
                 if (car.toPair().car(res) == obj) car else assq(obj, list.toPair().cdr(res), tracedPair, res)
             }
             else -> throw IllegalArgumentException("not proper list")
@@ -403,11 +403,11 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         ): PtrObject =
             when {
                 list.isNull() -> res.constFalse
-                list.isPair(res) -> {
+                list.isPair() -> {
                     if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                     tracedPair.addLast(list)
                     val car = list.toPair().car(res)
-                    if (car.isNotPair(res)) throw IllegalArgumentException("not association list")
+                    if (car.isNotPair()) throw IllegalArgumentException("not association list")
                     if (eqvQ(car.toPair().car(res), obj, res)) car else assv(
                         obj,
                         list.toPair().cdr(res),
@@ -427,12 +427,12 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             res: KevesResources
         ): PtrObject = when {
             list.isNull() -> res.constFalse
-            list.isPair(res) -> {
+            list.isPair() -> {
                 if (tracedPair.indexOf(list) >= 0) throw IllegalArgumentException("not proper list")
                 tracedPair.addLast(list)
                 val car = list.toPair().car(res)
                 when {
-                    car.isNotPair(res) -> throw IllegalArgumentException("not association list")
+                    car.isNotPair() -> throw IllegalArgumentException("not association list")
                     equalQ(car.toPair().car(res), obj, res) -> car
                     else -> assoc(obj, list.toPair().cdr(res), tracedPair, res)
                 }
@@ -443,7 +443,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         @Suppress("unused")
         fun car(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                if (obj.isNotPair(res)) throw IllegalArgumentException("'car' required pair, but got other")
+                if (obj.isNotPair()) throw IllegalArgumentException("'car' required pair, but got other")
                 obj.toPair().car(res)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("'car' required pair, but got other")
@@ -452,7 +452,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         @Suppress("unused")
         fun cdr(obj: PtrObject, res: KevesResources): PtrObject =
             try {
-                if (obj.isNotPair(res)) throw IllegalArgumentException("'cdr' required pair, but got other")
+                if (obj.isNotPair()) throw IllegalArgumentException("'cdr' required pair, but got other")
                 obj.toPair().cdr(res)
             } catch (e: TypeCastException) {
                 throw IllegalArgumentException("'cdr' required pair, but got other")

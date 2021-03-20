@@ -28,7 +28,7 @@ class ScmString(private val string: String) : ScmObject() {
     override fun toStringForWrite(res: KevesResources): String = "\"${toStringForDisplay(res)}\""
     override fun toStringForDisplay(res: KevesResources): String = string
     fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        this === other.toString2().toVal(res) || (other.isString(res) && this.string == other.toString2().toVal(res).string)
+        this === other.toString2().toVal(res) || (other.isString() && this.string == other.toString2().toVal(res).string)
 
     companion object {
         fun make(string: String, res: KevesResources) = ScmString(string).let { res.addString(it) }

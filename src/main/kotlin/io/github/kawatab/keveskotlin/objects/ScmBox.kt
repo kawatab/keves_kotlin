@@ -31,8 +31,8 @@ class ScmBox private constructor(var value: PtrObject) : ScmObject() {
     override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(value, res)}>"
     override fun toString(): String = "#<box $value>"
     fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        (other.isBox(res) && this === other.toBox().toVal(res)) ||
-                (other.isBox(res) && equalQ(other.toBox(), ArrayDeque(), res))
+        (other.isBox() && this === other.toBox().toVal(res)) ||
+                (other.isBox() && equalQ(other.toBox(), ArrayDeque(), res))
 
     fun equalQ(other: PtrBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) ->

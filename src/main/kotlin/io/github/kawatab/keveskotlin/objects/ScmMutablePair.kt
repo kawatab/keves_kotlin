@@ -76,7 +76,7 @@ class ScmMutablePair private constructor(car: PtrObject, cdr: PtrObject) : ScmPa
             last: PtrMutablePair,
             tracedPair: ArrayDeque<PtrObject>
         ) {
-            if (rest.isPair(this)) {
+            if (rest.isPair()) {
                 if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot copy circulated list")
                 tracedPair.addLast(rest)
                 val next = make(rest.toPairOrNull().car(this), PtrObject(0), this)
@@ -102,7 +102,7 @@ class ScmMutablePair private constructor(car: PtrObject, cdr: PtrObject) : ScmPa
         ): PtrMutablePair =
             when {
                 rest.isNull() -> result
-                rest.isPair(this) -> {
+                rest.isPair() -> {
                     if (tracedPair.indexOf(rest) >= 0) throw IllegalArgumentException("cannot reverse improper list")
                     tracedPair.addLast(rest)
                     reverse(

@@ -96,9 +96,9 @@ class Keves {
                     println("compile error")
                     return ScmError.make("compiler", e.message ?: "", res).toObject()
                 }.let { compiled ->
-                    println("compiled: ${compiled.toVal(res).toStringForWrite(res)}")
+                    // println("compiled: ${compiled.toVal(res).toStringForWrite(res)}")
                     try {
-                        vm.evaluate(compiled).also { println("result: ${ScmObject.getStringForWrite(it, res)}") }
+                        vm.evaluate(compiled) // .also { println("result: ${ScmObject.getStringForWrite(it, res)}") }
                     } catch (e: IllegalArgumentException) {
                         return ScmError.make("vm", e.message ?: "", res).toObject()
                     }

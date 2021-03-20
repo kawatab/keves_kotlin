@@ -26,11 +26,6 @@ import io.github.kawatab.keveskotlin.PtrObject
 import io.github.kawatab.keveskotlin.PtrPairOrNull
 import io.github.kawatab.keveskotlin.PtrVector
 
-/*
-class ScmVector private constructor(private val array: Array<ScmObject?>) : ScmObject() {
-    constructor(size: Int) : this(Array<ScmObject?>(size) { ScmConstant.UNDEF })
-    constructor(size: Int, fill: ScmObject?) : this(Array<ScmObject?>(size) { fill })
- */
 class ScmVector private constructor(private val array: IntArray) : ScmObject() {
     constructor(size: Int, res: KevesResources) : this(IntArray(size) { res.constUndef.ptr })
     constructor(size: Int, fill: PtrObject) : this(IntArray(size) { fill.ptr })
@@ -46,7 +41,7 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
     override fun toString(): String = "#()"
 
     fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        if (this === other.toVector().toVal(res)) true else (other.isVector(res) && equalQ(other.toVector(), ArrayDeque(), res))
+        if (this === other.toVector().toVal(res)) true else (other.isVector() && equalQ(other.toVector(), ArrayDeque(), res))
 
     fun equalQ(other: PtrVector, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) -> (this == first && other.toVal(res) == second) || (this == second && other.toVal(res) == first) } >= 0) return true
@@ -59,9 +54,9 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
             if (!res.isScmObject(obj1) || !res.isScmObject(obj2)) return false
             when {
                 obj1.isNull() -> obj2.isNull()
-                obj1.isBox(res) -> if (obj2.isBox(res) || !obj1.toBox().equalQ(obj2.toBox(), duplicated, res)) return false
-                obj1.isPair(res) -> if (obj2.isPair(res) || !obj1.toPair().equalQ(obj2.toPair(), duplicated, res)) return false
-                obj1.isVector(res) -> if (obj2.isVector(res) || !obj1.toVector().equalQ(obj2.toVector(), duplicated, res)) return false
+                obj1.isBox() -> if (obj2.isBox() || !obj1.toBox().equalQ(obj2.toBox(), duplicated, res)) return false
+                obj1.isPair() -> if (obj2.isPair() || !obj1.toPair().equalQ(obj2.toPair(), duplicated, res)) return false
+                obj1.isVector() -> if (obj2.isVector() || !obj1.toVector().equalQ(obj2.toVector(), duplicated, res)) return false
                 else -> if (!res.equalQ(obj1, obj2, duplicated)) return false
             }
         }

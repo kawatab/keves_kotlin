@@ -39,7 +39,7 @@ class ScmByteVector private constructor(var array: ByteArray) : ScmObject() {
     fun equalQ(other: PtrObject, res: KevesResources): Boolean {
         when {
             this === other.toByteVector().toVal(res) -> return true
-            other.isNotByteVector(res) -> return false
+            other.isNotByteVector() -> return false
             else -> {
                 val otherArray = other.toByteVector().getArray(res)
                 if (this.array.size != otherArray.size) return false

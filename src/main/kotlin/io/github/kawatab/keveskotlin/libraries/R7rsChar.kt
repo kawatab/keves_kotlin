@@ -34,7 +34,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val ptr = vm.stack.index(vm.sp, 0)
-                        val result = if (ptr.isChar(res)) res.constTrue else res.constFalse
+                        val result = if (ptr.isChar()) res.constTrue else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -451,10 +451,10 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val char = vm.stack.index(vm.sp, 0)
-                            .also { if (it.isNotChar(res)) throw KevesExceptions.expectedChar(id) }
+                            .also { if (it.isNotChar()) throw KevesExceptions.expectedChar(id) }
                             .toChar()
                         val value = char.digitToInt(res)
-                        val result = if (value >= 0) ScmInt.make(value, vm.res).toObject() else res.constFalse
+                        val result = if (value >= 0) KevesResources.makeInt(value) else res.constFalse
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -472,9 +472,9 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val char = vm.stack.index(vm.sp, 0)
-                            .also { if (it.isNotChar(res)) throw KevesExceptions.expectedChar(id) }
+                            .also { if (it.isNotChar()) throw KevesExceptions.expectedChar(id) }
                             .toChar()
-                        val result = ScmInt.make(char.toUtf32(res), res).toObject()
+                        val result = KevesResources.makeInt(char.toUtf32(res))
                         vm.scmProcReturn(result, n)
                     }
                     else -> throw KevesExceptions.expected1DatumGotMore(id)
@@ -492,8 +492,8 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 ->
                         try {
-                            val value = vm.stack.index(vm.sp, 0).toInt().value(res)
-                            val result = ScmChar.make(value, vm.res).toObject()
+                            val value = vm.stack.index(vm.sp, 0).toInt().value
+                            val result = ScmChar.make(value, res).toObject()
                             vm.scmProcReturn(result, n)
                         } catch (e: TypeCastException) {
                             throw KevesExceptions.expectedInt(id)
@@ -513,7 +513,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val char = vm.stack.index(vm.sp, 0)
-                            .also { if (it.isNotChar(res)) throw KevesExceptions.expectedChar(id) }
+                            .also { if (it.isNotChar()) throw KevesExceptions.expectedChar(id) }
                             .toChar()
                         val result = ScmChar.make(char.toUpperCase(res), res).toObject()
                         vm.scmProcReturn(result, n)
@@ -533,7 +533,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val char = vm.stack.index(vm.sp, 0)
-                            .also { if (it.isNotChar(res)) throw KevesExceptions.expectedChar(id) }
+                            .also { if (it.isNotChar()) throw KevesExceptions.expectedChar(id) }
                             .toChar()
                         val result = ScmChar.make(char.toLowerCase(res), res).toObject()
                         vm.scmProcReturn(result, n)
@@ -553,7 +553,7 @@ class R7rsChar(private val res: KevesResources) {
                     0 -> throw KevesExceptions.expected1DatumGotMore(id)
                     1 -> {
                         val char = vm.stack.index(vm.sp, 0)
-                            .also { if (it.isNotChar(res)) throw KevesExceptions.expectedChar(id) }
+                            .also { if (it.isNotChar()) throw KevesExceptions.expectedChar(id) }
                             .toChar()
                         val result = ScmChar.make(char.toFoldCase(res), vm.res).toObject()
                         vm.scmProcReturn(result, n)

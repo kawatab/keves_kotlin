@@ -101,7 +101,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
             "+inf.0" -> return res.constPositiveInfinity.toNonNull()
             "-inf.0" -> return res.constNegativeInfinity.toNonNull()
         }
-        text.toIntOrNull()?.let { return@parseText ScmInt.make(it, res).toObjectNonNull() }
+        text.toIntOrNull()?.let { return@parseText KevesResources.makeInt(it).toNonNull() }
         text.replace('l', 'e', true).toDoubleOrNull()
             ?.let { return@parseText ScmDouble.make(it, res).toObjectNonNull() }
         text.replace('s', 'e', true).replace('f', 'e', true).toFloatOrNull()
@@ -654,7 +654,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                         )
                     }
 
-            if (last.isPair(res) && last.toPair().cdr(res).isNotNull()) {
+            if (last.isPair() && last.toPair().cdr(res).isNotNull()) {
                 errorList.add(
                     ScmError.make(
                         "parser",
@@ -665,7 +665,7 @@ class KevesParser(private val text: String, private val res: KevesResources) {
                 return null
             }
 
-            var result: PtrObject = if (last.isPair(res)) last.toPair().car(res) else PtrObject(0)
+            var result: PtrObject = if (last.isPair()) last.toPair().car(res) else PtrObject(0)
             while (stack.isNotEmpty()) {
                 val value = stack.removeLast()
                 result = ScmPair.make(value, result, res).toObject()

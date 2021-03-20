@@ -51,7 +51,7 @@ class VMTest {
 
         val stringABC = ScmString.make("abc", res).toObject()
         val stringDEF = ScmString.make("def", res).toObject()
-        val int123 = ScmInt.make(123, res).toObject()
+        val int123 = KevesResources.makeInt(123)
         val double4p56 = ScmDouble.make(4.56, res).toObject()
 
         val tests = listOf(
@@ -63,7 +63,7 @@ class VMTest {
         ).map { (s, i, v, w) -> Triple(Triple(s as Int, i as Int, v as PtrObject), Pair(s, i), Pair(v, w)) }
 
         tests.forEach { (set, _, _) ->
-            set.let { (s, i, v) -> stack.indexSetE( s, i, v) }
+            set.let { (s, i, v) -> stack.indexSetE(s, i, v) }
         }
 
         tests.forEach { (_, refer, v) ->
@@ -71,196 +71,6 @@ class VMTest {
             assertNotEquals(v.second, stack.index(refer.first, refer.second))
         }
     }
-
-    /*
-    @Test
-    fun testPatternMatchReferLocal() {
-        val patternMatchReferLocal =
-            vm.javaClass.getDeclaredMethod("patternMatchReferLocal", ScmPair::class.java)
-        patternMatchReferLocal.isAccessible = true
-
-        val int123 = ScmInt(123)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, int123, next)
-        assertEquals(123, (patternMatchReferLocal.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchReferLocal.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchReferFree() {
-        val patternMatchReferFree =
-            vm.javaClass.getDeclaredMethod("patternMatchReferFree", ScmPair::class.java)
-        patternMatchReferFree.isAccessible = true
-
-        val int123 = ScmInt(123)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, int123, next)
-        assertEquals(123, (patternMatchReferFree.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchReferFree.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchIndirect() {
-        val patternMatchIndirect =
-            vm.javaClass.getDeclaredMethod("patternMatchIndirect", ScmPair::class.java)
-        patternMatchIndirect.isAccessible = true
-
-        val next = ScmPair.list(ScmString.make("abc"), ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, next)
-        assertEquals(next, patternMatchIndirect.invoke(vm, x))
-    }
-
-    @Test
-    fun testPatternMatchConstant() {
-        val patternMatchConstant =
-            vm.javaClass.getDeclaredMethod("patternMatchConstant", ScmPair::class.java)
-        patternMatchConstant.isAccessible = true
-
-        val obj = ScmConstant.UNDEF
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, obj, next)
-        assertEquals(obj, (patternMatchConstant.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchConstant.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchClose() {
-        val patternMatchClose =
-            vm.javaClass.getDeclaredMethod("patternMatchClose", ScmPair::class.java)
-        patternMatchClose.isAccessible = true
-
-        val m = 123
-        val n = 456
-        val body = ScmPair.list(ScmInstruction.Constant(null, ScmInstruction.HALT)) // CONSTANT)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, ScmInt(m), ScmInt(n), body, next)
-        assertEquals(m to n, (patternMatchClose.invoke(vm, x) as? Triple<*, *, *>)?.first)
-        assertEquals(body, (patternMatchClose.invoke(vm, x) as? Triple<*, *, *>)?.second)
-        assertEquals(next, (patternMatchClose.invoke(vm, x) as? Triple<*, *, *>)?.third)
-    }
-
-    @Test
-    fun testPatternMatchBox() {
-        val patternMatchBox =
-            vm.javaClass.getDeclaredMethod("patternMatchBox", ScmPair::class.java)
-        patternMatchBox.isAccessible = true
-
-        val int123 = ScmInt(123)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, int123, next)
-        assertEquals(123, (patternMatchBox.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchBox.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchTest() {
-        val patternMatchTest =
-            vm.javaClass.getDeclaredMethod("patternMatchTest", ScmPair::class.java)
-        patternMatchTest.isAccessible = true
-
-        val thn = ScmPair.list(ScmInstruction.Constant(null, ScmInstruction.HALT))
-        val els = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, thn, els)
-        assertEquals(thn, (patternMatchTest.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(els, (patternMatchTest.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchAssignLocal() {
-        val patternMatchAssignLocal =
-            vm.javaClass.getDeclaredMethod("patternMatchAssignLocal", ScmPair::class.java)
-        patternMatchAssignLocal.isAccessible = true
-
-        val int123 = ScmInt(123)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, int123, next)
-        assertEquals(123, (patternMatchAssignLocal.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchAssignLocal.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchAssignFree() {
-        val patternMatchAssignFree =
-            vm.javaClass.getDeclaredMethod("patternMatchAssignFree", ScmPair::class.java)
-        patternMatchAssignFree.isAccessible = true
-
-        val int123 = ScmInt(123)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, int123, next)
-        assertEquals(123, (patternMatchAssignFree.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchAssignFree.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchConti() {
-        val patternMatchConti =
-            vm.javaClass.getDeclaredMethod("patternMatchConti", ScmPair::class.java)
-        patternMatchConti.isAccessible = true
-
-        val next = ScmPair.list(ScmString.make("abc"), ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, next)
-        assertEquals(next, patternMatchConti.invoke(vm, x))
-    }
-
-    @Test
-    fun testPatternMatchNuate() {
-        val patternMatchNuate =
-            vm.javaClass.getDeclaredMethod("patternMatchNuate", ScmPair::class.java)
-        patternMatchNuate.isAccessible = true
-
-        val stack = res.makeVector(10)
-        val next = ScmPair.list(ScmString.make("abc"), ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, stack, next)
-        assertEquals(stack, (patternMatchNuate.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchNuate.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchFrame() {
-        val patternMatchFrame =
-            vm.javaClass.getDeclaredMethod("patternMatchFrame", ScmPair::class.java)
-        patternMatchFrame.isAccessible = true
-
-        val ret = ScmPair.list(ScmInstruction.HALT)
-        val next = ScmPair.list(ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, ret, next)
-        assertEquals(ret, (patternMatchFrame.invoke(vm, x) as? Pair<*, *>)?.first)
-        assertEquals(next, (patternMatchFrame.invoke(vm, x) as? Pair<*, *>)?.second)
-    }
-
-    @Test
-    fun testPatternMatchArgument() {
-        val patternMatchArgument =
-            vm.javaClass.getDeclaredMethod("patternMatchArgument", ScmPair::class.java)
-        patternMatchArgument.isAccessible = true
-
-        val next = ScmPair.list(ScmString.make("abc"), ScmConstant.TRUE, ScmConstant.FALSE)
-        val x = ScmPair.list(ScmConstant.TRUE, next)
-        assertEquals(next, patternMatchArgument.invoke(vm, x))
-    }
-
-    @Test
-    fun testPatternMatchApply() {
-        val patternMatchApply =
-            vm.javaClass.getDeclaredMethod("patternMatchReturn", ScmPair::class.java)
-        patternMatchApply.isAccessible = true
-
-        val n = 150
-        val x = ScmPair.list(ScmConstant.TRUE, ScmInt(n))
-        assertEquals(n, patternMatchApply.invoke(vm, x))
-    }
-
-    @Test
-    fun testPatternMatchReturn() {
-        val patternMatchReturn =
-            vm.javaClass.getDeclaredMethod("patternMatchReturn", ScmPair::class.java)
-        patternMatchReturn.isAccessible = true
-
-        val n = 150
-        val x = ScmPair.list(ScmConstant.TRUE, ScmInt(n))
-        assertEquals(n, patternMatchReturn.invoke(vm, x))
-    }
-     */
 
     @Test
     fun test001() {
@@ -280,8 +90,7 @@ class VMTest {
         assertEquals(
             "8",
             ScmObject.getStringForDisplay(
-                scheme.evaluate2("((lambda (x) (if x x (begin (set! x 8) x))) #f)")
-                    , scheme.res
+                scheme.evaluate2("((lambda (x) (if x x (begin (set! x 8) x))) #f)"), scheme.res
             )
         )
     }
@@ -301,8 +110,7 @@ class VMTest {
         assertEquals(
             "6",
             ScmObject.getStringForDisplay(
-                scheme.evaluate2("(call/cc (lambda (exit) (begin 1 2 3 4 5 6)))")
-                    , scheme.res
+                scheme.evaluate2("(call/cc (lambda (exit) (begin 1 2 3 4 5 6)))"), scheme.res
             )
         )
         // ScmObject.getStringForDisplay(scheme.evaluate2("(call/cc (lambda (exit) (begin 1 2 3 (exit 4) 5 6)))")
@@ -508,8 +316,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(define fib (lambda (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))\n" +
                             "(fib 5)"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -530,9 +337,9 @@ class VMTest {
                     // "(fib 38)" // 36s176ms 2021-02-14; removed list from code
                     // "(fib 38)" // 30s750ms 2021-02-16; replaced MutableList with Array as stack
                     // "(fib 38)" // 29s885ms 2021-02-16; replaced ScmVector with Array in ScmClosure
+                    // "(fib 38)" // 23s61ms 2021-03-20; replaced ScmInt with instant value
                     // exec() return x, then invoke x.exec()
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -561,8 +368,7 @@ class VMTest {
             "caaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caaar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -570,8 +376,7 @@ class VMTest {
             "caadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caadr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -579,8 +384,7 @@ class VMTest {
             "cadar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cadar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -588,8 +392,7 @@ class VMTest {
             "caddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caddr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -597,8 +400,7 @@ class VMTest {
             "cdaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdaar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -606,8 +408,7 @@ class VMTest {
             "cdadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdadr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -615,8 +416,7 @@ class VMTest {
             "cddar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cddar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -624,8 +424,7 @@ class VMTest {
             "cdddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdddr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -634,8 +433,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(caaaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -644,8 +442,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(caaadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -654,8 +451,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(caadar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -664,8 +460,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(caaddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -674,8 +469,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cadaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -684,8 +478,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cadadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -694,8 +487,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(caddar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -704,8 +496,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cadddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -714,8 +505,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cdaaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -724,8 +514,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cdaadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -734,8 +523,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cdadar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -744,8 +532,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cdaddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -754,8 +541,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cddaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -764,8 +550,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cddadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -774,8 +559,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cdddar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -784,8 +568,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cddddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -1566,8 +1349,7 @@ class VMTest {
                     "(let ((x (list 'a 'b 'c)))\n" +
                             "(set-cdr! (cddr x) x)\n" +
                             "x)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -1697,8 +1479,7 @@ class VMTest {
                     "(define reverse-subtract\n" +
                             "  (lambda (x y) (- y x)))\n" +
                             "(reverse-subtract 7 10)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1745,8 +1526,7 @@ class VMTest {
                     "(if (> 3 2)\n" +
                             "(- 3 2)\n" +
                             "(+ 3 2))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -1761,8 +1541,7 @@ class VMTest {
                             "(+ x 1)\n" +
                             "(set! x 4)\n" +
                             "(+ x 1)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -1775,8 +1554,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(cond ((> 3 2) 'greater)\n" +
                             "((< 3 2) 'less))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1787,8 +1565,7 @@ class VMTest {
                     "(cond ((> 3 3) 'greater)\n" +
                             "((< 3 3) 'less)\n" +
                             "(else 'equal))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1812,8 +1589,7 @@ class VMTest {
                     "(when (= 1 1.0)\n" +
                             "(display \"1\")\n" +
                             "(display \"2\"))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1824,8 +1600,7 @@ class VMTest {
                     "(until (= 1 1.0)\n" +
                             "(display \"1\")\n" +
                             "(display \"2\"))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -1838,8 +1613,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((x 2) (y 3))\n" +
                             "(* x y))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1851,8 +1625,7 @@ class VMTest {
                             "(let ((x 7)\n" +
                             "(z (+ x y)))\n" +
                             "(* z x)))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1864,8 +1637,7 @@ class VMTest {
                             "(let* ((x 7)\n" +
                             "(z (+ x y)))\n" +
                             "(* z x)))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1884,8 +1656,7 @@ class VMTest {
                             "#f\n" +
                             "(even? (- n 1))))))\n" +
                             "(even? 88))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             ).replace("\n", "\\n")
         )
     }
@@ -1938,8 +1709,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(eqv? (lambda () 1)\n" +
                             "(lambda () 2))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1949,8 +1719,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((p (lambda (x) x)))\n" +
                             "(eqv? p p))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1975,8 +1744,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(eqv? (lambda (x) x)\n" +
                             "(lambda (x) x))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -1986,8 +1754,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(eqv? (lambda (x) x)\n" +
                             "(lambda (y) y))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
         assertEquals(
@@ -2010,8 +1777,7 @@ class VMTest {
                             "(lambda () (set! n (+ n 1)) n))))\n" +
                             "(let ((g (gen-counter)))\n" +
                             "(eqv? g g))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2026,8 +1792,7 @@ class VMTest {
                             "(let ((g (gen-counter)))\n" +
                             "(eqv? g g))\n" +
                             "(eqv? (gen-counter) (gen-counter))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2048,8 +1813,7 @@ class VMTest {
                             "(lambda () (set! n (+ n 1)) 27))))\n" +
                             "(let ((g (gen-loser)))\n" +
                             "(eqv? g g))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2071,8 +1835,7 @@ class VMTest {
                             "(let ((g (gen-loser)))\n" +
                             "(eqv? g g))\n" +
                             "(eqv? (gen-loser) (gen-loser))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2084,8 +1847,7 @@ class VMTest {
                             "(g (lambda () (if (eqv? f g) 'both 'g))))\n" +
                             "(eqv? f g))\n"
 
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2096,8 +1858,7 @@ class VMTest {
                     "(letrec ((f (lambda () (if (eqv? f g) 'f 'both)))\n" +
                             "(g (lambda () (if (eqv? f g) 'g 'both))))\n" +
                             "(eqv? f g))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2131,13 +1892,12 @@ class VMTest {
             ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(eq? '() '())\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
         assertEquals(
-            "#f",
+            "#t",
             ScmObject.getStringForWrite(scheme.evaluate2("(eq? 2 2)\n"), scheme.res)
         )
 
@@ -2157,8 +1917,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((n (+ 2 3)))\n" +
                             "(eq? n n))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2168,8 +1927,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((x '(a)))\n" +
                             "(eq? x x))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2179,8 +1937,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((x '#()))\n" +
                             "(eq? x x))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2190,8 +1947,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(let ((p (lambda (x) x)))\n" +
                             "(eq? p p)))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2226,8 +1982,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(equal? (make-vector 5 'a)\n" +
                             "(make-vector 5 'a))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2249,8 +2004,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(equal? (lambda (x) x)\n" +
                             "(lambda (y) y))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -2264,8 +2018,7 @@ class VMTest {
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
                             "y\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2277,8 +2030,7 @@ class VMTest {
                             "(define y x)\n" +
                             "y\n" +
                             "(list? y)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2292,8 +2044,7 @@ class VMTest {
                             "(list? y)\n" +
                             "(set-cdr! x 4)\n" +
                             "x\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2308,8 +2059,7 @@ class VMTest {
                             "(set-cdr! x 4)\n" +
                             "x\n" +
                             "(eqv? x y)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2325,8 +2075,7 @@ class VMTest {
                             "x\n" +
                             "(eqv? x y)\n" +
                             "y\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2343,8 +2092,7 @@ class VMTest {
                             "(eqv? x y)\n" +
                             "y\n" +
                             "(list? y)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2363,8 +2111,7 @@ class VMTest {
                             "(list? y)\n" +
                             "(set-cdr! x x)\n" +
                             "(list? x)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2376,8 +2123,7 @@ class VMTest {
                             "(pair? '(a b c))\n" +
                             "(pair? '())\n" +
                             "(pair? '#(a b)))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2390,8 +2136,7 @@ class VMTest {
                             "(cons \"a\" '(b c))\n" +
                             "(cons 'a 3)\n" +
                             "(cons '(a b) 'c))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2402,8 +2147,7 @@ class VMTest {
                     "(list (car '(a b c))\n" +
                             "(car '((a) b c d))\n" +
                             "(car '(1 . 2)))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2418,8 +2162,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(list (cdr '((a) b c d))\n" +
                             "(cdr '(1 . 2)))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2435,8 +2178,7 @@ class VMTest {
                     "(define (f) (list 'not-a-constant-list))\n" +
                             "(define (g) '(constant-list))\n" +
                             "(set-car! (f) 3)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             ).replace("\n", "\\n")
         )
 
@@ -2448,8 +2190,7 @@ class VMTest {
                             "(define (g) '(constant-list))\n" +
                             "(set-car! (f) 3)\n" +
                             "(set-car! (g) 3)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             ).replace("\n", "\\n")
         )
 
@@ -2475,8 +2216,7 @@ class VMTest {
                     "(list (length '(a b c))\n" +
                             "(length '(a (b) (c d e)))\n" +
                             "(length '()))"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2499,8 +2239,7 @@ class VMTest {
                 scheme.evaluate2(
                     "(list (reverse '(a b c))\n" +
                             "(reverse '(a (b c) d (e (f)))))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2528,8 +2267,7 @@ class VMTest {
                     "(let ((ls (list 'one 'two 'five!)))\n" +
                             "(list-set! ls 2 'three)\n" +
                             "ls)\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2542,7 +2280,7 @@ class VMTest {
         assertEquals(
             "((a b c) (b c) #f #f ((a) c)" +
                     // // " (\"b\" \"c\")\n" +
-                    " #f (101 102))",
+                    " (101 102) (101 102))",
             ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (memq 'a '(a b c))\n" +
@@ -2556,15 +2294,14 @@ class VMTest {
                             // // "string-ci=?)\n" +  // TODO
                             "(memq 101 '(100 101 102))\n" +
                             "(memv 101 '(100 101 102)))\n",
-                )
-                    , scheme.res
+                ), scheme.res
             ).replace("\n", "\\n")
         )
 
         assertEquals(
             "((a 1) (b 2) #f #f ((a)) " +
                     // "(2 4) " +
-                    "#f (5 7))",
+                    "(5 7) (5 7))",
             ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define e '((a 1) (b 2) (c 3)))\n" +
@@ -2576,8 +2313,7 @@ class VMTest {
                             // "(assoc 2.0 '((1 1) (2 4) (3 9)) =)\n" + // TODO
                             "(assq 5 '((2 3) (5 7) (11 13)))\n" +
                             "(assv 5 '((2 3) (5 7) (11 13))))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2589,8 +2325,7 @@ class VMTest {
                             "(define b (list-copy a))\n" +
                             "(set-car! b 3) ; b is mutable\n" +
                             "(list b a)",
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }
@@ -2607,8 +2342,7 @@ class VMTest {
                             "(symbol? 'nil)\n" +
                             "(symbol? '())\n" +
                             "(symbol? #f))\n"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2620,8 +2354,7 @@ class VMTest {
                             "(symbol->string 'Martin)\n" +
                             "(symbol->string\n" +
                             "(string->symbol \"Malvina\")))\n",
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2637,8 +2370,7 @@ class VMTest {
                             "(string=? \"K. Harper, M.D.\"\n" +
                             "(symbol->string\n" +
                             "(string->symbol \"K. Harper, M.D.\"))))\n",
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2656,8 +2388,7 @@ class VMTest {
                             "#\\space ; the preferred way to write a space\n" +
                             "#\\tab ; the tab character, U+0009\n" +
                             ")",
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
 
@@ -2754,8 +2485,7 @@ class VMTest {
                             "(digit-value #\\x1E953) ;; ADLAM DIGIT THREE - \n" +
                             "(digit-value #\\x1FBF4) ;; SEGMENTED DIGIT FOUR - 🯴\n" +
                             ")"
-                )
-                    , scheme.res
+                ), scheme.res
             )
         )
     }

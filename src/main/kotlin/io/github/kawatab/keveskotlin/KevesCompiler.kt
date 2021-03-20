@@ -35,12 +35,12 @@ class KevesCompiler(private val res: KevesResources) {
     }
 
     private fun transformDefine(x: PtrObject): PtrObject {
-        return if (x.isPair(res)) {
+        return if (x.isPair()) {
             val car = x.toPairOrNull().car(res)
             when {
-                car.isPair(res) -> ScmPair.make(transformDefine(car), transformDefine(x.toPairOrNull().cdr(res)), res)
+                car.isPair() -> ScmPair.make(transformDefine(car), transformDefine(x.toPairOrNull().cdr(res)), res)
                     .toObject()
-                car.isSymbol(res) -> {
+                car.isSymbol() -> {
                     when (car) {
                         ScmSymbol.get("begin", res).toObject() -> {
                             val (definition, body) = findDefinition(
@@ -73,9 +73,9 @@ class KevesCompiler(private val res: KevesResources) {
     }
 
     private tailrec fun findDefinition(sequence: PtrObject, definition: PtrPairOrNull): Pair<PtrPairOrNull, PtrObject> {
-        if (sequence.isPair(res)) {
+        if (sequence.isPair()) {
             val obj = sequence.toPairOrNull().car(res)
-            if (obj.isPair(res)) {
+            if (obj.isPair()) {
                 val car = obj.toPair().car(res)
                 if (car == ScmSymbol.get("define", res).toObject())
                     return findDefinition(
@@ -93,15 +93,15 @@ class KevesCompiler(private val res: KevesResources) {
     }
 
     private fun findLambda(definition: PtrObject): PtrPair {
-        if (definition.isNotPair(res)) throw IllegalArgumentException("define is malformed")
+        if (definition.isNotPair()) throw IllegalArgumentException("define is malformed")
         val car = definition.toPair().car(res)
         val cdr = definition.toPair().cdr(res)
         return when {
-            car.isSymbol(res) -> definition.toPair()
-            car.isPair(res) -> {
+            car.isSymbol() -> definition.toPair()
+            car.isPair() -> {
                 val variable = car.toPair().car(res)
                 val formals = car.toPair().cdr(res)
-                if (variable.isNotNull() && variable.isNotSymbol(res)) throw IllegalArgumentException("found no identifier in definition")
+                if (variable.isNotNull() && variable.isNotSymbol()) throw IllegalArgumentException("found no identifier in definition")
                 ScmPair.list(
                     variable,
                     ScmPair.listStar(ScmSymbol.get("lambda", res).toObject(), formals, cdr, res).toObject(),
@@ -117,15 +117,15 @@ class KevesCompiler(private val res: KevesResources) {
             if (rest.isNull()) result
             else {
                 loop(
-                    rest = rest.cdr(res).let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) },
+                    rest = rest.cdr(res).let { if (it.isPair()) it.toPairOrNull() else PtrPairOrNull(0) },
                     result = ScmPair.make(rest.car(res), result.toObject(), res)
                 )
             }
 
         // val valSequence = sequence.toVal(res)
-        if (sequence.isPair(res)) {
+        if (sequence.isPair()) {
             val obj = sequence.toPair().car(res)
-            if (obj.isPair(res)) {
+            if (obj.isPair()) {
                 val car = obj.toPair().car(res)
                 if (car != ScmSymbol.get("define", res).toObject())
                     return findNextDefinition(
@@ -142,13 +142,13 @@ class KevesCompiler(private val res: KevesResources) {
 
     private fun transformWithMacro(x: PtrObject): PtrObject =
         when {
-            x.isPair(res) -> {
+            x.isPair() -> {
                 val car = x.toPair().car(res)
                 when {
-                    car.isPair(res) -> ScmPair.make(transformWithMacro(car), transformWithMacro(x.toPair().cdr(res)), res).toObject()
-                    car.isSymbol(res) -> {
+                    car.isPair() -> ScmPair.make(transformWithMacro(car), transformWithMacro(x.toPair().cdr(res)), res).toObject()
+                    car.isSymbol() -> {
                         val obj: PtrObject = findBind(car.toSymbol())?.second ?: PtrObject(0)
-                        if (obj.isMacro(res)) transformWithMacro(x = obj.toMacro().transform(x.toPair(), this, res))
+                        if (obj.isMacro()) transformWithMacro(x = obj.toMacro().transform(x.toPair(), this, res))
                         else ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
                     }
                     else -> ScmPair.make(car, transformWithMacro(x = x.toPair().cdr(res)), res).toObject()
@@ -166,11 +166,11 @@ class KevesCompiler(private val res: KevesResources) {
      */
     fun compile(x: PtrObject, e: PtrPairOrNull, s: PtrPairOrNull, next: PtrInstruction): PtrInstruction =
         when {
-            x.isSymbol(res) -> {
+            x.isSymbol() -> {
                 val bind = findBind(x.toSymbol())
                 val obj: PtrObject = bind?.let { (_, obj) ->
                     when {
-                        obj.isSyntax(res) || obj.isProcedure(res) -> obj
+                        obj.isSyntax() || obj.isProcedure() -> obj
                         else -> PtrObject(0)
                     }
                 } ?: PtrObject(0)
@@ -184,16 +184,16 @@ class KevesCompiler(private val res: KevesResources) {
                     )
                 }
             }
-            x.isPair(res) -> {
+            x.isPair() -> {
                 val bind = x.toPair().car(res).let {
-                    if (it.isSymbol(res)) findBind(it.toSymbol()) else null
+                    if (it.isSymbol()) findBind(it.toSymbol()) else null
                 }
                 val obj: PtrObject = bind?.second ?: PtrObject(0)
                 when {
-                    obj.isSyntax(res) -> {
+                    obj.isSyntax() -> {
                         obj.toSyntax().compile(x.toPair(), e, s, next, this, res)
                     }
-                    obj.isProcedure(res) && obj.toProcedure().hasSyntax(res) -> {
+                    obj.isProcedure() && obj.toProcedure().hasSyntax(res) -> {
                         obj.toProcedure().getSyntax(res).toSyntaxNonNull().compile(x.toPair(), e, s, next, this, res)
                     }
                     else -> {
@@ -207,7 +207,7 @@ class KevesCompiler(private val res: KevesResources) {
                             } else {
                                 loop(
                                     args.cdr(res).also {
-                                        if (it.isNeitherNullNorPair(res))
+                                        if (it.isNeitherNullNorPair())
                                             throw IllegalArgumentException(
                                                 KevesExceptions.badSyntax(ScmObject.getStringForWrite(x, res))
                                             )
@@ -219,7 +219,7 @@ class KevesCompiler(private val res: KevesResources) {
 
                         loop(
                             x.toPair().cdr(res).also {
-                                if (it.isNeitherNullNorPair(res))
+                                if (it.isNeitherNullNorPair())
                                     throw IllegalArgumentException(KevesExceptions.badSyntax(x.toPair().toStringForWrite(res)))
                             }.toPairOrNull(),
                             compile(
@@ -255,15 +255,15 @@ class KevesCompiler(private val res: KevesResources) {
      */
     fun findSets(x: PtrObject, v: PtrPairOrNull): PtrPairOrNull =
         when {
-            x.isSymbol(res) ->
+            x.isSymbol() ->
                 PtrPairOrNull(0)
-            x.isPair(res) -> {
-                val bind = x.toPair().car(res).let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+            x.isPair() -> {
+                val bind = x.toPair().car(res).let { if (it.isSymbol()) findBind(it.toSymbol()) else null }
                 val second = bind?.second ?: PtrObject(0)
                 when {
-                    second.isSyntax(res) ->
+                    second.isSyntax() ->
                         second.toSyntax().findSets(x.toPair(), v, this, res)
-                    second.isProcedure(res) && second.toProcedure().hasSyntax(res) ->
+                    second.isProcedure() && second.toProcedure().hasSyntax(res) ->
                         second.toProcedure().getSyntax(res).toSyntaxNonNull().findSets(x.toPair(), v, this, res)
                     else -> {
                         fun next(x: PtrPairOrNull): PtrPairOrNull =
@@ -271,7 +271,7 @@ class KevesCompiler(private val res: KevesResources) {
                             else {
                                 val cdrX = try {
                                     x.cdr(res)
-                                        .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair") }
+                                        .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'next' got non pair") }
                                         .toPairOrNull()
                                 } catch (e: IllegalArgumentException) {
                                     throw IllegalArgumentException("'next' got improper list")
@@ -280,7 +280,7 @@ class KevesCompiler(private val res: KevesResources) {
                             }
                         next(
                             if (bind == null) x.toPairOrNull()
-                            else x.toPair().cdr(res).let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) }
+                            else x.toPair().cdr(res).let { if (it.isPair()) it.toPairOrNull() else PtrPairOrNull(0) }
                         )
                     }
                 }
@@ -295,34 +295,34 @@ class KevesCompiler(private val res: KevesResources) {
      */
     fun findFree(x: PtrObject, b: PtrPairOrNull): PtrPairOrNull =
         when {
-            x.isSymbol(res) -> {
+            x.isSymbol() -> {
                 when {
                     findBind(x.toSymbol()) != null -> PtrPairOrNull(0)
                     setMemberQ(x.toSymbol(), b) -> PtrPairOrNull(0)
                     else -> ScmPair.list(x, res)
                 }
             }
-            x.isPair(res) -> {
-                val bind = x.toPair().car(res).let { if (it.isSymbol(res)) findBind(it.toSymbol()) else null }
+            x.isPair() -> {
+                val bind = x.toPair().car(res).let { if (it.isSymbol()) findBind(it.toSymbol()) else null }
                 val second = bind?.second ?: PtrObject(0)
                 when {
-                    second.isSyntax(res) ->
+                    second.isSyntax() ->
                         second.toSyntax().findFree(x.toPair(), b, this, res)
-                    second.isProcedure(res) && second.toProcedure().hasSyntax(res) ->
+                    second.isProcedure() && second.toProcedure().hasSyntax(res) ->
                         second.toProcedure().getSyntax(res).toSyntaxNonNull().findFree(x.toPair(), b, this, res)
                     else -> {
                         fun next(x: PtrPairOrNull): PtrPairOrNull =
                             if (x.isNull()) PtrPairOrNull(0)
                             else {
                                 val cdrX = x.cdr(res).also {
-                                    if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'next' got non pair")
+                                    if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'next' got non pair")
                                 }.toPairOrNull()
                                 setUnion(findFree(x.car(res), b), next(cdrX))
                             }
                         next(
                             x = if (bind == null) x.toPairOrNull()
                             else x.toPairOrNull().cdr(res)
-                                .let { if (it.isPair(res)) it.toPairOrNull() else PtrPairOrNull(0) }
+                                .let { if (it.isPair()) it.toPairOrNull() else PtrPairOrNull(0) }
                         )
                     }
                 }
@@ -385,12 +385,12 @@ class KevesCompiler(private val res: KevesResources) {
         if (vars.isNull()) next
         else collectFree(
             vars = vars.cdr(res)
-                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'collect-free' got none pair as vars") }
+                .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'collect-free' got none pair as vars") }
                 .toPairOrNull(),
             e = e,
             next = compileRefer(
                 vars.car(res)
-                    .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'collect-free' got none symbol as identifier") }
+                    .also { if (it.isNotSymbol()) throw IllegalArgumentException("'collect-free' got none symbol as identifier") }
                     .toSymbol(),
                 e,
                 ScmInstruction.Argument.make(next, res)
@@ -406,14 +406,14 @@ class KevesCompiler(private val res: KevesResources) {
         fun f(vars: PtrObject, n: Int): PtrInstruction =
             when {
                 vars.isNull() -> next
-                vars.isPair(res) -> {
+                vars.isPair() -> {
                     val carVars = vars.toPair().car(res)
-                        .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'make-box' got non symbol as vars") }
+                        .also { if (it.isNotSymbol()) throw IllegalArgumentException("'make-box' got non symbol as vars") }
                         .toSymbol()
                     if (setMemberQ(carVars, sets)) ScmInstruction.Box.make(n, f(vars.toPair().cdr(res), n + 1), res)
                     else f(vars.toPair().cdr(res), n + 1)
                 }
-                vars.isSymbol(res) -> {
+                vars.isSymbol() -> {
                     if (setMemberQ(vars.toSymbol(), sets)) ScmInstruction.BoxRest.make(n, next, res)
                     else next
                 }
@@ -434,7 +434,7 @@ class KevesCompiler(private val res: KevesResources) {
             s.car(res) == x.toObject() -> true
             else -> {
                 val cdrS = s.cdr(res)
-                    .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-member?' got non pair") }
+                    .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'set-member?' got non pair") }
                     .toPairOrNull()
                 setMemberQ(x = x, s = cdrS)
             }
@@ -458,10 +458,10 @@ class KevesCompiler(private val res: KevesResources) {
             s2
         } else {
             val carS1 = s1.car(res)
-                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-union' got illegal pair") }
+                .also { if (it.isNotSymbol()) throw IllegalArgumentException("'set-union' got illegal pair") }
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
-                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-union' got non pair") }
+                .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'set-union' got non pair") }
                 .toPairOrNull()
             setUnion(s1 = cdrS1, s2 = setCons(carS1, s2))
         }
@@ -476,10 +476,10 @@ class KevesCompiler(private val res: KevesResources) {
             PtrPairOrNull(0)
         } else {
             val carS1 = s1.car(res)
-                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-minus' got non symbol as identifier") }
+                .also { if (it.isNotSymbol()) throw IllegalArgumentException("'set-minus' got non symbol as identifier") }
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
-                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-minus' got non pair") }
+                .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'set-minus' got non pair") }
                 .toPairOrNull()
             if (setMemberQ(carS1, s2)) setMinus(s1 = cdrS1, s2 = s2)
             else ScmPair.make(carS1.toObject(), setMinus(s1 = cdrS1, s2 = s2).toObject(), res)
@@ -495,10 +495,10 @@ class KevesCompiler(private val res: KevesResources) {
             PtrPairOrNull(0)
         } else {
             val carS1 = s1.car(res)
-                .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("'set-intersect' got non symbol as identifier") }
+                .also { if (it.isNotSymbol()) throw IllegalArgumentException("'set-intersect' got non symbol as identifier") }
                 .toSymbol()
             val cdrS1 = s1.cdr(res)
-                .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("'set-intersect' got non pair") }
+                .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("'set-intersect' got non pair") }
                 .toPairOrNull()
             if (setMemberQ(carS1, s2)) ScmPair.make(carS1.toObject(), setIntersect(s1 = cdrS1, s2 = s2).toObject(), res)
             else setIntersect(s1 = cdrS1, s2 = s2)
@@ -537,13 +537,13 @@ companion object {
                 variables to values
             } else {
                 val pair = binds.car(res)
-                    .also { if (it.isNotPair(res)) throw IllegalArgumentException("syntax error") }
+                    .also { if (it.isNotPair()) throw IllegalArgumentException("syntax error") }
                     .toPair()
                 val variable = pair.car(res)
-                    .also { if (it.isNotSymbol(res)) throw IllegalArgumentException("syntax error") }
+                    .also { if (it.isNotSymbol()) throw IllegalArgumentException("syntax error") }
                 val value = ScmPair.cadr(pair.toObject(), res)
                 val cdr = binds.cdr(res)
-                    .also { if (it.isNeitherNullNorPair(res)) throw IllegalArgumentException("Syntax error") }
+                    .also { if (it.isNeitherNullNorPair()) throw IllegalArgumentException("Syntax error") }
                     .toPairOrNull()
                 loop(
                     cdr,
