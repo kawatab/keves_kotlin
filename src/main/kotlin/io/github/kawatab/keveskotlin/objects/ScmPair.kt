@@ -33,8 +33,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
     var cdr: PtrObject = cdr
         protected set
 
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        if (this === other.toVal(res)) true else (other.isPair(res) && equalQ(other.toPair(), ArrayDeque(), res))
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        if (this === other.toPair().toVal(res)) true else (other.isPair(res) && equalQ(other.toPair(), ArrayDeque(), res))
 
     fun equalQ(other: PtrPair, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) ->
@@ -52,7 +52,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             ) return false
             car1.isVector(res) -> if (car2.isNotVector(res) || !car1.toVector().equalQ(car2.toVector(), duplicated, res)
             ) return false
-            else -> if (!car1.toVal(res)!!.equalQ(car2, res)) return false
+            else -> if (!res.equalQ(car1, car2, duplicated)) return false
         }
 
         if (this.cdr == other.cdr(res)) return true
@@ -63,7 +63,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
             cdr1.isBox(res) -> cdr2.isBox(res) && cdr1.toBox().equalQ(cdr2.toBox(), duplicated, res)
             cdr1.isPair(res) -> cdr2.isPair(res) && cdr1.toPair().equalQ(cdr2.toPair(), duplicated, res)
             cdr1.isVector(res) -> cdr2.isVector(res) && cdr1.toVector().equalQ(cdr2.toVector(), duplicated, res)
-            else -> cdr1.toVal(res)!!.equalQ(cdr2, res)
+            else -> res.equalQ(cdr1, cdr2, duplicated)
         }
     }
 
@@ -138,7 +138,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         val carStr =
             let {
                 if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
-                else getStringForWrite(car.toVal(res), res)
+                else getStringForWrite(car, res)
             }
         return when {
             cdr.isNull() -> "($carStr)"
@@ -154,21 +154,21 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 val cdrStr = writePair(cdr.toPair(), duplicatedPair, false, res)
                 "$prefix($carStr $cdrStr)"
             }
-            else -> "($carStr . ${cdr.toVal(res)!!.toStringForWrite(res)})"
+            else -> "($carStr . ${getStringForWrite(cdr, res)})"
         }
     }
 
     private fun writeInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
             if (car.isPair(res)) writePair(car.toPair(), duplicatedPair, true, res)
-            else getStringForWrite(car.toVal(res), res)
+            else getStringForWrite(car, res)
         return when {
             cdr.isNull() -> carStr
             cdr.isPair(res) -> {
                 val cdrStr = writePair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
-            else -> "$carStr . ${cdr.toVal(res)!!.toStringForWrite(res)}"
+            else -> "$carStr . ${getStringForWrite(cdr, res)}"
         }
     }
 
@@ -178,7 +178,7 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         res.searchCirculation(this, allPair, duplicatedPair)
         val carStr =
             if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
-            else getStringForDisplay(car.toVal(res), res)
+            else getStringForDisplay(car, res)
         return when {
             cdr.isNull() -> "($carStr)"
             cdr.isPair(res) -> {
@@ -193,21 +193,21 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
                 val cdrStr = displayPair(cdr.toPair(), duplicatedPair, false, res)
                 "$prefix($carStr $cdrStr)"
             }
-            else -> "($carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)})"
+            else -> "($carStr . ${getStringForDisplay(cdr, res)})"
         }
     }
 
     private fun displayInner(duplicatedPair: ArrayDeque<Pair<ScmPair, Boolean>>, res: KevesResources): String {
         val carStr =
             if (car.isPair(res)) displayPair(car.toPair(), duplicatedPair, true, res)
-            else getStringForDisplay(car.toVal(res), res)
+            else getStringForDisplay(car, res)
         return when {
             cdr.isNull() -> carStr
             cdr.isPair(res) -> {
                 val cdrStr = displayPair(cdr.toPair(), duplicatedPair, false, res)
                 "$carStr $cdrStr"
             }
-            else -> "$carStr . ${cdr.toVal(res)!!.toStringForDisplay(res)}"
+            else -> "$carStr . ${getStringForDisplay(cdr, res)}"
         }
     }
 
@@ -223,8 +223,8 @@ open class ScmPair protected constructor(car: PtrObject, cdr: PtrObject) : ScmOb
         ): Int = when {
             rest.isNull() -> n
             rest.isPair(this) -> {
-                if (tracedPair.indexOf(rest.toVal(this)) > 0) throw IllegalArgumentException("cannot get the length of improper list")
-                tracedPair.addLast(rest.toVal(this)!!)
+                if (tracedPair.indexOf(rest.toPair().toVal(this)) > 0) throw IllegalArgumentException("cannot get the length of improper list")
+                tracedPair.addLast(rest.toPair().toVal(this))
                 length(rest = rest.toPairOrNull().cdr(this), n = n + 1, tracedPair = tracedPair)
             }
             else -> throw IllegalArgumentException("cannot get the length of improper list")

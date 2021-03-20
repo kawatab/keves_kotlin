@@ -35,7 +35,7 @@ class Keves {
         val result = parser.parse()
         parser.errorList.let { errorList ->
             if (errorList.isEmpty()) {
-                println(ScmObject.getStringForWrite(result.toVal(res), res))
+                println(ScmObject.getStringForWrite(result.toObject(), res))
             } else {
                 displayError(parser.errorList, res)
             }
@@ -62,11 +62,11 @@ class Keves {
             ScmObject.getStringForDisplay(
                 compiler.compile(
                     compiler.transform(code.toObject())
-                        .also { println(ScmObject.getStringForDisplay(it.toVal(res), res)) },
+                        .also { println(ScmObject.getStringForDisplay(it, res)) },
                     PtrPairOrNull(0),
                     PtrPairOrNull(0),
                     res.constHalt.toInstruction(),
-                ).toVal(res),
+                ).toObject(),
                 res
             )
         )
@@ -98,7 +98,7 @@ class Keves {
                 }.let { compiled ->
                     println("compiled: ${compiled.toVal(res).toStringForWrite(res)}")
                     try {
-                        vm.evaluate(compiled).also { println("result: ${it.toVal(res)?.toStringForWrite(res)}") }
+                        vm.evaluate(compiled).also { println("result: ${ScmObject.getStringForWrite(it, res)}") }
                     } catch (e: IllegalArgumentException) {
                         return ScmError.make("vm", e.message ?: "", res).toObject()
                     }
@@ -115,7 +115,7 @@ class Keves {
         println(
             ScmObject.getStringForDisplay(
                 parser.parse().let { parsed ->
-                    if (parsed.isNull()) PtrObject(0).toVal(res)
+                    if (parsed.isNull()) PtrObject(0)
                     else {
                         try {
                             compiler.compile(
@@ -125,7 +125,7 @@ class Keves {
                                 res.constHalt.toInstruction()
                             ).let { compiled ->
                                 try {
-                                    vm.evaluate(compiled).toVal(res)
+                                    vm.evaluate(compiled)
                                 } catch (e: IllegalArgumentException) {
                                     val error = ScmError.make("vm", e.message ?: "", res)
                                     return println(error.toVal(res).toStringForDisplay(res))

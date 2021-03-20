@@ -54,8 +54,8 @@ class ScmChar private constructor(private val charArray: CharArray) : ScmObject(
         }
 
     override fun toString(): String = String(charArray)
-    override fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isChar(res) && this.toUtf32() == other.toChar().toUtf32(res)
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
+    fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isChar(res) && this.toUtf32() == other.toChar().toUtf32(res)
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
 
     fun toUtf32(): Int =
         if (charArray.size == 1) charArray[0].toInt()

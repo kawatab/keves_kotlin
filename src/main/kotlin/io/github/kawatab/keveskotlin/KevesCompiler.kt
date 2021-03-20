@@ -122,7 +122,7 @@ class KevesCompiler(private val res: KevesResources) {
                 )
             }
 
-        val valSequence = sequence.toVal(res)
+        // val valSequence = sequence.toVal(res)
         if (sequence.isPair(res)) {
             val obj = sequence.toPair().car(res)
             if (obj.isPair(res)) {
@@ -135,9 +135,9 @@ class KevesCompiler(private val res: KevesResources) {
             }
         }
 
-        return valSequence?.let {
+        return if (sequence.isNotNull())
             loop(notDefinition, ScmPair.make(ScmSymbol.get("begin", res).toObject(), sequence, res))
-        } ?: PtrPairOrNull(0)
+        else PtrPairOrNull(0)
     }
 
     private fun transformWithMacro(x: PtrObject): PtrObject =
@@ -209,7 +209,7 @@ class KevesCompiler(private val res: KevesResources) {
                                     args.cdr(res).also {
                                         if (it.isNeitherNullNorPair(res))
                                             throw IllegalArgumentException(
-                                                KevesExceptions.badSyntax(x.toVal(res)!!.toStringForWrite(res))
+                                                KevesExceptions.badSyntax(ScmObject.getStringForWrite(x, res))
                                             )
                                     }.toPairOrNull(),
                                     compile(args.car(res), e, s, ScmInstruction.Argument.make(c, res)),

@@ -21,11 +21,67 @@
 
 package io.github.kawatab.keveskotlin
 
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_BOX
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_BYTE_VECTOR
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_CHAR
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_CLOSURE
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_CONSTANT
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_DOUBLE
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_ERROR
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_FLOAT
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_INSTRUCTION
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_MACRO
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_MUTABLE_PAIR
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_PAIR
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_PROCEDURE
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_STRING
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_SYMBOL
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_SYNTAX
+import io.github.kawatab.keveskotlin.KevesResources.Companion.F_VECTOR
 import io.github.kawatab.keveskotlin.objects.*
 
+/**
+ * Pointers & instant values
+ * null:         00000000 00000000 00000000 00000000
+ * char:         xxxxxxxx xxxxxxxx xxxxxxxx 00000010
+ * float:        xxxxxxxx xxxxxxxx xxxxxxxx 00000100
+ * double:       xxxxxxxx xxxxxxxx xxxxxxxx 00000110
+ * pair:         xxxxxxxx xxxxxxxx xxxxxxxx 00001000
+ * mutable pair: xxxxxxxx xxxxxxxx xxxxxxxx 00001010
+ * box:          xxxxxxxx xxxxxxxx xxxxxxxx 00001100
+ * vector:       xxxxxxxx xxxxxxxx xxxxxxxx 00001110
+ * symbol:       xxxxxxxx xxxxxxxx xxxxxxxx 00010000
+ * string:       xxxxxxxx xxxxxxxx xxxxxxxx 00010010
+ * byte vector:  xxxxxxxx xxxxxxxx xxxxxxxx 00010100
+ * closure:      xxxxxxxx xxxxxxxx xxxxxxxx 00010110
+ * macro:        xxxxxxxx xxxxxxxx xxxxxxxx 00011000
+ * procedure:    xxxxxxxx xxxxxxxx xxxxxxxx 00011010
+ * syntax:       xxxxxxxx xxxxxxxx xxxxxxxx 00011100
+ * error:        xxxxxxxx xxxxxxxx xxxxxxxx 00011110
+ * instruction:  xxxxxxxx xxxxxxxx xxxxxxxx 00100000
+ * constant:     xxxxxxxx xxxxxxxx xxxxxxxx 01000000
+ * int:          xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxx1
+ */
 class KevesResources {
     companion object {
         private const val MAX_NUMBER_OF_OBJECT = 10000
+        const val F_CHAR = 0x2
+        const val F_FLOAT = 0x4
+        const val F_DOUBLE = 0x6
+        const val F_PAIR = 0x8
+        const val F_MUTABLE_PAIR = 0xa
+        const val F_BOX = 0xc
+        const val F_VECTOR = 0xe
+        const val F_SYMBOL = 0x10
+        const val F_STRING = 0x12
+        const val F_BYTE_VECTOR = 0x14
+        const val F_CLOSURE = 0x16
+        const val F_MACRO = 0x18
+        const val F_PROCEDURE = 0x1a
+        const val F_SYNTAX = 0x1c
+        const val F_ERROR = 0x1e
+        const val F_INSTRUCTION = 0x20
+        const val F_CONSTANT = 0x40
     }
 
     private val allObjectList = Array<ScmObject?>(MAX_NUMBER_OF_OBJECT) { null }
@@ -48,234 +104,267 @@ class KevesResources {
     private fun reset() {
         allObjectList.fill(null)
         objectCnt = 1 // null at 0
-        constUndef = add(ScmConstant.UNDEF)
-        constTrue = add(ScmConstant.TRUE)
-        constFalse = add(ScmConstant.FALSE)
-        constNaN = add(ScmDouble.NaN)
-        constPositiveInfinity = add(ScmDouble.POSITIVE_INFINITY)
-        constNegativeInfinity = add(ScmDouble.NEGATIVE_INFINITY)
-        constHalt = add(ScmInstruction.HALT)
+        constUndef = addConstant(ScmConstant.UNDEF).toObject()
+        constTrue = addConstant(ScmConstant.TRUE).toObject()
+        constFalse = addConstant(ScmConstant.FALSE).toObject()
+        constNaN = addDouble(ScmDouble.NaN).toObject()
+        constPositiveInfinity = addDouble(ScmDouble.POSITIVE_INFINITY).toObject()
+        constNegativeInfinity = addDouble(ScmDouble.NEGATIVE_INFINITY).toObject()
+        constHalt = addInstruction(ScmInstruction.HALT).toObject()
     }
 
-    private fun add(obj: ScmObject): PtrObject {
+    private fun add(obj: ScmObject, flag: Int): PtrObject {
         synchronized(this) {
             if (objectCnt >= MAX_NUMBER_OF_OBJECT - 1) throw RuntimeException("cannot create object any more, due to memory full")
             val temp = objectCnt
             allObjectList[objectCnt] = obj
             objectCnt += 1
-            return PtrObject(temp shl 2)
+            return PtrObject((temp shl 8) + flag)
         }
     }
 
-    fun addBox(box: ScmBox) = add(box).toBox()
-    fun addByteVector(byteVector: ScmByteVector) = add(byteVector).toByteVector()
-    fun addChar(char: ScmChar) = add(char).toChar()
-    fun addClosure(closure: ScmClosure) = add(closure).toClosure()
-    fun addDouble(double: ScmDouble) = add(double).toDouble()
-    fun addError(error: ScmError) = add(error).toError()
-    fun addFloat(float: ScmFloat) = add(float).toFloat()
-    fun addInstruction(instruction: ScmInstruction) = add(instruction).toInstruction()
-    fun addInstructionApply(instruction: ScmInstruction.Apply) = add(instruction).toInstructionApply()
-    fun addInstructionReturn(instruction: ScmInstruction.Return) = add(instruction).toInstructionReturn()
-    fun addInt(int: ScmInt) = add(int).toInt()
-    fun addMutablePair(mutablePair: ScmMutablePair) = add(mutablePair).toMutablePair()
-    fun addPair(pair: ScmPair) = add(pair).toPairOrNull()
-    fun addString(string: ScmString) = add(string).toString2()
-    fun addSymbol(symbol: ScmSymbol) = add(symbol).toSymbol()
-    fun addVector(vector: ScmVector) = add(vector).toVector()
+    fun addBox(box: ScmBox) = add(box, F_BOX).toBox()
+    fun addByteVector(byteVector: ScmByteVector) = add(byteVector, F_BYTE_VECTOR).toByteVector()
+    fun addChar(char: ScmChar) = add(char, F_CHAR).toChar()
+    fun addClosure(closure: ScmClosure) = add(closure, F_CLOSURE).toClosure()
+    fun addConstant(constant: ScmConstant) = add(constant, F_CONSTANT).toConstant()
+    fun addDouble(double: ScmDouble) = add(double, F_DOUBLE).toDouble()
+    fun addError(error: ScmError) = add(error, F_ERROR).toError()
+    fun addFloat(float: ScmFloat) = add(float, F_FLOAT).toFloat()
+    fun addInstruction(instruction: ScmInstruction) = add(instruction, F_INSTRUCTION).toInstruction()
+    fun addInstructionApply(instruction: ScmInstruction.Apply) = add(instruction, F_INSTRUCTION).toInstructionApply()
+    fun addInstructionReturn(instruction: ScmInstruction.Return) = add(instruction, F_INSTRUCTION).toInstructionReturn()
+    fun addInt(int: ScmInt) = add(int, 0x1).toInt()
+    fun addMutablePair(mutablePair: ScmMutablePair) = add(mutablePair, F_MUTABLE_PAIR).toMutablePair()
+    fun addPair(pair: ScmPair) = add(pair, F_PAIR).toPairOrNull()
+    fun addString(string: ScmString) = add(string, F_STRING).toString2()
+    fun addSymbol(symbol: ScmSymbol) = add(symbol, F_SYMBOL).toSymbol()
+    fun addVector(vector: ScmVector) = add(vector, F_VECTOR).toVector()
 
-    fun addMacro(macro: ScmMacro) = add(macro)
-    fun addProcedure(proc: ScmProcedure) = PtrProcedure(add(proc).ptr)
-    fun addSyntaxOrNull(syntax: ScmSyntax) = PtrSyntaxOrNull(add(syntax).ptr)
+    fun addMacro(macro: ScmMacro) = add(macro, F_MACRO)
+    fun addProcedure(proc: ScmProcedure) = PtrProcedure(add(proc, F_PROCEDURE).ptr)
+    fun addSyntax(syntax: ScmSyntax) = PtrSyntaxOrNull(add(syntax, F_SYNTAX).ptr)
 
-    fun isScmObject(id: PtrObject) = (id.ptr and 3) == 0
-    fun isInt(id: PtrObject) = (id.ptr and 3) == 1
-    fun toInt(id: PtrObject) = id.ptr ushr 2
-    fun toPointer(value: Int) = (value shl 2) + 1
+    fun equalQ(obj1: PtrObject, obj2: PtrObject, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>): Boolean =
+        when {
+            obj1.isNull() -> obj2.isNull()
+            obj1.isBox(this) -> obj2.isBox(this) && obj1.toBox().equalQ(obj2.toBox(), duplicated, this)
+            obj1.isPair(this) -> obj2.isPair(this) && obj1.toPair().equalQ(obj2.toPair(), duplicated, this)
+            obj1.isVector(this) -> obj2.isVector(this) && obj1.toVector().equalQ(obj2.toVector(), duplicated, this)
+            obj1.isByteVector(this) -> obj1.toByteVector().toVal(this).equalQ(obj2, this)
+            obj1.isChar(this) -> obj1.toChar().toVal(this).equalQ(obj2, this)
+            obj1.isClosure(this) -> obj1 == obj2
+            obj1.isConstant(this) -> obj1 == obj2
+            obj1.isDouble(this) -> obj1.toDouble().toVal(this).equalQ(obj2, this)
+            obj1.isError(this) -> obj1 == obj2
+            obj1.isFloat(this) -> obj1.toFloat().toVal(this).equalQ(obj2, this)
+            obj1.isInstruction(this) -> obj1 == obj2
+            obj1.isInt(this) -> obj1.toInt().toVal(this).equalQ(obj2, this)
+            obj1.isMacro(this) -> obj1 == obj2
+            obj1.isProcedure(this) -> obj1 == obj2
+            obj1.isString(this) -> obj1.toString2().toVal(this).equalQ(obj2, this)
+            obj1.isSymbol(this) -> obj1 == obj2
+            obj1.isSyntax(this) -> obj1 == obj2
+            else -> false
+        }
+
+    fun isScmObject(id: PtrObject) = (id.ptr and 0x1) == 0
+    fun isInt(id: PtrObject) = (id.ptr and 0x1) == 1
+    fun toInt(id: PtrObject) = id.ptr ushr 8
+    fun toPointer(value: Int) = (value shl 8) + 1
 
     fun getNonNull(id: PtrObjectNonNull): ScmObject {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] ?: throw RuntimeException("null is not acceptable")
     }
 
+    /*
     internal fun get(id: PtrObject): ScmObject? {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object") else allObjectList[i]
     }
+     */
 
     internal fun getBox(id: PtrBox): ScmBox {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmBox ?: throw KevesExceptions.typeCastFailedToBox
     }
 
     internal fun getByteVector(id: PtrByteVector): ScmByteVector {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmByteVector ?: throw KevesExceptions.typeCastFailedToByteVector
     }
 
     internal fun getChar(id: PtrChar): ScmChar {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmChar ?: throw KevesExceptions.typeCastFailedToChar
     }
 
     internal fun getClosure(id: PtrClosure): ScmClosure {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmClosure ?: throw KevesExceptions.typeCastFailedToClosure
     }
 
+    internal fun getConstant(id: PtrConstant): ScmConstant {
+        val i = id.ptr shr 8
+        return if (i >= objectCnt) throw RuntimeException("cannot find such object")
+        else allObjectList[i] as? ScmConstant ?: throw KevesExceptions.typeCastFailedToConstant
+    }
+
     internal fun getDouble(id: PtrDouble): ScmDouble {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmDouble ?: throw KevesExceptions.typeCastFailedToDouble
     }
 
     internal fun getError(id: PtrError): ScmError {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmError ?: throw KevesExceptions.typeCastFailedToError
     }
 
     internal fun getFloat(id: PtrFloat): ScmFloat {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmFloat ?: throw KevesExceptions.typeCastFailedToFloat
     }
 
     internal fun getInstruction(id: PtrInstruction): ScmInstruction {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmInstruction ?: throw KevesExceptions.typeCastFailedToInstruction
     }
 
     internal fun getInstructionApply(id: PtrInstructionApply): ScmInstruction.Apply {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmInstruction.Apply ?: throw KevesExceptions.typeCastFailedToInstructionApply
     }
 
     internal fun getInstructionReturn(id: PtrInstructionReturn): ScmInstruction.Return {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmInstruction.Return ?: throw KevesExceptions.typeCastFailedToInstructionReturn
     }
 
     internal fun getInt(id: PtrInt): ScmInt {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmInt ?: throw KevesExceptions.typeCastFailedToInt
     }
 
     internal fun getPairOrNull(id: PtrPairOrNull): ScmPair? {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i]?.let { it as? ScmPair ?: throw KevesExceptions.typeCastFailedToPairOrNull }
     }
 
     internal fun getPair(id: PtrPair): ScmPair {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmPair ?: throw KevesExceptions.typeCastFailedToPair
     }
 
     internal fun getMacro(id: PtrMacro): ScmMacro {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmMacro ?: throw KevesExceptions.typeCastFailedToMacro
     }
 
     internal fun getMutablePair(id: PtrMutablePair): ScmMutablePair {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmMutablePair ?: throw KevesExceptions.typeCastFailedToMutablePair
     }
 
     internal fun getProcedure(id: PtrProcedure): ScmProcedure {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmProcedure ?: throw KevesExceptions.typeCastFailedToProcedure
     }
 
     internal fun getString(id: PtrString): ScmString {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmString ?: throw KevesExceptions.typeCastFailedToString
     }
 
     internal fun getSymbol(id: PtrSymbol): ScmSymbol {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmSymbol ?: throw KevesExceptions.typeCastFailedToSymbol
     }
 
     internal fun getSyntax(id: PtrSyntax): ScmSyntax {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmSyntax ?: throw KevesExceptions.typeCastFailedToSyntax
     }
 
     internal fun getSyntaxOrNull(id: PtrSyntaxOrNull): ScmSyntax? {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i]?.let { it as? ScmSyntax ?: throw KevesExceptions.typeCastFailedToSyntax }
     }
 
     internal fun getVector(id: PtrVector): ScmVector {
-        val i = id.ptr shr 2
+        val i = id.ptr shr 8
         return if (i >= objectCnt) throw RuntimeException("cannot find such object")
         else allObjectList[i] as? ScmVector ?: throw KevesExceptions.typeCastFailedToVector
     }
 }
 
-/**
- * Pointers & instant values
- * null: 00000000 00000000 00000000 00000000
- * ptr:  xxxxxxxx xxxxxxxx xxxxxxxx xxxxxx00
- * int:  xxxxxxxx xxxxxxxx xxxxxxxx xxxxxx01
- */
 inline class PtrObject(val ptr: Int) {
+    private val flag get() = ptr and 0xff
     fun isNull() = ptr == 0
     fun isNotNull() = ptr != 0
-    fun isBox(res: KevesResources) = toVal(res) is ScmBox
-    fun isNotBox(res: KevesResources) = toVal(res) !is ScmBox
-    fun isByteVector(res: KevesResources) = toVal(res) is ScmByteVector
-    fun isNotByteVector(res: KevesResources) = toVal(res) !is ScmByteVector
-    fun isChar(res: KevesResources) = toVal(res) is ScmChar
-    fun isNotChar(res: KevesResources) = toVal(res) !is ScmChar
-    fun isClosure(res: KevesResources) = toVal(res) is ScmClosure
-    fun isNotClosure(res: KevesResources) = toVal(res) !is ScmClosure
-    fun isDouble(res: KevesResources) = toVal(res) is ScmDouble
-    fun isNotDouble(res: KevesResources) = toVal(res) !is ScmDouble
-    fun isFloat(res: KevesResources) = toVal(res) is ScmFloat
-    fun isNotFloat(res: KevesResources) = toVal(res) !is ScmFloat
-    fun isInt(res: KevesResources) = toVal(res) is ScmInt
-    fun isNotInt(res: KevesResources) = toVal(res) !is ScmInt
-    fun isMacro(res: KevesResources) = toVal(res) is ScmMacro
-    fun isNotMacro(res: KevesResources) = toVal(res) !is ScmMacro
-    fun isPair(res: KevesResources) = toVal(res) is ScmPair
-    fun isNotPair(res: KevesResources) = toVal(res) !is ScmPair
-    fun isProcedure(res: KevesResources) = toVal(res) is ScmProcedure
-    fun isNotProcedure(res: KevesResources) = toVal(res) !is ScmProcedure
-    fun isNotMutablePair(res: KevesResources) = toVal(res) !is ScmMutablePair
-    fun isString(res: KevesResources) = toVal(res) is ScmString
-    fun isNotString(res: KevesResources) = toVal(res) !is ScmString
-    fun isSymbol(res: KevesResources) = toVal(res) is ScmSymbol
-    fun isNotSymbol(res: KevesResources) = toVal(res) !is ScmSymbol
-    fun isSyntax(res: KevesResources) = toVal(res) is ScmSyntax
-    fun isNotSyntax(res: KevesResources) = toVal(res) !is ScmSyntax
-    fun isVector(res: KevesResources) = toVal(res) is ScmVector
-    fun isNotVector(res: KevesResources) = toVal(res) !is ScmVector
-    fun isNeitherNullNorPair(res: KevesResources) = ptr != 0 && toVal(res) !is ScmPair
-    fun toVal(res: KevesResources) = res.get(this)
+    fun isBox(res: KevesResources) = flag == F_BOX
+    fun isNotBox(res: KevesResources) = flag != F_BOX
+    fun isByteVector(res: KevesResources) = flag == F_BYTE_VECTOR
+    fun isNotByteVector(res: KevesResources) = flag != F_BYTE_VECTOR
+    fun isChar(res: KevesResources) = flag == F_CHAR
+    fun isNotChar(res: KevesResources) = flag != F_CHAR
+    fun isClosure(res: KevesResources) = flag == F_CLOSURE
+    fun isConstant(res: KevesResources) = flag == F_CONSTANT
+    fun isNotClosure(res: KevesResources) = flag != F_CLOSURE
+    fun isDouble(res: KevesResources) = flag == F_DOUBLE
+    fun isNotDouble(res: KevesResources) = flag != F_DOUBLE
+    fun isError(res: KevesResources) = flag == F_ERROR
+    fun isNotError(res: KevesResources) = flag != F_ERROR
+    fun isFloat(res: KevesResources) = flag == F_FLOAT
+    fun isNotFloat(res: KevesResources) = flag != F_FLOAT
+    fun isInstruction(res: KevesResources) = flag == F_INSTRUCTION
+    fun isNotInstruction(res: KevesResources) = flag != F_INSTRUCTION
+    fun isInt(res: KevesResources) = ptr and 0x1 == 1
+    fun isNotInt(res: KevesResources) = ptr and 0x1 != 1
+    fun isMacro(res: KevesResources) = flag == F_MACRO
+    fun isNotMacro(res: KevesResources) = flag != F_MACRO
+    fun isNotMutablePair(res: KevesResources) = flag != F_MUTABLE_PAIR
+    fun isPair(res: KevesResources) = flag == F_PAIR || flag == F_MUTABLE_PAIR
+    fun isNotPair(res: KevesResources) = flag != F_PAIR && flag != F_MUTABLE_PAIR
+    fun isProcedure(res: KevesResources) = flag == F_PROCEDURE
+    fun isNotProcedure(res: KevesResources) = flag != F_PROCEDURE
+    fun isString(res: KevesResources) = flag == F_STRING
+    fun isNotString(res: KevesResources) = flag != F_STRING
+    fun isSymbol(res: KevesResources) = flag == F_SYMBOL
+    fun isNotSymbol(res: KevesResources) = flag != F_SYMBOL
+    fun isSyntax(res: KevesResources) = flag == F_SYNTAX
+    fun isNotSyntax(res: KevesResources) = flag != F_SYNTAX
+    fun isVector(res: KevesResources) = flag == F_VECTOR
+    fun isNotVector(res: KevesResources) = flag != F_VECTOR
+    fun isNeitherNullNorPair(res: KevesResources) = ptr != 0 && flag != F_PAIR && flag != F_MUTABLE_PAIR
+    // fun toVal(res: KevesResources) = res.get(this)
     fun toNonNull() = PtrObjectNonNull(ptr)
     fun toBox() = PtrBox(ptr)
     fun toByteVector() = PtrByteVector(ptr)
     fun toChar() = PtrChar(ptr)
     fun toClosure() = PtrClosure(ptr)
+    fun toConstant() = PtrConstant(ptr)
     fun toDouble() = PtrDouble(ptr)
     fun toError() = PtrError(ptr)
     fun toFloat() = PtrFloat(ptr)
@@ -336,6 +425,11 @@ inline class PtrChar(val ptr: Int) {
 
 inline class PtrClosure(val ptr: Int) {
     fun toVal(res: KevesResources) = res.getClosure(this)
+    fun toObject() = PtrObject(ptr)
+}
+
+inline class PtrConstant(val ptr: Int) {
+    fun toVal(res: KevesResources) = res.getConstant(this)
     fun toObject() = PtrObject(ptr)
 }
 

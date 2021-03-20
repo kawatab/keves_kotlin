@@ -28,8 +28,8 @@ class ScmFloat private constructor(val value: Float) : ScmObject() {
     override fun toStringForWrite(res: KevesResources): String = toString()
     override fun toStringForDisplay(res: KevesResources): String = toString()
     override fun toString(): String = value.toString()
-    override fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isFloat(res) && this.value == other.toFloat().value(res)
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
+    fun eqvQ(other: PtrObject, res: KevesResources): Boolean = other.isFloat(res) && this.value == other.toFloat().value(res)
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean = eqvQ(other, res)
 
     override fun add(other: PtrObject, res: KevesResources): PtrObject =
         when {

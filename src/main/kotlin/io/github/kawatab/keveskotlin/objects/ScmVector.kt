@@ -38,15 +38,15 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
     val size get() = array.size
 
     override fun toStringForWrite(res: KevesResources): String =
-        "#(${array.joinToString(" ") { getStringForWrite(PtrObject(it).toVal(res), res) }})"
+        "#(${array.joinToString(" ") { getStringForWrite(PtrObject(it), res) }})"
 
     override fun toStringForDisplay(res: KevesResources): String =
-        "#(${array.joinToString(" ") { getStringForDisplay(PtrObject(it).toVal(res), res) }})"
+        "#(${array.joinToString(" ") { getStringForDisplay(PtrObject(it), res) }})"
 
     override fun toString(): String = "#()"
 
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        if (this === other.toVal(res)) true else (other.isVector(res) && equalQ(other.toVector(), ArrayDeque(), res))
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        if (this === other.toVector().toVal(res)) true else (other.isVector(res) && equalQ(other.toVector(), ArrayDeque(), res))
 
     fun equalQ(other: PtrVector, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) -> (this == first && other.toVal(res) == second) || (this == second && other.toVal(res) == first) } >= 0) return true
@@ -62,7 +62,7 @@ class ScmVector private constructor(private val array: IntArray) : ScmObject() {
                 obj1.isBox(res) -> if (obj2.isBox(res) || !obj1.toBox().equalQ(obj2.toBox(), duplicated, res)) return false
                 obj1.isPair(res) -> if (obj2.isPair(res) || !obj1.toPair().equalQ(obj2.toPair(), duplicated, res)) return false
                 obj1.isVector(res) -> if (obj2.isVector(res) || !obj1.toVector().equalQ(obj2.toVector(), duplicated, res)) return false
-                else -> if (!obj1.toVal(res)!!.equalQ(obj2, res)) return false
+                else -> if (!res.equalQ(obj1, obj2, duplicated)) return false
             }
         }
         return true

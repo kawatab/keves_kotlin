@@ -71,7 +71,12 @@ class R7rsNumber(private val res: KevesResources) {
                             vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         vm.scmProcReturn(
                             try {
-                                obj1.toVal(res)!!.add(obj2, vm.res)
+                                when {
+                                    obj1.isInt(res) -> obj1.toInt().toVal(res).add(obj2, vm.res)
+                                    obj1.isFloat(res) -> obj1.toFloat().toVal(res).add(obj2, vm.res)
+                                    obj1.isDouble(res) -> obj1.toDouble().toVal(res).add(obj2, vm.res)
+                                    else -> throw KevesExceptions.expectedNumber(id)
+                                }
                             } catch (e: IllegalArgumentException) {
                                 throw KevesExceptions.expectedNumber(id)
                             },
@@ -138,7 +143,8 @@ class R7rsNumber(private val res: KevesResources) {
                         when {
                             obj.isInt(res) -> ScmInt.make(-obj.toInt().value(res), vm.res).toObject() // opposite
                             obj.isFloat(res) -> ScmFloat.make(-obj.toFloat().value(res), vm.res).toObject() // opposite
-                            obj.isDouble(res) -> ScmDouble.make(-obj.toDouble().value(res), vm.res).toObject() // opposite
+                            obj.isDouble(res) -> ScmDouble.make(-obj.toDouble().value(res), vm.res)
+                                .toObject() // opposite
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
                     }
@@ -149,7 +155,12 @@ class R7rsNumber(private val res: KevesResources) {
                         val obj2 =
                             vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         try {
-                            obj1.toVal(res)!!.subtract(obj2, vm.res)
+                            when {
+                                obj1.isInt(res) -> obj1.toInt().toVal(res).subtract(obj2, vm.res)
+                                obj1.isFloat(res) -> obj1.toFloat().toVal(res).subtract(obj2, vm.res)
+                                obj1.isDouble(res) -> obj1.toDouble().toVal(res).subtract(obj2, vm.res)
+                                else -> throw KevesExceptions.expectedNumber(id)
+                            }
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedNumber(id)
                         }
@@ -237,7 +248,10 @@ class R7rsNumber(private val res: KevesResources) {
                         val obj = vm.stack.index(i, index)
                         when {
                             obj.isInt(res) -> floatLoop(index = index + 1, product = product * obj.toInt().value(res))
-                            obj.isFloat(res) -> floatLoop(index = index + 1, product = product * obj.toFloat().value(res))
+                            obj.isFloat(res) -> floatLoop(
+                                index = index + 1,
+                                product = product * obj.toFloat().value(res)
+                            )
                             obj.isDouble(res) -> doubleLoop(index + 1, product * obj.toDouble().value(res))
                             else -> throw KevesExceptions.expectedNumber(id)
                         }
@@ -276,7 +290,8 @@ class R7rsNumber(private val res: KevesResources) {
                         when {
                             obj.isInt(res) -> when (obj.toInt().value(res)) { // reciprocal
                                 0 -> throw KevesExceptions.expectedNonZero(id)
-                                -1, 1 -> ScmInt.make(obj.toInt().value(res), res).toObject() // TODO("remove ScmInt.make")
+                                -1, 1 -> ScmInt.make(obj.toInt().value(res), res)
+                                    .toObject() // TODO("remove ScmInt.make")
                                 else -> ScmDouble.make(1.0 / obj.toInt().value(res).toDouble(), vm.res).toObject()
                             }
 
@@ -341,7 +356,10 @@ class R7rsNumber(private val res: KevesResources) {
                                         if (remainder == 0) {
                                             intLoop(index = index + 1, quotient = quotient / obj.toInt().value(res))
                                         } else {
-                                            doubleLoop(index + 1, quotient.toDouble() / obj.toInt().value(res).toDouble())
+                                            doubleLoop(
+                                                index + 1,
+                                                quotient.toDouble() / obj.toInt().value(res).toDouble()
+                                            )
                                         }
                                     }
                                     obj.isFloat(res) -> floatLoop(index + 1, quotient / obj.toFloat().value(res))
@@ -442,7 +460,18 @@ class R7rsNumber(private val res: KevesResources) {
                         val obj2 =
                             vm.stack.index(sp, 1).also { if (it.isNull()) throw KevesExceptions.expectedNumber(id) }
                         val result = try {
-                            if (obj1.toVal(res)!!.isLessThan(obj2, res)) res.constTrue else res.constFalse
+                            when {
+                                obj1.isInt(res) ->
+                                    if (obj1.toInt().toVal(res).isLessThan(obj2, res)) res.constTrue else res.constFalse
+                                obj1.isFloat(res) ->
+                                    if (obj1.toFloat().toVal(res).isLessThan(obj2, res)) res.constTrue
+                                    else res.constFalse
+                                obj1.isDouble(res) ->
+                                    if (obj1.toDouble().toVal(res).isLessThan(obj2, res)) res.constTrue
+                                    else res.constFalse
+                                else -> throw KevesExceptions.expectedNumber(id)
+
+                            }
                         } catch (e: IllegalArgumentException) {
                             throw KevesExceptions.expectedNumber(id)
                         }

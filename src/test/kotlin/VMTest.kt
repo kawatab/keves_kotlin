@@ -264,14 +264,14 @@ class VMTest {
 
     @Test
     fun test001() {
-        assertEquals("123", scheme.getStringForDisplay(scheme.evaluate2("(quote 123)").toVal(scheme.res)))
+        assertEquals("123", ScmObject.getStringForDisplay(scheme.evaluate2("(quote 123)"), scheme.res))
     }
 
     @Test
     fun test002() {
         assertEquals(
             "6",
-            scheme.getStringForDisplay(scheme.evaluate2("((lambda (x) (set! x 6)) #f)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("((lambda (x) (set! x 6)) #f)"), scheme.res)
         )
     }
 
@@ -279,9 +279,9 @@ class VMTest {
     fun test003() {
         assertEquals(
             "8",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2("((lambda (x) (if x x (begin (set! x 8) x))) #f)")
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -290,8 +290,8 @@ class VMTest {
     fun test004() {
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("((lambda (x) (if x x (begin (set! x 8) x))) #t)").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("((lambda (x) (if x x (begin (set! x 8) x))) #t)"), scheme.res
             )
         )
     }
@@ -300,9 +300,9 @@ class VMTest {
     fun test005() {
         assertEquals(
             "6",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2("(call/cc (lambda (exit) (begin 1 2 3 4 5 6)))")
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
         // ScmObject.getStringForDisplay(scheme.evaluate2("(call/cc (lambda (exit) (begin 1 2 3 (exit 4) 5 6)))")
@@ -310,65 +310,65 @@ class VMTest {
 
     @Test
     fun test006() {
-        assertEquals("#<undef>", scheme.getStringForDisplay(scheme.evaluate2("(display \"abc\")").toVal(scheme.res)))
+        assertEquals("#<undef>", ScmObject.getStringForDisplay(scheme.evaluate2("(display \"abc\")"), scheme.res))
     }
 
     @Test
     fun test007() {
-        assertEquals("123", scheme.getStringForDisplay(scheme.evaluate2("(+ (+ (+ 123)))").toVal(scheme.res)))
+        assertEquals("123", ScmObject.getStringForDisplay(scheme.evaluate2("(+ (+ (+ 123)))"), scheme.res))
     }
 
     @Test
     fun test008() {
         assertEquals(
             (234 + 345 + 123 + 678 + 901).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(+ (+ 234 345 (+ 123) 678) 901)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(+ (+ 234 345 (+ 123) 678) 901)"), scheme.res)
         )
     }
 
     @Test
     fun test009() {
-        assertEquals("0", scheme.getStringForDisplay(scheme.evaluate2("(+)").toVal(scheme.res)))
+        assertEquals("0", ScmObject.getStringForDisplay(scheme.evaluate2("(+)"), scheme.res))
     }
 
     @Test
     fun test010() {
-        assertEquals("123", scheme.getStringForDisplay(scheme.evaluate2("(+ 123)").toVal(scheme.res)))
+        assertEquals("123", ScmObject.getStringForDisplay(scheme.evaluate2("(+ 123)"), scheme.res))
     }
 
     @Test
     fun test011() {
-        assertEquals("123.5", scheme.getStringForDisplay(scheme.evaluate2("(+ 123.5)").toVal(scheme.res)))
+        assertEquals("123.5", ScmObject.getStringForDisplay(scheme.evaluate2("(+ 123.5)"), scheme.res))
     }
 
     @Test
     fun test012() {
         assertEquals(
             (23.4 + 345 + 123 + 678 + 901).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(+ (+ 23.4 345 (+ 123) 678) 901)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(+ (+ 23.4 345 (+ 123) 678) 901)"), scheme.res)
         )
     }
 
     @Test
     fun test013() {
-        assertEquals("1", scheme.getStringForDisplay(scheme.evaluate2("(*)").toVal(scheme.res)))
+        assertEquals("1", ScmObject.getStringForDisplay(scheme.evaluate2("(*)"), scheme.res))
     }
 
     @Test
     fun test014() {
-        assertEquals("123", scheme.getStringForDisplay(scheme.evaluate2("(* 123)").toVal(scheme.res)))
+        assertEquals("123", ScmObject.getStringForDisplay(scheme.evaluate2("(* 123)"), scheme.res))
     }
 
     @Test
     fun test015() {
-        assertEquals("123.5", scheme.getStringForDisplay(scheme.evaluate2("(* 123.5)").toVal(scheme.res)))
+        assertEquals("123.5", ScmObject.getStringForDisplay(scheme.evaluate2("(* 123.5)"), scheme.res))
     }
 
     @Test
     fun test016() {
         assertEquals(
             ((23.4 + 345 + 123 + 678) * 901).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(* (+ 23.4 345 (+ 123) 678) 901)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(* (+ 23.4 345 (+ 123) 678) 901)"), scheme.res)
         )
     }
 
@@ -376,7 +376,7 @@ class VMTest {
     fun test017() {
         assertEquals(
             (-123.5).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(- 123.5)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(- 123.5)"), scheme.res)
         )
     }
 
@@ -384,30 +384,30 @@ class VMTest {
     fun test018() {
         assertEquals(
             ((23.4 - 345 - 123 - 678) * 901).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(* (- 23.4 345 (+ 123) 678) 901)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(* (- 23.4 345 (+ 123) 678) 901)"), scheme.res)
         )
     }
 
     @Test
     fun test019() {
-        assertEquals("1", scheme.getStringForDisplay(scheme.evaluate2("(/ 1)").toVal(scheme.res)))
+        assertEquals("1", ScmObject.getStringForDisplay(scheme.evaluate2("(/ 1)"), scheme.res))
     }
 
     @Test
     fun test020() {
-        assertEquals("-1", scheme.getStringForDisplay(scheme.evaluate2("(/ -1)").toVal(scheme.res)))
+        assertEquals("-1", ScmObject.getStringForDisplay(scheme.evaluate2("(/ -1)"), scheme.res))
     }
 
     @Test
     fun test021() {
-        assertEquals("-1", scheme.getStringForDisplay(scheme.evaluate2("(/ -8 4 2)").toVal(scheme.res)))
+        assertEquals("-1", ScmObject.getStringForDisplay(scheme.evaluate2("(/ -8 4 2)"), scheme.res))
     }
 
     @Test
     fun test022() {
         assertEquals(
             ((23.4 - 345 - 123 - 678) / 901).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(/ (- 23.4 345 (+ 123) 678) 901)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(/ (- 23.4 345 (+ 123) 678) 901)"), scheme.res)
         )
     }
 
@@ -415,11 +415,11 @@ class VMTest {
     fun test023() {
         assertEquals(
             (Double.POSITIVE_INFINITY).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(/ 0.0)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(/ 0.0)"), scheme.res)
         )
         assertNotEquals(
             (Double.NEGATIVE_INFINITY).toString(),
-            scheme.getStringForDisplay(scheme.evaluate2("(/ 0.0)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(/ 0.0)"), scheme.res)
         )
     }
 
@@ -427,16 +427,16 @@ class VMTest {
     fun test024() {
         assertEquals(
             "14",
-            scheme.getStringForDisplay(scheme.evaluate2("(let () (+ 2 3 4 5))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(let () (+ 2 3 4 5))"), scheme.res)
         )
 
         assertEquals(
             "a",
-            scheme.getStringForDisplay(scheme.evaluate2("(let ([x (list 'a 'b 'c)]) (car x))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(let ([x (list 'a 'b 'c)]) (car x))"), scheme.res)
         )
         assertEquals(
             "(b c)",
-            scheme.getStringForDisplay(scheme.evaluate2("(let ([x (list 'a 'b 'c)]) (cdr x))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(let ([x (list 'a 'b 'c)]) (cdr x))"), scheme.res)
         )
     }
 
@@ -444,26 +444,26 @@ class VMTest {
     fun test025() {
         assertEquals(
             "a",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (caar x))").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (caar x))"), scheme.res
             )
         )
         assertEquals(
             "(b 2 3)",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cadr x))").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cadr x))"), scheme.res
             )
         )
         assertEquals(
             "(1)",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cdar x))").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cdar x))"), scheme.res
             )
         )
         assertEquals(
             "(c)",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cddr x))").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ([x (list (list 'a 1) (list 'b 2 3) 'c)]) (cddr x))"), scheme.res
             )
         )
     }
@@ -472,14 +472,14 @@ class VMTest {
     fun test026() {
         assertEquals(
             "#0=(a b c . #0#)",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ((x (list 'a 'b 'c))) (set-cdr! (cddr x) x) x)").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ((x (list 'a 'b 'c))) (set-cdr! (cddr x) x) x)"), scheme.res
             )
         )
         assertEquals(
             "(a . #0=(b c . #0#))",
-            scheme.getStringForDisplay(
-                scheme.evaluate2("(let ((x (list 'a 'b 'c))) (set-cdr! (cddr x) (cdr x)) x)").toVal(scheme.res)
+            ScmObject.getStringForDisplay(
+                scheme.evaluate2("(let ((x (list 'a 'b 'c))) (set-cdr! (cddr x) (cdr x)) x)"), scheme.res
             )
         )
     }
@@ -488,7 +488,7 @@ class VMTest {
     fun testLetStar() {
         assertEquals(
             "15",
-            scheme.getStringForDisplay(scheme.evaluate2("(let* () (+ 1 2 3 4 5))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(let* () (+ 1 2 3 4 5))"), scheme.res)
         )
     }
 
@@ -496,7 +496,7 @@ class VMTest {
     fun testLetrecStar() {
         assertEquals(
             "15",
-            scheme.getStringForDisplay(scheme.evaluate2("(letrec* () (+ 1 2 3 4 5))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(letrec* () (+ 1 2 3 4 5))"), scheme.res)
         )
     }
 
@@ -504,12 +504,12 @@ class VMTest {
     fun testFib5() {
         assertEquals(
             "5",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(define fib (lambda (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))\n" +
                             "(fib 5)"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -518,7 +518,7 @@ class VMTest {
     fun testFib15() {
         assertEquals(
             "610",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(define fib (lambda (n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2))))))\n" +
                             "(fib 15)"
@@ -532,1042 +532,1042 @@ class VMTest {
                     // "(fib 38)" // 29s885ms 2021-02-16; replaced ScmVector with Array in ScmClosure
                     // exec() return x, then invoke x.exec()
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
 
     @Test
     fun testCarCdr() {
-        assertEquals("car", scheme.getStringForDisplay(scheme.evaluate2("(car '(car . cdr))").toVal(scheme.res)))
-        assertEquals("cdr", scheme.getStringForDisplay(scheme.evaluate2("(cdr '(car . cdr))").toVal(scheme.res)))
+        assertEquals("car", ScmObject.getStringForDisplay(scheme.evaluate2("(car '(car . cdr))"), scheme.res))
+        assertEquals("cdr", ScmObject.getStringForDisplay(scheme.evaluate2("(cdr '(car . cdr))"), scheme.res))
         assertEquals(
             "caar",
-            scheme.getStringForDisplay(scheme.evaluate2("(caar '((caar . cdar) . (cadr . cddr)))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(caar '((caar . cdar) . (cadr . cddr)))"), scheme.res)
         )
         assertEquals(
             "cadr",
-            scheme.getStringForDisplay(scheme.evaluate2("(cadr '((caar . cdar) . (cadr . cddr)))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(cadr '((caar . cdar) . (cadr . cddr)))"), scheme.res)
         )
         assertEquals(
             "cdar",
-            scheme.getStringForDisplay(scheme.evaluate2("(cdar '((caar . cdar) . (cadr . cddr)))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(cdar '((caar . cdar) . (cadr . cddr)))"), scheme.res)
         )
         assertEquals(
             "cddr",
-            scheme.getStringForDisplay(scheme.evaluate2("(cddr '((caar . cdar) . (cadr . cddr)))").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(cddr '((caar . cdar) . (cadr . cddr)))"), scheme.res)
         )
         assertEquals(
-            "caaar", scheme.getStringForDisplay(
+            "caaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caaar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caadr", scheme.getStringForDisplay(
+            "caadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caadr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cadar", scheme.getStringForDisplay(
+            "cadar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cadar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caddr", scheme.getStringForDisplay(
+            "caddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caddr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdaar", scheme.getStringForDisplay(
+            "cdaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdaar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdadr", scheme.getStringForDisplay(
+            "cdadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdadr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cddar", scheme.getStringForDisplay(
+            "cddar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cddar '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdddr", scheme.getStringForDisplay(
+            "cdddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdddr '(((caaar . cdaar) . (cadar . cddar)) . ((caadr . cdadr) . (caddr . cdddr))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caaaar", scheme.getStringForDisplay(
+            "caaaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caaaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caaadr", scheme.getStringForDisplay(
+            "caaadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caaadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caadar", scheme.getStringForDisplay(
+            "caadar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caadar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caaddr", scheme.getStringForDisplay(
+            "caaddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caaddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cadaar", scheme.getStringForDisplay(
+            "cadaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cadaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cadadr", scheme.getStringForDisplay(
+            "cadadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cadadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "caddar", scheme.getStringForDisplay(
+            "caddar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(caddar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cadddr", scheme.getStringForDisplay(
+            "cadddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cadddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdaaar", scheme.getStringForDisplay(
+            "cdaaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdaaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdaadr", scheme.getStringForDisplay(
+            "cdaadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdaadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdadar", scheme.getStringForDisplay(
+            "cdadar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdadar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdaddr", scheme.getStringForDisplay(
+            "cdaddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdaddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cddaar", scheme.getStringForDisplay(
+            "cddaar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cddaar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cddadr", scheme.getStringForDisplay(
+            "cddadr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cddadr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cdddar", scheme.getStringForDisplay(
+            "cdddar", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cdddar '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
-            "cddddr", scheme.getStringForDisplay(
+            "cddddr", ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(cddddr '((((caaaar . cdaaar) . (cadaar . cddaar)) . ((caadar . cdadar) . (caddar . cdddar))) .\n" +
                             "(((caaadr . cdaadr) . (cadadr . cddadr)) . ((caaddr . cdaddr) . (cadddr . cddddr)))))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
 
     @Test
     fun testNullQ() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(null? 'a)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(null? '(a b c))").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(null? '())").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(null? 'a)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(null? '(a b c))"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(null? '())"), scheme.res))
     }
 
     @Test
     fun testListTail() {
-        assertEquals("(d)", scheme.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 3)").toVal(scheme.res)))
+        assertEquals("(d)", ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 3)"), scheme.res))
         assertEquals(
             "(f)",
-            scheme.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d e f) 5)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d e f) 5)"), scheme.res)
         )
         assertEquals(
             "(a b c d)",
-            scheme.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 0)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(list-tail '(a b c d) 0)"), scheme.res)
         )
     }
 
     @Test
     fun testListRef() {
-        assertEquals("d", scheme.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 3)").toVal(scheme.res)))
-        assertEquals("f", scheme.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d e f) 5)").toVal(scheme.res)))
-        assertEquals("a", scheme.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 0)").toVal(scheme.res)))
+        assertEquals("d", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 3)"), scheme.res))
+        assertEquals("f", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d e f) 5)"), scheme.res))
+        assertEquals("a", ScmObject.getStringForDisplay(scheme.evaluate2("(list-ref '(a b c d) 0)"), scheme.res))
     }
 
     @Test
     fun testSymbolEqualQ() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'a 'b 'c 'd)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'a 'b 'c 'd)"), scheme.res))
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'abc)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'abc)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'ab)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc 'abc 'ab)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc 'abc 'abc)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc 'abc 'abc)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'bc)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(symbol=? 'abc 'abc)"), scheme.res))
     }
 
     @Test
     fun testStringEqualQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(string=? \"a\" \"b\" \"c\" \"d\")").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"a\" \"b\" \"c\" \"d\")"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"abc\")").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"abc\")"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"ab\")").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\" \"abc\" \"ab\")"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\" \"abc\" \"abc\")").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\" \"abc\" \"abc\")"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\")").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\")").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"bc\")"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(string=? \"abc\" \"abc\")"), scheme.res))
     }
 
     @Test
     fun testCharEqualQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B #\\A #\\a)"), scheme.res)
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharLessThanQ() {
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\c #\\d)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B #\\A #\\a)"), scheme.res)
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharLessThanEqualQ() {
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B #\\a #\\A)"), scheme.res)
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char<=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharGraterThanQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b #\\A #\\a)"), scheme.res)
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>? #\\A #\\a)"), scheme.res))
     }
 
     @Test
     fun testCharGraterThanEqualQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B #\\a #\\A)"), scheme.res)
+        )
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char>=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharCIEqualQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A #\\A #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharCILessThanQ() {
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A #\\A #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharCILessThanEqualQ() {
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)"), scheme.res)
+        )
+        assertEquals(
+            "#t",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B #\\a #\\A)"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci<=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharCIGraterThanQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
-        )
-        assertEquals(
-            "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b #\\A #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a #\\A #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a)").toVal(scheme.res)))
+        assertEquals(
+            "#f",
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b #\\A #\\a)"), scheme.res)
+        )
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\b)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>? #\\A #\\a)"), scheme.res))
     }
 
     @Test
     fun testCharCIGraterThanEqualQ() {
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\c #\\d)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\c #\\d)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a #\\a #\\a)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\a #\\a)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b #\\a #\\a)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\b)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\a)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\c #\\D)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\c #\\D)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A #\\a #\\A)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\a #\\A)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B #\\a #\\A)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-ci>=? #\\a #\\A)"), scheme.res))
     }
 
     @Test
     fun testCharAlphabeticQ() {
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\a)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\λ)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\1)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\a)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\λ)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\1)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\.)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\ )").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\tab )").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\.)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\ )"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\tab )"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\return )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\return )"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\newline )"), scheme.res)
         )
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\語)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-alphabetic? #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharNumericQ() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\a)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\λ)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\1)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0664)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0AE6)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0EA6)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\.)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\ )").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\tab )").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\return )").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\a)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\λ)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\1)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0664)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0AE6)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\x0EA6)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\.)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\ )"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\tab )"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\return )"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\newline )"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\語)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-numeric? #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharWhitespaceQ() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\a)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\λ)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\1)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\a)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\λ)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\1)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\.)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\ )").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\tab )").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\.)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\ )"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\tab )"), scheme.res))
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\return )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\return )"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\newline )"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\語)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-whitespace? #\\語)"), scheme.res))
     }
 
     @Test
     fun testDigitValue() {
-        assertEquals("3", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n").toVal(scheme.res)))
-        assertEquals("4", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n").toVal(scheme.res)))
-        assertEquals("0", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n").toVal(scheme.res)))
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n"), scheme.res))
+        assertEquals("4", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n"), scheme.res))
+        assertEquals("0", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n"), scheme.res))
     }
 
     @Test
     fun testCharToInteger() {
-        assertEquals("51", scheme.getStringForDisplay(scheme.evaluate2("(char->integer #\\3)\n").toVal(scheme.res)))
+        assertEquals("51", ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\3)\n"), scheme.res))
         assertEquals(
             "1636",
-            scheme.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0664)\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0664)\n"), scheme.res)
         )
         assertEquals(
             "2790",
-            scheme.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0AE6)\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0AE6)\n"), scheme.res)
         )
         assertEquals(
             "3750",
-            scheme.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0EA6)\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\x0EA6)\n"), scheme.res)
         )
         assertEquals(
             "69944",
-            scheme.getStringForDisplay(scheme.evaluate2("(char->integer #\\\uD804\uDD38)\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char->integer #\\\uD804\uDD38)\n"), scheme.res)
         )
     }
 
     @Test
     fun testIntegerToChar() {
-        assertEquals("3", scheme.getStringForDisplay(scheme.evaluate2("(integer->char 51)\n").toVal(scheme.res)))
-        assertEquals("٤", scheme.getStringForDisplay(scheme.evaluate2("(integer->char 1636)\n").toVal(scheme.res)))
-        assertEquals("૦", scheme.getStringForDisplay(scheme.evaluate2("(integer->char 2790)\n").toVal(scheme.res)))
-        assertEquals("\u0EA6", scheme.getStringForDisplay(scheme.evaluate2("(integer->char 3750)\n").toVal(scheme.res)))
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 51)\n"), scheme.res))
+        assertEquals("٤", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 1636)\n"), scheme.res))
+        assertEquals("૦", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 2790)\n"), scheme.res))
+        assertEquals("\u0EA6", ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 3750)\n"), scheme.res))
         assertEquals(
             "\uD804\uDD38",
-            scheme.getStringForDisplay(scheme.evaluate2("(integer->char 69944)\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(integer->char 69944)\n"), scheme.res)
         )
     }
 
     @Test
     fun testCharUpperCase() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\a)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\B)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\λ)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\1)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\a)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\B)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\λ)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\1)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\.)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\ )").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\tab )").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\.)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\ )"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\tab )"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\return )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\return )"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\newline )"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\語)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-upper-case? #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharLowerCase() {
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\a)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\B)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\λ)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\1)").toVal(scheme.res)))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\a)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\B)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\λ)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\1)"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\.)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\ )").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\tab )").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\.)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\ )"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\tab )"), scheme.res))
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\return )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\return )"), scheme.res)
         )
         assertEquals(
             "#f",
-            scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\newline )"), scheme.res)
         )
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\語)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(char-lower-case? #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharUpcase() {
-        assertEquals("#\\A", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\a)").toVal(scheme.res)))
-        assertEquals("#\\B", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\B)").toVal(scheme.res)))
-        assertEquals("#\\Λ", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\λ)").toVal(scheme.res)))
-        assertEquals("#\\1", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\1)").toVal(scheme.res)))
+        assertEquals("#\\A", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\a)"), scheme.res))
+        assertEquals("#\\B", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\B)"), scheme.res))
+        assertEquals("#\\Λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\λ)"), scheme.res))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\1)"), scheme.res))
         assertEquals(
             "#\\\u0664",
-            scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#\\\u0AE6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#\\\u0EA6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#\\.", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\.)").toVal(scheme.res)))
-        assertEquals("#\\space", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\ )").toVal(scheme.res)))
-        assertEquals("#\\tab", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\tab )").toVal(scheme.res)))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\.)"), scheme.res))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\ )"), scheme.res))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\tab )"), scheme.res))
         assertEquals(
             "#\\return",
-            scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\return )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\return )"), scheme.res)
         )
         assertEquals(
             "#\\newline",
-            scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\newline )"), scheme.res)
         )
-        assertEquals("#\\語", scheme.getStringForWrite(scheme.evaluate2("(char-upcase #\\語)").toVal(scheme.res)))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-upcase #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharDowncase() {
-        assertEquals("#\\a", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\a)").toVal(scheme.res)))
-        assertEquals("#\\b", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\B)").toVal(scheme.res)))
-        assertEquals("#\\λ", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\λ)").toVal(scheme.res)))
-        assertEquals("#\\1", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\1)").toVal(scheme.res)))
+        assertEquals("#\\a", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\a)"), scheme.res))
+        assertEquals("#\\b", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\B)"), scheme.res))
+        assertEquals("#\\λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\λ)"), scheme.res))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\1)"), scheme.res))
         assertEquals(
             "#\\\u0664",
-            scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#\\\u0AE6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#\\\u0EA6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#\\.", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\.)").toVal(scheme.res)))
-        assertEquals("#\\space", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\ )").toVal(scheme.res)))
-        assertEquals("#\\tab", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\tab )").toVal(scheme.res)))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\.)"), scheme.res))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\ )"), scheme.res))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\tab )"), scheme.res))
         assertEquals(
             "#\\return",
-            scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\return )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\return )"), scheme.res)
         )
         assertEquals(
             "#\\newline",
-            scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\newline )"), scheme.res)
         )
-        assertEquals("#\\語", scheme.getStringForWrite(scheme.evaluate2("(char-downcase #\\語)").toVal(scheme.res)))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-downcase #\\語)"), scheme.res))
     }
 
     @Test
     fun testCharFoldcase() {
-        assertEquals("#\\a", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\a)").toVal(scheme.res)))
-        assertEquals("#\\b", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\B)").toVal(scheme.res)))
-        assertEquals("#\\λ", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\λ)").toVal(scheme.res)))
-        assertEquals("#\\1", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\1)").toVal(scheme.res)))
+        assertEquals("#\\a", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\a)"), scheme.res))
+        assertEquals("#\\b", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\B)"), scheme.res))
+        assertEquals("#\\λ", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\λ)"), scheme.res))
+        assertEquals("#\\1", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\1)"), scheme.res))
         assertEquals(
             "#\\\u0664",
-            scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0664)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0664)"), scheme.res)
         )
         assertEquals(
             "#\\\u0AE6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0AE6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0AE6)"), scheme.res)
         )
         assertEquals(
             "#\\\u0EA6",
-            scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0EA6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\x0EA6)"), scheme.res)
         )
-        assertEquals("#\\.", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\.)").toVal(scheme.res)))
-        assertEquals("#\\space", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\ )").toVal(scheme.res)))
-        assertEquals("#\\tab", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\tab )").toVal(scheme.res)))
+        assertEquals("#\\.", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\.)"), scheme.res))
+        assertEquals("#\\space", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\ )"), scheme.res))
+        assertEquals("#\\tab", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\tab )"), scheme.res))
         assertEquals(
             "#\\return",
-            scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\return )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\return )"), scheme.res)
         )
         assertEquals(
             "#\\newline",
-            scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\newline )").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\newline )"), scheme.res)
         )
-        assertEquals("#\\語", scheme.getStringForWrite(scheme.evaluate2("(char-foldcase #\\語)").toVal(scheme.res)))
+        assertEquals("#\\語", ScmObject.getStringForWrite(scheme.evaluate2("(char-foldcase #\\語)"), scheme.res))
     }
 
     @Test
     fun testProcLessThan() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(< 1 2 3 2.5)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(< 1.5 3 4 5.5)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(< 105 93 84 75.5)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(< 1 2 3 2.5)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(< 1.5 3 4 5.5)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(< 105 93 84 75.5)"), scheme.res))
     }
 
     @Test
     fun testProcGraterThan() {
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(> 1 2 3 2.5)").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(> 1.5 3 4 5.5)").toVal(scheme.res)))
-        assertEquals("#t", scheme.getStringForDisplay(scheme.evaluate2("(> 105 93 84 75.5)").toVal(scheme.res)))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(> 1 2 3 2.5)"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(> 1.5 3 4 5.5)"), scheme.res))
+        assertEquals("#t", ScmObject.getStringForDisplay(scheme.evaluate2("(> 105 93 84 75.5)"), scheme.res))
     }
 
     @Test
     fun testR7RS0204() {
         assertEquals(
             "#0=(a b c . #0#)",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(let ((x (list 'a 'b 'c)))\n" +
                             "(set-cdr! (cddr x) x)\n" +
                             "x)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -1576,7 +1576,7 @@ class VMTest {
     fun testR7RS040101() {
         assertEquals(
             "28",
-            scheme.getStringForDisplay(scheme.evaluate2("(define x 28)\n" + "x\n").toVal(scheme.res))
+            ScmObject.getStringForDisplay(scheme.evaluate2("(define x 28)\n" + "x\n"), scheme.res)
         )
     }
 
@@ -1584,87 +1584,87 @@ class VMTest {
     fun testR7RS040102() {
         assertEquals(
             "a",
-            scheme.getStringForWrite(scheme.evaluate2("(quote a)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(quote a)\n"), scheme.res)
         )
         assertEquals(
             "#(a b c)",
-            scheme.getStringForWrite(scheme.evaluate2("(quote #(a b c))").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(quote #(a b c))"), scheme.res)
         )
         assertEquals(
             "(+ 1 2)",
-            scheme.getStringForWrite(scheme.evaluate2("(quote (+ 1 2))").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(quote (+ 1 2))"), scheme.res)
         )
         assertEquals(
             "a",
-            scheme.getStringForWrite(scheme.evaluate2("'a\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'a\n"), scheme.res)
         )
         assertEquals(
             "#(a b c)",
-            scheme.getStringForWrite(scheme.evaluate2("'#(a b c)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'#(a b c)\n"), scheme.res)
         )
         assertEquals(
             "()",
-            scheme.getStringForWrite(scheme.evaluate2("'()\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'()\n"), scheme.res)
         )
         assertEquals(
             "(+ 1 2)",
-            scheme.getStringForWrite(scheme.evaluate2("'(+ 1 2)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'(+ 1 2)\n"), scheme.res)
         )
         assertEquals(
             "(quote a)",
-            scheme.getStringForWrite(scheme.evaluate2("'(quote a)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'(quote a)\n"), scheme.res)
         )
         assertEquals(
             "(quote a)",
-            scheme.getStringForWrite(scheme.evaluate2("''a\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("''a\n"), scheme.res)
         )
         assertEquals(
             "145932",
-            scheme.getStringForWrite(scheme.evaluate2("'145932\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'145932\n"), scheme.res)
         )
         assertEquals(
             "145932",
-            scheme.getStringForWrite(scheme.evaluate2("145932\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("145932\n"), scheme.res)
         )
         assertEquals(
             "\"abc\"",
-            scheme.getStringForWrite(scheme.evaluate2("'\"abc\"\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'\"abc\"\n"), scheme.res)
         )
         assertEquals(
             "\"abc\"",
-            scheme.getStringForWrite(scheme.evaluate2("\"abc\"\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("\"abc\"\n"), scheme.res)
         )
         assertEquals(
             "#\\#",
-            scheme.getStringForWrite(scheme.evaluate2("'#\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'#\n"), scheme.res)
         )
         assertEquals(
             "#\\#",
-            scheme.getStringForWrite(scheme.evaluate2("#\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("#\n"), scheme.res)
         )
         assertEquals(
             "#(a 10)",
-            scheme.getStringForWrite(scheme.evaluate2("'#(a 10)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'#(a 10)\n"), scheme.res)
         )
         assertEquals(
             "#(a 10)",
-            scheme.getStringForWrite(scheme.evaluate2("#(a 10)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("#(a 10)\n"), scheme.res)
         )
         assertEquals(
             "#u8(64 65)",
-            scheme.getStringForWrite(scheme.evaluate2("'#u8(64 65)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'#u8(64 65)"), scheme.res)
         )
         assertEquals(
             "#u8(64 65)",
-            scheme.getStringForWrite(scheme.evaluate2("#u8(64 65)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("#u8(64 65)\n"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("'#t\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("'#t\n"), scheme.res)
         )
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("#t\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("#t\n"), scheme.res)
         )
     }
 
@@ -1672,11 +1672,11 @@ class VMTest {
     fun testR7RS040103() {
         assertEquals(
             "7",
-            scheme.getStringForWrite(scheme.evaluate2("(+ 3 4)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(+ 3 4)\n"), scheme.res)
         )
         assertEquals(
             "12",
-            scheme.getStringForWrite(scheme.evaluate2("((if #f + *) 3 4)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("((if #f + *) 3 4)\n"), scheme.res)
         )
     }
 
@@ -1684,46 +1684,46 @@ class VMTest {
     fun testR7RS040104() {
         assertEquals(
             "#<procedure lambda>",
-            scheme.getStringForWrite(scheme.evaluate2("(lambda (x) (+ x x))").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(lambda (x) (+ x x))"), scheme.res)
         )
         assertEquals(
             "8",
-            scheme.getStringForWrite(scheme.evaluate2("((lambda (x) (+ x x)) 4)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("((lambda (x) (+ x x)) 4)"), scheme.res)
         )
         assertEquals(
             "3",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define reverse-subtract\n" +
                             "  (lambda (x y) (- y x)))\n" +
                             "(reverse-subtract 7 10)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         /*
         assertEquals(
             "10",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define add4\n" +
                             "  (let((x 4))\n" +
                             "    (lambda(y)(+ x y))))\n" +
                             "  (add4 6)"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(3 4 5 6)",
-            scheme.getStringForWrite(scheme.evaluate2("((lambda x x) 3 4 5 6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("((lambda x x) 3 4 5 6)"), scheme.res)
         )
 
         assertEquals(
             "(5 6)",
-            scheme.getStringForWrite(scheme.evaluate2("((lambda (x y . z) z) 3 4 5 6)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("((lambda (x y . z) z) 3 4 5 6)"), scheme.res)
         )
          */
     }
@@ -1732,21 +1732,21 @@ class VMTest {
     fun testR7RS040105() {
         assertEquals(
             "yes",
-            scheme.getStringForWrite(scheme.evaluate2("(if (> 3 2) 'yes 'no)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(if (> 3 2) 'yes 'no)"), scheme.res)
         )
         assertEquals(
             "no",
-            scheme.getStringForWrite(scheme.evaluate2("(if (> 2 3) 'yes 'no)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(if (> 2 3) 'yes 'no)"), scheme.res)
         )
         assertEquals(
             "1",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(if (> 3 2)\n" +
                             "(- 3 2)\n" +
                             "(+ 3 2))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -1755,14 +1755,14 @@ class VMTest {
     fun testR7RS040106() {
         assertEquals(
             "5",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x 2)\n" +
                             "(+ x 1)\n" +
                             "(set! x 4)\n" +
                             "(+ x 1)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -1771,24 +1771,24 @@ class VMTest {
     fun testR7RS040201() {
         assertEquals(
             "greater",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(cond ((> 3 2) 'greater)\n" +
                             "((< 3 2) 'less))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "equal",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(cond ((> 3 3) 'greater)\n" +
                             "((< 3 3) 'less)\n" +
                             "(else 'equal))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
@@ -1796,36 +1796,36 @@ class VMTest {
         TODO("must implement =>")
         assertEquals(
             "2",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(cond ((assv 'b '((a 1) (b 2))) => cadr)\n" +
                             "(else #f))"
                 )
-            .toVal(scheme.res))
+            , scheme.res)
         )
          */
 
         assertEquals(
             "#<undef>",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(when (= 1 1.0)\n" +
                             "(display \"1\")\n" +
                             "(display \"2\"))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#<undef>",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(until (= 1 1.0)\n" +
                             "(display \"1\")\n" +
                             "(display \"2\"))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -1834,44 +1834,44 @@ class VMTest {
     fun testR7RS040202() {
         assertEquals(
             "6",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((x 2) (y 3))\n" +
                             "(* x y))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "35",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((x 2) (y 3))\n" +
                             "(let ((x 7)\n" +
                             "(z (+ x y)))\n" +
                             "(* z x)))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "70",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((x 2) (y 3))\n" +
                             "(let* ((x 7)\n" +
                             "(z (+ x y)))\n" +
                             "(* z x)))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(letrec ((even?\n" +
                             "(lambda (n)\n" +
@@ -1885,7 +1885,7 @@ class VMTest {
                             "(even? (- n 1))))))\n" +
                             "(even? 88))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             ).replace("\n", "\\n")
         )
     }
@@ -1894,115 +1894,115 @@ class VMTest {
     fun testR7RS0601() {
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 'a 'a)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 'a 'a)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 'a 'b)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 'a 'b)"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 2 2)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 2 2)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 2 2.0)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 2 2.0)"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? '() '())").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? '() '())"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 100000000 100000000)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 100000000 100000000)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 0.0 +nan.0)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 0.0 +nan.0)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? (cons 1 2) (cons 1 2))").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? (cons 1 2) (cons 1 2))"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(eqv? (lambda () 1)\n" +
                             "(lambda () 2))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((p (lambda (x) x)))\n" +
                             "(eqv? p p))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? #f 'nil)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? #f 'nil)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? \"\" \"\")").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? \"\" \"\")"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? '#() '#())").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? '#() '#())"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(eqv? (lambda (x) x)\n" +
                             "(lambda (x) x))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(eqv? (lambda (x) x)\n" +
                             "(lambda (y) y))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? 1.0e0 1.0f0)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? 1.0e0 1.0f0)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eqv? +nan.0 +nan.0)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eqv? +nan.0 +nan.0)"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define gen-counter\n" +
                             "(lambda ()\n" +
@@ -2011,13 +2011,13 @@ class VMTest {
                             "(let ((g (gen-counter)))\n" +
                             "(eqv? g g))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define gen-counter\n" +
                             "(lambda ()\n" +
@@ -2027,13 +2027,13 @@ class VMTest {
                             "(eqv? g g))\n" +
                             "(eqv? (gen-counter) (gen-counter))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define gen-counter\n" +
                             "(lambda ()\n" +
@@ -2049,13 +2049,13 @@ class VMTest {
                             "(let ((g (gen-loser)))\n" +
                             "(eqv? g g))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define gen-counter\n" +
                             "(lambda ()\n" +
@@ -2072,185 +2072,185 @@ class VMTest {
                             "(eqv? g g))\n" +
                             "(eqv? (gen-loser) (gen-loser))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(letrec ((f (lambda () (if (eqv? f g) 'both 'f)))\n" +
                             "(g (lambda () (if (eqv? f g) 'both 'g))))\n" +
                             "(eqv? f g))\n"
 
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(letrec ((f (lambda () (if (eqv? f g) 'f 'both)))\n" +
                             "(g (lambda () (if (eqv? f g) 'g 'both))))\n" +
                             "(eqv? f g))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? 'a 'a)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? 'a 'a)"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? '(a) '(a))\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? '(a) '(a))\n"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? (list 'a) (list 'a))\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? (list 'a) (list 'a))\n"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? \"a\" \"a\")\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? \"a\" \"a\")\n"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? \"\" \"\")\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? \"\" \"\")\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(eq? '() '())\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? 2 2)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? 2 2)\n"), scheme.res)
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? #\\A #\\A)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? #\\A #\\A)\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(eq? car car)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(eq? car car)\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((n (+ 2 3)))\n" +
                             "(eq? n n))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((x '(a)))\n" +
                             "(eq? x x))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((x '#()))\n" +
                             "(eq? x x))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((p (lambda (x) x)))\n" +
                             "(eq? p p)))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(equal? 'a 'a)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(equal? 'a 'a)\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(equal? '(a) '(a))\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(equal? '(a) '(a))\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(equal? '(a (b) c)\n" + "'(a (b) c))\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(equal? '(a (b) c)\n" + "'(a (b) c))\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(equal? \"abc\" \"abc\")\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(equal? \"abc\" \"abc\")\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(scheme.evaluate2("(equal? 2 2)\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(equal? 2 2)\n"), scheme.res)
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(equal? (make-vector 5 'a)\n" +
                             "(make-vector 5 'a))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         /* TODO
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(equal? '#1=(a b . #1#)\n" +
                     "'#2=(a b a b . #2#))=⇒\n"
                 )
-            .toVal(scheme.res))
+            , scheme.res)
         )
          */
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(equal? (lambda (x) x)\n" +
                             "(lambda (y) y))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -2259,32 +2259,32 @@ class VMTest {
     fun testR7RS0604() {
         assertEquals(
             "(a b c)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
                             "y\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
                             "y\n" +
                             "(list? y)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(a . 4)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
@@ -2293,13 +2293,13 @@ class VMTest {
                             "(set-cdr! x 4)\n" +
                             "x\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#t",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
@@ -2309,13 +2309,13 @@ class VMTest {
                             "x\n" +
                             "(eqv? x y)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(a . 4)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
@@ -2326,13 +2326,13 @@ class VMTest {
                             "(eqv? x y)\n" +
                             "y\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
@@ -2344,13 +2344,13 @@ class VMTest {
                             "y\n" +
                             "(list? y)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "#f",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define x (list 'a 'b 'c))\n" +
                             "(define y x)\n" +
@@ -2364,26 +2364,26 @@ class VMTest {
                             "(set-cdr! x x)\n" +
                             "(list? x)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(#t #t #f #f)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (pair? '(a . b))\n" +
                             "(pair? '(a b c))\n" +
                             "(pair? '())\n" +
                             "(pair? '#(a b)))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "((a) ((a) b c d) (\"a\" b c) (a . 3) ((a b) . c))",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (cons 'a '())\n" +
                             "(cons '(a) '(b c d))\n" +
@@ -2391,151 +2391,151 @@ class VMTest {
                             "(cons 'a 3)\n" +
                             "(cons '(a b) 'c))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(a (a) 1)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (car '(a b c))\n" +
                             "(car '((a) b c d))\n" +
                             "(car '(1 . 2)))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "*** ERROR: 'car' expected a pair, but got other\\n who: vm",
-            scheme.getStringForWrite(scheme.evaluate2("(car '())").toVal(scheme.res)).replace("\n", "\\n")
+            ScmObject.getStringForWrite(scheme.evaluate2("(car '())"), scheme.res).replace("\n", "\\n")
         )
 
         assertEquals(
             "((b c d) 2)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (cdr '((a) b c d))\n" +
                             "(cdr '(1 . 2)))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "*** ERROR: 'cdr' expected a pair, but got other\\n who: vm",
-            scheme.getStringForWrite(scheme.evaluate2("(cdr '())\n").toVal(scheme.res)).replace("\n", "\\n")
+            ScmObject.getStringForWrite(scheme.evaluate2("(cdr '())\n"), scheme.res).replace("\n", "\\n")
         )
 
         assertEquals(
             "#<undef>",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define (f) (list 'not-a-constant-list))\n" +
                             "(define (g) '(constant-list))\n" +
                             "(set-car! (f) 3)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             ).replace("\n", "\\n")
         )
 
         assertEquals(
             "*** ERROR: 'set-car!' expected a mutable pair, but got other\\n who: vm",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define (f) (list 'not-a-constant-list))\n" +
                             "(define (g) '(constant-list))\n" +
                             "(set-car! (f) 3)\n" +
                             "(set-car! (g) 3)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             ).replace("\n", "\\n")
         )
 
         assertEquals(
             "(3 3)",
-            scheme.getStringForWrite(scheme.evaluate2("(make-list 2 3)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(make-list 2 3)"), scheme.res)
         )
 
         assertEquals(
             "(a 7 c)",
-            scheme.getStringForWrite(scheme.evaluate2("(list 'a (+ 3 4) 'c)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(list 'a (+ 3 4) 'c)"), scheme.res)
         )
 
         assertEquals(
             "()",
-            scheme.getStringForWrite(scheme.evaluate2("(list)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(list)"), scheme.res)
         )
 
         assertEquals(
             "(3 3 0)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (length '(a b c))\n" +
                             "(length '(a (b) (c d e)))\n" +
                             "(length '()))"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "((x y) (a b c d) (a (b) (c)) (a b c . d) a)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (append '(x) '(y))\n" +
                             "(append '(a) '(b c d))\n" +
                             "(append '(a (b)) '((c)))\n" +
                             "(append '(a b) '(c . d))\n" +
                             "(append '() 'a))\n"
-                ).toVal(scheme.res)
+                ), scheme.res
             )
         )
 
         assertEquals(
             "((c b a) ((e (f)) d (b c) a))",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (reverse '(a b c))\n" +
                             "(reverse '(a (b c) d (e (f)))))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "c",
-            scheme.getStringForWrite(scheme.evaluate2("(list-ref '(a b c d) 2)").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(list-ref '(a b c d) 2)"), scheme.res)
         )
 
         /* TODO
         assertEquals(
             "c",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list-ref '(a b c d)\n" +
                             "(exact (round 1.8)))"
                 )
-            .toVal(scheme.res))
+            , scheme.res)
         )
          */
 
         assertEquals(
             "(one two three)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(let ((ls (list 'one 'two 'five!)))\n" +
                             "(list-set! ls 2 'three)\n" +
                             "ls)\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "*** ERROR: 'list-set!' expected a mutable pair, but got other\\n who: vm",
-            scheme.getStringForWrite(scheme.evaluate2("(list-set! '(0 1 2) 1 \"oops\")\n").toVal(scheme.res))
+            ScmObject.getStringForWrite(scheme.evaluate2("(list-set! '(0 1 2) 1 \"oops\")\n"), scheme.res)
                 .replace("\n", "\\n")
         )
 
@@ -2543,7 +2543,7 @@ class VMTest {
             "((a b c) (b c) #f #f ((a) c)" +
                     // // " (\"b\" \"c\")\n" +
                     " #f (101 102))",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (memq 'a '(a b c))\n" +
                             "(memq 'b '(a b c))\n" +
@@ -2557,7 +2557,7 @@ class VMTest {
                             "(memq 101 '(100 101 102))\n" +
                             "(memv 101 '(100 101 102)))\n",
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             ).replace("\n", "\\n")
         )
 
@@ -2565,7 +2565,7 @@ class VMTest {
             "((a 1) (b 2) #f #f ((a)) " +
                     // "(2 4) " +
                     "#f (5 7))",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define e '((a 1) (b 2) (c 3)))\n" +
                             "(list (assq 'a e)\n" +
@@ -2577,20 +2577,20 @@ class VMTest {
                             "(assq 5 '((2 3) (5 7) (11 13)))\n" +
                             "(assv 5 '((2 3) (5 7) (11 13))))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "((3 8 2 8) (1 8 2 8))",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(define a '(1 8 2 8)) ; a may be immutable\n" +
                             "(define b (list-copy a))\n" +
                             "(set-car! b 3) ; b is mutable\n" +
                             "(list b a)",
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }
@@ -2599,7 +2599,7 @@ class VMTest {
     fun testR7RS0605() {
         assertEquals(
             "(#t #t #f #t #f #f)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (symbol? 'foo)\n" +
                             "(symbol? (car '(a b)))\n" +
@@ -2608,26 +2608,26 @@ class VMTest {
                             "(symbol? '())\n" +
                             "(symbol? #f))\n"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(\"flying-fish\" \"Martin\" \"Malvina\")",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (symbol->string 'flying-fish)\n" +
                             "(symbol->string 'Martin)\n" +
                             "(symbol->string\n" +
                             "(string->symbol \"Malvina\")))\n",
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(mISSISSIppi #t #t #t)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list (string->symbol \"mISSISSIppi\")\n" +
                             "(eqv? 'bitBlt (string->symbol \"bitBlt\"))\n" +
@@ -2638,13 +2638,13 @@ class VMTest {
                             "(symbol->string\n" +
                             "(string->symbol \"K. Harper, M.D.\"))))\n",
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             "(#\\alarm #\\backspace #\\delete #\\escape #\\newline #\\null #\\return #\\space #\\tab)",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list #\\alarm ; U+0007\n" +
                             "#\\backspace ; U+0008\n" +
@@ -2657,13 +2657,13 @@ class VMTest {
                             "#\\tab ; the tab character, U+0009\n" +
                             ")",
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
 
         assertEquals(
             """(#\a #\A #\( #\space #\λ)""", // #\ι)""",
-            scheme.getStringForWrite(
+            ScmObject.getStringForWrite(
                 scheme.evaluate2(
                     "(list #\\a ; lower case letter\n" +
                             "#\\A ; upper case letter\n" +
@@ -2672,20 +2672,20 @@ class VMTest {
                             "#\\x03BB ; λ (if character is supported)\n" +
                             // "#\\iota ; ι (if character and name are supported)\n" +
                             ")",
-                ).toVal(scheme.res)
+                ), scheme.res
             )
         )
     }
 
     @Test
     fun testR7RS0606() {
-        assertEquals("3", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n").toVal(scheme.res)))
-        assertEquals("4", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n").toVal(scheme.res)))
-        assertEquals("0", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n").toVal(scheme.res)))
-        assertEquals("#f", scheme.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n").toVal(scheme.res)))
+        assertEquals("3", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\3)\n"), scheme.res))
+        assertEquals("4", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0664)\n"), scheme.res))
+        assertEquals("0", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0AE6)\n"), scheme.res))
+        assertEquals("#f", ScmObject.getStringForDisplay(scheme.evaluate2("(digit-value #\\x0EA6)\n"), scheme.res))
         assertEquals(
             "(0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4)",
-            scheme.getStringForDisplay(
+            ScmObject.getStringForDisplay(
                 scheme.evaluate2(
                     "(list\n" +
                             "(digit-value #\\x0030) ;; DIGIT ZERO - 0\n" +
@@ -2755,7 +2755,7 @@ class VMTest {
                             "(digit-value #\\x1FBF4) ;; SEGMENTED DIGIT FOUR - 🯴\n" +
                             ")"
                 )
-                    .toVal(scheme.res)
+                    , scheme.res
             )
         )
     }

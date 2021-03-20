@@ -36,9 +36,9 @@ class ScmByteVector private constructor(var array: ByteArray) : ScmObject() {
     override fun toStringForDisplay(res: KevesResources): String = toStringForWrite(res)
     override fun toString(): String = "#u8(${array.joinToString(" ")})"
 
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean {
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean {
         when {
-            this === other.toVal(res) -> return true
+            this === other.toByteVector().toVal(res) -> return true
             other.isNotByteVector(res) -> return false
             else -> {
                 val otherArray = other.toByteVector().getArray(res)

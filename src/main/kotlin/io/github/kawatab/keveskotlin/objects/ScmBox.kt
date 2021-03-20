@@ -27,11 +27,12 @@ import io.github.kawatab.keveskotlin.PtrObject
 
 // class ScmBox private constructor(var value: ScmObject?) : ScmObject() {
 class ScmBox private constructor(var value: PtrObject) : ScmObject() {
-    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(value.toVal(res), res)}>"
-    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(value.toVal(res), res)}>"
+    override fun toStringForWrite(res: KevesResources): String = "#<box ${getStringForWrite(value, res)}>"
+    override fun toStringForDisplay(res: KevesResources): String = "#<box ${getStringForDisplay(value, res)}>"
     override fun toString(): String = "#<box $value>"
-    override fun equalQ(other: PtrObject, res: KevesResources): Boolean =
-        if (this === other.toVal(res)) true else (other.isBox(res) && equalQ(other.toBox(), ArrayDeque(), res))
+    fun equalQ(other: PtrObject, res: KevesResources): Boolean =
+        (other.isBox(res) && this === other.toBox().toVal(res)) ||
+                (other.isBox(res) && equalQ(other.toBox(), ArrayDeque(), res))
 
     fun equalQ(other: PtrBox, duplicated: ArrayDeque<Pair<ScmObject, ScmObject>>, res: KevesResources): Boolean {
         if (duplicated.indexOfFirst { (first, second) ->
@@ -42,13 +43,7 @@ class ScmBox private constructor(var value: PtrObject) : ScmObject() {
         val obj2 = other.toVal(res).value
         if (obj1 == obj2) return true
         if (!res.isScmObject(obj1) || !res.isScmObject(obj2)) return false
-        return when {
-            obj1.isNull() -> obj2.isNull()
-            obj1.isBox(res) -> obj2.isBox(res) && obj1.toBox().equalQ(obj2.toBox(), duplicated, res)
-            obj1.isPair(res) -> obj2.isPair(res) && obj1.toPair().equalQ(obj2.toPair(), duplicated, res)
-            obj1.isVector(res) -> obj2.isVector(res) && obj1.toVector().equalQ(obj2.toVector(), duplicated, res)
-            else -> obj1.toVal(res)!!.equalQ(obj2, res)
-        }
+        return res.equalQ(obj1, obj2, duplicated)
     }
 
     companion object {

@@ -132,6 +132,7 @@ object KevesExceptions {
     val typeCastFailedToByteVector = TypeCastException("Type cast to ByteVector failed")
     val typeCastFailedToChar = TypeCastException("Type cast to Char failed")
     val typeCastFailedToClosure = TypeCastException("Type cast to Closure failed")
+    val typeCastFailedToConstant = TypeCastException("Type cast to Constant failed")
     val typeCastFailedToDouble = TypeCastException("Type cast to Double failed")
     val typeCastFailedToError = TypeCastException("Type cast to Error failed")
     val typeCastFailedToFloat = TypeCastException("Type cast to Float failed")

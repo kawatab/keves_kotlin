@@ -84,7 +84,7 @@ abstract class ScmInstruction private constructor() : ScmObject() {
     class Constant private constructor(private val ptr: PtrObject, private val next: PtrInstruction) :
         ScmInstruction() {
         override fun toStringForWrite(res: KevesResources): String =
-            "<CONSTANT ${getStringForWrite(ptr.toVal(res), res)} ${next.toVal(res).toStringForWrite(res)}>"
+            "<CONSTANT ${getStringForWrite(ptr, res)} ${next.toVal(res).toStringForWrite(res)}>"
 
         override fun exec(vm: KevesVM) {
             // vm.acc = obj
@@ -174,8 +174,8 @@ abstract class ScmInstruction private constructor() : ScmObject() {
                         .also {
                             if (it.isNotBox(vm.res)) throw IllegalArgumentException(
                                 "<ASSIGN_LOCAL> expected box but got other ${
-                                    vm.stack.index(vm.fp, n).toVal(vm.res)?.toStringForWrite(vm.res)
-                                }, ${vm.acc.toVal(vm.res)?.toStringForWrite(vm.res)}"
+                                    getStringForWrite(vm.stack.index(vm.fp, n), vm.res)
+                                }, ${getStringForWrite(vm.acc, vm.res)}"
                             )
                         }.toBox()
                 box.setValue(vm.acc, vm.res)
